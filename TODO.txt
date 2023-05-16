@@ -3,3 +3,4 @@
 
 Current TODO:
   - Research software feasibility for possible devices/features of new payload
+  - Discuss possible directory structure
