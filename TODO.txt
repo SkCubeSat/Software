@@ -1,0 +1,5 @@
+// This file describes the current goals/to-do list for the software subteam
+
+
+Current TODO:
+  - Research software feasibility for possible devices/features of new payload
