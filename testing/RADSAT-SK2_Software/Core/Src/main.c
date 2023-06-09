@@ -97,9 +97,14 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+	// turns the LED on
 	HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
+	// Waits for 1000 ms
 	HAL_Delay(1000);
+	// Turns the LED off
 	HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+	// Waits for 1000 ms
 	HAL_Delay(1000);
   }
   /* USER CODE END 3 */
