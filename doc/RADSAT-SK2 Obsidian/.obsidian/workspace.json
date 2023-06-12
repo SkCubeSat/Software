@@ -1,0 +1,159 @@
+{
+  "main": {
+    "id": "4141e2e81b8c9a75",
+    "type": "split",
+    "children": [
+      {
+        "id": "f180bc43e9130217",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "5ebf0dbcdec3200b",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Readme.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "64f6419669d06b26",
+    "type": "split",
+    "children": [
+      {
+        "id": "8b9037f5d2cac2c7",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "d8345a4918eaba2d",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "3207357aa7894718",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "5fdb330402708599",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "b196374ae00c8a60",
+    "type": "split",
+    "children": [
+      {
+        "id": "48a0a365e0985e6b",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "1527d6926c127369",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Readme.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "d750d8bc6a84ef5a",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Readme.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "64a1a466f9647fa1",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          },
+          {
+            "id": "3efe8027be107cd5",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Readme.md"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false
+    }
+  },
+  "active": "d8345a4918eaba2d",
+  "lastOpenFiles": [
+    "attachments/git status.gif",
+    "Passwords.md",
+    "Readme.md",
+    "attachments/OpenProject.gif",
+    "attachments/STM32CubeIDE.gif",
+    "attachments",
+    "New folder"
+  ]
+}
