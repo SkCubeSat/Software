@@ -3,7 +3,7 @@
 ## STM32 software development
 
 ##### 1. First head over to [STM32Cube IDE](https://www.st.com/en/development-tools/stm32cubeide.html) and download and install the latest version of the STM32cube IDE.
-- Note that you can use any name or anything in the input field as long as its a vag/lid email address since the software download link will go to your email inbox
+- Note that you can use any name or anything in the input field as long as its a valid email address since the software download link will go to your email inbox
 - Use a [temporary email for sign up if you'd like](https://temp-mail.org/en/)
 - 
 
