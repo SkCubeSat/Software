@@ -6,7 +6,9 @@
 - Note that you can use any name or anything in the input field as long as its a valid email address since the software download link will go to your email inbox
 - Use a [temporary email for sign up if you'd like](https://temp-mail.org/en/)
 - 
-![[STM32CubeIDE.gif]]
+
+![](https://i.imgur.com/HmqLSrb.gif)
+
 
 
 ##### 2. Install the software but DO NO CREATE A NEW PROJECT
