@@ -31,8 +31,7 @@
               }
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -98,7 +97,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "README.md",
+                "file": "Setting up STM32Cube IDE.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -115,7 +114,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "README.md",
+                "file": "Setting up STM32Cube IDE.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -138,7 +137,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "README.md"
+                "file": "Setting up STM32Cube IDE.md"
               }
             }
           }
@@ -159,10 +158,10 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "186e37adc974b1f2",
+  "active": "5ebf0dbcdec3200b",
   "lastOpenFiles": [
-    "Setting up STM32Cube IDE.md",
     "README.md",
+    "Setting up STM32Cube IDE.md",
     "attachments/STM32CubeIDE.gif",
     "attachments/git status.gif",
     "Passwords.md",
