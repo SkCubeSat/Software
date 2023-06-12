@@ -20,6 +20,18 @@
             }
           },
           {
+            "id": "19e9a7691ec1244b",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "conflict-files-obsidian-git.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
             "id": "186e37adc974b1f2",
             "type": "leaf",
             "state": {
@@ -31,7 +43,8 @@
               }
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -97,7 +110,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Setting up STM32Cube IDE.md",
+                "file": "conflict-files-obsidian-git.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -114,7 +127,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Setting up STM32Cube IDE.md",
+                "file": "conflict-files-obsidian-git.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -137,7 +150,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Setting up STM32Cube IDE.md"
+                "file": "conflict-files-obsidian-git.md"
               }
             }
           }
@@ -158,10 +171,11 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "5ebf0dbcdec3200b",
+  "active": "19e9a7691ec1244b",
   "lastOpenFiles": [
-    "attachments/STM32CubeIDE.gif",
     "Setting up STM32Cube IDE.md",
+    "conflict-files-obsidian-git.md",
+    "attachments/STM32CubeIDE.gif",
     "README.md",
     "attachments/git status.gif",
     "Passwords.md",
