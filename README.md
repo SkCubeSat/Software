@@ -66,10 +66,7 @@ We welcome contributions from anyone interested in improving the RADSAT-SK2 soft
 
 Here are some helpful resources to assist you in your software development journey:
 
-- [Official RADSAT-SK2 Website](https://skcubesat.ca/)
-- [Project Roadmap](docs/Roadmap.md)
-## Branching
+- [Official RADSAT-SK2 Website](http://skcubesat.ca)
 
-## Directory Structure
 
-(UNFINISHED)
+# (INCOMPLETE)
