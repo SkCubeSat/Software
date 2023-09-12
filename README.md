@@ -64,6 +64,28 @@ We welcome contributions from anyone interested in improving the RADSAT-SK2 soft
 
 ## Resources
 
+## Getting started with the PocketBeagle
+1. Connect the PocketBeagle to your computer using the microUSB cable.
+2. Paste http://192.168.7.2:3000 (Windows) or http://192.168.6.2:3000 (MAC or Linux) depending on your operating system in a browser.
+3. Create a new text file in the web editor
+    ![alt text](https://github.com/beagleboard/pocketbeagle/wiki/images/SRM1_cloud9blinkPB.png)
+4. Copy and paste the below code into the editor
+   ```
+   var b = require('bonescript');
+    var state = b.LOW;
+    b.pinMode("USR3", b.OUTPUT);
+    setInterval(toggle, 250);  // toggle 4 times a second, every 250ms
+    function toggle() {
+        if(state == b.LOW) state = b.HIGH;
+        else state = b.LOW;
+        b.digitalWrite("USR3", state);
+    }
+   ```
+
+5. Save the new text file as blinkusr3.js within the default directory
+6. run ``` node blinkusr3.js ``` in the terminal
+7. 
+
 Here are some helpful resources to assist you in your software development journey:
 
 - [Official RADSAT-SK2 Website](http://skcubesat.ca)
