@@ -1,13 +1,14 @@
-Welcome to Lumache's documentation!
-===================================
+Welcome to RADSAT-SK2 Software documentation!
+=============================================
 
-**Lumache** (/lu'make/) is a Python library for cooks and food lovers
-that creates recipes mixing random ingredients.
-It pulls data from the `Open Food Facts database <https://world.openfoodfacts.org/>`_
-and offers a *simple* and *intuitive* API.
+**RADSAT-SK2** (Radiation Satellite Saskatchewan 2) is the second cube satellite designed
+at the University of Saskatchewan.
 
-Check out the :doc:`usage` section for further information, including
-how to :ref:`installation` the project.
+Find more about the project at our `main website <https://world.openfoodfacts.org/>`_
+Check out our organization GitHub page and all other repositories at  `SkCubeSat <https://github.com/SkCubeSat>`_
+
+To get started Check out the :doc:`getting started` section for further information, including
+how to :ref:`contribute` to the project.
 
 .. note::
 
