@@ -1,0 +1,9 @@
+version: '3.3'
+services:
+  linux:
+    build: .
+    volumes:
+      - ./linux:/root
+    stdin_open: true
+    tty: true
+  
