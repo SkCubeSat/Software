@@ -26,3 +26,5 @@ CANDevice::write_data (unsigned int[] data, size_t size)
     write(s, &frame, sizeof(struct can_frame));
     return 0;
 }
+
+
