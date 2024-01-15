@@ -3,13 +3,16 @@ project(src)
 
 set(CMAKE_CXX_STANDARD 20)
 
-include_directories(classes)
+include_directories(src)
 
 add_executable(src
-        classes/CANDevice.cpp
-        classes/CANDevice.h
-        classes/I2CDevice.h
-        classes/SPIDevice.h
+        src/CANDevice.cpp
+        src/CANDevice.h
+        src/I2CDevice.h
+        src/SPIDevice.h
         main.cpp
-        classes/Util/GPIO/GPIO.h
-        classes/Util/GPIO/GPIO.cpp)
+        src/Core/include/GPIO.h
+        src/Core/src/GPIO.cpp
+        src/Util/File.h
+        src/Util/File.cpp
+        src/Core/include/Core.h)
