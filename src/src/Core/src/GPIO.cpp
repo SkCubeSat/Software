@@ -25,8 +25,7 @@
  * For more details, see http://www.derekmolloy.ie/
  */
 
-#include "include/GPIO.h"
-#include "Core/include/GPIO.h"
+#include "GPIO.h"
 
 
 namespace PB

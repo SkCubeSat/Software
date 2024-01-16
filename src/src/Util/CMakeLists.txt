@@ -1,9 +1,9 @@
 cmake_minimum_required (VERSION 3.26)
 
-project ("Core" VERSION 0.1 LANGUAGES CXX DESCRIPTION "Core functionalities")
+project ("Util" VERSION 0.1 LANGUAGES CXX DESCRIPTION "Utilities")
 
 add_library(${PROJECT_NAME}
-"src/GPIO.cpp"
+"src/File.cpp"
 )
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
@@ -16,8 +16,5 @@ target_include_directories(${PROJECT_NAME}
 	"include"
 )
 
-target_link_libraries(${PROJECT_NAME}
-PRIVATE
-gpiod
-Util
-)
+
+
