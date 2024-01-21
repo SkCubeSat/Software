@@ -1,10 +1,17 @@
 #pragma once
 
+/*
+ * Doc :
+ * https://libgpiod.readthedocs.io/en/latest/group__gpiod__cxx.html
+ * Examples :
+ * https://git.kernel.org/pub/scm/libs/libgpiod/libgpiod.git/tree/bindings/cxx/examples
+ */
+
 #include <File.h>
 
 #include <sstream>
 #include <unistd.h>
-#include <gpiod.h>
+#include <gpiod.hpp>
 
 namespace PB
 {

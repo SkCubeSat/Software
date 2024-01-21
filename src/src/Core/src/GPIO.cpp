@@ -35,7 +35,7 @@ namespace PB
 
 	/**
 	 *
-	 * @param number The include number for the BBB
+	 * @param Number The include number for the BBB
 	 */
     GPIO::GPIO(uint32_t Number) : m_Number(Number)
 	{
