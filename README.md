@@ -84,7 +84,6 @@ We welcome contributions from anyone interested in improving the RADSAT-SK2 soft
 
 5. Save the new text file as blinkusr3.js within the default directory
 6. run `node blinkusr3.js` in the terminal
-7.
 
 Here are some helpful resources to assist you in your software development journey:
 
