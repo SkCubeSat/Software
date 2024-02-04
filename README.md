@@ -1,4 +1,5 @@
 # Software
+
 Code and Documentation for USST's second Canadian CUBESAT Project: The RADSAT-SK2/CUBICS Satellite
 
 Welcome to the RADSAT-SK2 project's software sub-team documentation repository! This folder contains all the informal documentation related to the software development aspects of the project. Here, you will find valuable information, guidelines, and resources to assist you throughout the development process.
@@ -15,22 +16,19 @@ Welcome to the RADSAT-SK2 project's software sub-team documentation repository! 
 
 ## Introduction
 
-The RADSAT-SK2 project is an exciting endeavor aimed at designing a 2U Cube Satellite. The software sub-team plays a crucial role in developing the software components that enable the satellite's functionality. This documentation serves as a knowledge base for team members and contributors, providing insights and instructions for the software development process.
+The RADSAT-SK2 project is an exciting endeavor aimed at designing a 3U Cube Satellite. The software sub-team plays a crucial role in developing the software components that enable the satellite's functionality. This documentation serves as a knowledge base for team members and contributors, providing insights and instructions for the software development process.
 
 ## Getting Started
 
 To get started with the RADSAT-SK2 software sub-team, follow these steps:
 
 1. Clone this repository to your local machine using the following command:
-    
-    `git clone https://github.com/USST-CUBICS/Software`
-    
+
+   `git clone https://github.com/USST-CUBICS/Software`
+
 2. Install any required dependencies as specified in the project's main repository.
-    
 3. Familiarize yourself with the project's overall structure, guidelines, and development practices outlined in this documentation.
-    
 4. Explore the available resources and references to enhance your understanding of the project.
-    
 
 ## Project Structure
 
@@ -65,11 +63,13 @@ We welcome contributions from anyone interested in improving the RADSAT-SK2 soft
 ## Resources
 
 ## Getting started with the PocketBeagle
+
 1. Connect the PocketBeagle to your computer using the microUSB cable.
 2. Paste http://192.168.7.2:3000 (Windows) or http://192.168.6.2:3000 (MAC or Linux) depending on your operating system in a browser.
 3. Create a new text file in the web editor
-    ![alt text](https://github.com/beagleboard/pocketbeagle/wiki/images/SRM1_cloud9blinkPB.png)
+   ![alt text](https://github.com/beagleboard/pocketbeagle/wiki/images/SRM1_cloud9blinkPB.png)
 4. Copy and paste the below code into the editor
+
    ```
    var b = require('bonescript');
     var state = b.LOW;
@@ -83,12 +83,11 @@ We welcome contributions from anyone interested in improving the RADSAT-SK2 soft
    ```
 
 5. Save the new text file as blinkusr3.js within the default directory
-6. run ``` node blinkusr3.js ``` in the terminal
-7. 
+6. run `node blinkusr3.js` in the terminal
+7.
 
 Here are some helpful resources to assist you in your software development journey:
 
 - [Official RADSAT-SK2 Website](http://skcubesat.ca)
-
 
 # (INCOMPLETE)
