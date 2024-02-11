@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.26)
+cmake_minimum_required (VERSION 3.13)
 
 project ("Util" VERSION 0.1 LANGUAGES CXX DESCRIPTION "Utilities")
 

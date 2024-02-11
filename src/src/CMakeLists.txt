@@ -1,7 +1,7 @@
 add_subdirectory(Util)
 add_subdirectory(Core)
 
-cmake_minimum_required (VERSION 3.26)
+cmake_minimum_required (VERSION 3.13)
 
 add_executable(${PROJECT_NAME}
 "main.cpp"
