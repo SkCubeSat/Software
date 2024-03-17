@@ -153,6 +153,12 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+# ide files
+.vs/
 .vscode/
+.idea/
 
 # End of https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks
+
+# KubOS box
+KubOS/

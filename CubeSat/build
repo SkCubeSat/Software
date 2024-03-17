@@ -1,0 +1,2 @@
+#!/bin/bash
+CC=/usr/bin/bbb_toolchain/usr/bin/arm-linux-gcc cargo kubos -c build -t kubos-linux-beaglebone-gcc

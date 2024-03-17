@@ -1,7 +1,7 @@
-#include <Core.h>
+// #include <Core.h>
 #include <iostream>
 #include <thread>
-
+#include <chrono>
 #include <gpiod.hpp>
 
 int main()
@@ -16,7 +16,7 @@ int main()
                     gpiod::line_settings().set_direction(
                             gpiod::line::direction::OUTPUT))
             .do_request();
-
+    /*
     while(true)
     {
         std::cout << LineOffset << "=" << LineValue << ::std::endl;
@@ -24,8 +24,10 @@ int main()
         std::this_thread::sleep_for(std::chrono::seconds(1));
         LineValue = LineValue == gpiod::line::value::ACTIVE ?
                 gpiod::line::value::INACTIVE : gpiod::line::value::ACTIVE;
-        request.set_value(LineOffset, LineValue);
+        LineRequest.set_value(LineOffset, LineValue);
     }
 
-	return 0;
+	return 0;*/
+
+    std::cout << "hello";
 }

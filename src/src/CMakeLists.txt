@@ -1,5 +1,5 @@
 add_subdirectory(Util)
-add_subdirectory(Core)
+# add_subdirectory(Core)
 
 cmake_minimum_required (VERSION 3.26)
 
@@ -14,6 +14,7 @@ endif()
 
 target_link_libraries(${PROJECT_NAME} 
 	PRIVATE
-	Core
+	gpiod
+	# Core
 	Util
 )
