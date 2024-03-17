@@ -27,7 +27,5 @@ int main()
         LineRequest.set_value(LineOffset, LineValue);
     }
 
-	return 0;*/
-
-    std::cout << "hello";
+	return 0;
 }
