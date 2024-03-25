@@ -9,7 +9,6 @@ Check out our organization GitHub page and all other repositories at  `SkCubeSat
 
 To get started Check out the :doc:`getting started` section for further information, including
 how to :ref:`contribute` to the project.
-This is an addition to the file
 
 .. note::
 
@@ -22,5 +21,4 @@ Contents
    :maxdepth: 1
 
    getting started
-   api
    documentation
