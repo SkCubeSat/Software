@@ -47,6 +47,13 @@ To preview your changes live as you edit the documentation:
 
 2. Open your browser and navigate to :code:`http://127.0.0.1:8000/` to view the documentation.
 
-3. if you want to push the documentation make sure you ignore the `_build` folders that you create.
+3. Alternatively, if you want to serve the documentation from the `radsat-server` computer. You can simply specify the host of the tailscale ip address. You can verify the ip address of the device you are on by running ``ifconfig`` and looking for ``tailscale0``. The ip address will be listed under ``inet``. Once you've determined the ip you can run the command below:
+
+.. code-block::
+
+   sphinx-autobuild source source/_build/html --host 100.91.27.26
+
+Replace the ip address with the one you found from the ``ifconfig`` command.
+This way you dont even have to run the server on your local machine and instead you can use the linuxbox to serve the documentation while you are working in it.
 
 
