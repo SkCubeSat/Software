@@ -1,0 +1,3 @@
+---
+# openSUSE-specific variables
+pkg_mgr: zypper 

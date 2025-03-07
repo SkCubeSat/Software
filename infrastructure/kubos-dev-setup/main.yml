@@ -1,0 +1,32 @@
+---
+- name: Kubos Development Environment Setup
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "{{ item }}"
+      with_first_found:
+        - "vars/{{ ansible_os_family }}.yml"
+        - "vars/default.yml"
+
+    - name: Setup Windows environment
+      ansible.builtin.include_tasks: tasks/windows.yml
+      when: ansible_os_family == "Windows"
+
+    - name: Setup MacOS environment
+      ansible.builtin.include_tasks: tasks/macos.yml
+      when: ansible_os_family == "Darwin"
+
+    - name: Setup Linux environment
+      ansible.builtin.include_tasks: tasks/linux.yml
+      when: ansible_os_family == "Debian" or ansible_os_family == "RedHat" or ansible_os_family == "Archlinux" or ansible_os_family == "Suse"
+
+    # Common tasks for all platforms
+    - name: Ensure git is installed
+      ansible.builtin.include_tasks: tasks/git.yml
+
+    - name: Install VirtualBox
+      ansible.builtin.include_tasks: tasks/virtualbox.yml
+
+    - name: Install Vagrant
+      ansible.builtin.include_tasks: tasks/vagrant.yml

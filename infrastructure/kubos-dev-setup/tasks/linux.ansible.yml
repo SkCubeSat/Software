@@ -1,0 +1,36 @@
+---
+# Linux-specific tasks
+
+- name: "Detect package manager"
+  ansible.builtin.set_fact:
+    pkg_mgr: "{{ ansible_pkg_mgr }}"
+
+- name: "Update package cache (Debian/Ubuntu)"
+  ansible.builtin.apt:
+    update_cache: true
+  when: pkg_mgr == "apt"
+
+- name: "Update package cache (RHEL/CentOS)"
+  ansible.builtin.yum:
+    update_cache: true
+  when: pkg_mgr == "yum"
+
+- name: "Update package cache (Fedora)"
+  ansible.builtin.dnf:
+    update_cache: true
+  when: pkg_mgr == "dnf"
+
+- name: "Update package cache (Arch Linux)"
+  community.general.pacman:
+    update_cache: true
+  when: pkg_mgr == "pacman"
+
+- name: "Update package cache (openSUSE)"
+  community.general.zypper:
+    name: "*"
+    update_cache: true
+  when: pkg_mgr == "zypper"
+
+- name: "Display detected package manager"
+  ansible.builtin.debug:
+    msg: "Detected package manager: {{ pkg_mgr }}"

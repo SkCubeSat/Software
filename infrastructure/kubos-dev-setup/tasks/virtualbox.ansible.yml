@@ -1,0 +1,53 @@
+---
+# VirtualBox installation tasks
+
+- name: "Install VirtualBox on Windows"
+  chocolatey.chocolatey.win_chocolatey:
+    name: virtualbox
+    state: present
+  when: ansible_os_family == "Windows"
+
+- name: "Install VirtualBox on MacOS"
+  community.general.homebrew_cask:
+    name: virtualbox
+    state: present
+  when: ansible_os_family == "Darwin"
+
+- name: "Install VirtualBox on Debian/Ubuntu"
+  ansible.builtin.apt:
+    name: VirtualBox
+    state: present
+  when: ansible_os_family == "Debian" and pkg_mgr == "apt"
+
+- name: "Install VirtualBox on RHEL/CentOS"
+  ansible.builtin.yum:
+    name: VirtualBox
+    state: present
+  when: ansible_os_family == "RedHat" and pkg_mgr == "yum"
+
+- name: "Install VirtualBox on Fedora"
+  ansible.builtin.dnf:
+    name: VirtualBox
+    state: present
+  when: ansible_os_family == "RedHat" and pkg_mgr == "dnf"
+
+- name: "Install VirtualBox on Arch Linux"
+  community.general.pacman:
+    name: virtualbox
+    state: present
+  when: ansible_os_family == "Archlinux" and pkg_mgr == "pacman"
+
+- name: "Install VirtualBox on openSUSE"
+  community.general.zypper:
+    name: virtualbox
+    state: present
+  when: ansible_os_family == "Suse" and pkg_mgr == "zypper"
+
+# Add user to vboxusers group on Linux
+- name: Add user to vboxusers group on Linux
+  ansible.builtin.user:
+    name: "{{ ansible_user_id }}"
+    groups: vboxusers
+    append: true
+  become: true
+  when: ansible_os_family != "Windows" and ansible_os_family != "Darwin"

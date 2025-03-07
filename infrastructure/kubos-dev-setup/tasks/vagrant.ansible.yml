@@ -1,0 +1,44 @@
+---
+# Vagrant installation tasks
+
+- name: "Install Vagrant on Windows"
+  chocolatey.chocolatey.win_chocolatey:
+    name: vagrant
+    state: present
+  when: ansible_os_family == "Windows"
+
+- name: "Install Vagrant on MacOS"
+  community.general.homebrew_cask:
+    name: vagrant
+    state: present
+  when: ansible_os_family == "Darwin"
+
+- name: "Install Vagrant on Debian/Ubuntu"
+  ansible.builtin.apt:
+    name: vagrant
+    state: present
+  when: ansible_os_family == "Debian" and pkg_mgr == "apt"
+
+- name: "Install Vagrant on RHEL/CentOS"
+  ansible.builtin.yum:
+    name: vagrant
+    state: present
+  when: ansible_os_family == "RedHat" and pkg_mgr == "yum"
+
+- name: "Install Vagrant on Fedora"
+  ansible.builtin.dnf:
+    name: vagrant
+    state: present
+  when: ansible_os_family == "RedHat" and pkg_mgr == "dnf"
+
+- name: "Install Vagrant on Arch Linux"
+  community.general.pacman:
+    name: vagrant
+    state: present
+  when: ansible_os_family == "Archlinux" and pkg_mgr == "pacman"
+
+- name: "Install Vagrant on openSUSE"
+  community.general.zypper:
+    name: vagrant
+    state: present
+  when: ansible_os_family == "Suse" and pkg_mgr == "zypper"

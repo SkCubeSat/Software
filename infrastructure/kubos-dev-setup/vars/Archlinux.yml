@@ -1,0 +1,3 @@
+---
+# Arch Linux-specific variables
+pkg_mgr: pacman 

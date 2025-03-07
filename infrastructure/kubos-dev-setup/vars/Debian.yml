@@ -1,0 +1,3 @@
+---
+# Debian-specific variables
+pkg_mgr: apt 

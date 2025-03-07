@@ -1,0 +1,3 @@
+---
+# RedHat-specific variables
+# This will be overridden by the detected package manager in the Linux tasks 
