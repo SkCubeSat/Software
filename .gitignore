@@ -193,3 +193,5 @@ Cargo.lock
 # End of custom additions
 venv/
 __pycache__/
+
+.vagrant/
