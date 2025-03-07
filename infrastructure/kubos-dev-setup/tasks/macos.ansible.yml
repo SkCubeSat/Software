@@ -1,0 +1,14 @@
+---
+# MacOS-specific tasks
+
+- name: Check if Homebrew is installed
+  ansible.builtin.command: which brew
+  register: brew_check
+  failed_when: false
+  changed_when: false
+
+- name: Install Homebrew
+  ansible.builtin.shell: |
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  when: brew_check.rc != 0
+  changed_when: brew_check.rc != 0
