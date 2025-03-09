@@ -1,3 +1,0 @@
-[submodule "kubos"]
-	path = kubos
-	url = git@github.com:kubos/kubos.git
