@@ -1,0 +1,33 @@
+[workspace]
+
+# This *must* contain all crates in this workspace
+members = [
+    # Pure Rust crates
+    "mission-applications/first-test-application",
+]
+
+# This contains just pure Rust crates to allow for running
+# cargo commands without C-build dependencies
+default-members = ["mission-applications/first-test-application"]
+
+[workspace.package]
+version = "1.23.0"
+description = "Radsat-SK2 software using KubOS: Linux-based OS and middleware for Satellites"
+documentation = "https://docs.kubos.com"
+repository = "https://github.com/kubos/kubos"
+license = "Apache-2.0"
+
+[profile.release]
+lto = true
+opt-level = "z"
+panic = "abort"
+codegen-units = 1
+
+[profile.bench]
+lto = true
+opt-level = "z"
+panic = "abort"
+codegen-units = 1
+
+[workspace.metadata.release]
+tag-name = "{{version}}"
