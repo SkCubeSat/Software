@@ -195,3 +195,8 @@ venv/
 __pycache__/
 
 .vagrant/
+
+# Kubos service directories and files
+**/app-registry/
+**/schedules/
+*.db

@@ -1,0 +1,13 @@
+{
+    "tasks": [
+        {
+            "description": "execute rust-mission-app",
+            "delay": "10s",
+            "period": "10s",
+            "app": {
+                "name": "rust-mission-app",
+                "config": "/home/vagrant/kubos/tools/local_config.toml"
+            }
+        }
+    ]
+}
