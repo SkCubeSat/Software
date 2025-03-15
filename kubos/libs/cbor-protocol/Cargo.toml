@@ -1,0 +1,13 @@
+[package]
+name = "cbor-protocol"
+version = "0.1.0"
+authors = ["Ryan Plauche <ryan@kubos.co>"]
+edition = "2018"
+
+[dependencies]
+serde_cbor = "0.8"
+thiserror = "1.0.69"
+log = "^0.4.0"
+
+[package.metadata.release]
+release = false

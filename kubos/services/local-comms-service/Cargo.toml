@@ -1,0 +1,17 @@
+[package]
+name = "local-comms-service"
+version = "0.1.0"
+authors = [
+    "Ryan Plauche <ryan@kubos.com>",
+    "William Greer <wgreer184@gmail.com>",
+]
+edition = "2018"
+
+[dependencies]
+anyhow = "1.0.97"
+kubos-comms = { path = "../../libs/kubos-comms" }
+radsat-system = { path = "../../apis/system-api" }
+log = "^0.4.0"
+
+[package.metadata.release]
+release = false
