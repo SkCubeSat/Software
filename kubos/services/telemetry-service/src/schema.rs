@@ -20,7 +20,7 @@ use diesel::sql_types::*;
 use diesel::RunQueryDsl;
 use flate2::write::GzEncoder;
 use flate2::Compression;
-use juniper::{FieldError, FieldResult, Value};
+use juniper::{graphql_object, FieldError, FieldResult, GraphQLInputObject, GraphQLObject, Value};
 use serde_derive::Serialize;
 use std::fs;
 use std::fs::File;
@@ -62,25 +62,29 @@ pub struct Entry {
     pub value: String,
 }
 
-graphql_object!(Entry: () |&self| {
-    description: "A telemetry entry"
-
-    field timestamp() -> f64 as "Timestamp" {
+// Updated to use the attribute-based syntax
+#[graphql_object(context = ())]
+impl Entry {
+    /// Timestamp
+    fn timestamp(&self) -> f64 {
         self.timestamp
     }
 
-    field subsystem() -> &str as "Subsystem name" {
+    /// Subsystem name
+    fn subsystem(&self) -> &str {
         &self.subsystem
     }
 
-    field parameter() -> &str as "Telemetry parameter" {
+    /// Telemetry parameter
+    fn parameter(&self) -> &str {
         &self.parameter
     }
 
-    field value() -> &str as "Telemetry value" {
+    /// Telemetry value
+    fn value(&self) -> &str {
         &self.value
     }
-});
+}
 
 fn query_db(
     database: &Arc<Mutex<kubos_telemetry_db::Database>>,
@@ -149,43 +153,56 @@ fn query_db(
 
 pub struct QueryRoot;
 
-graphql_object!(QueryRoot: Context |&self| {
-    // Test query to verify service is running without
-    // attempting to execute any actual logic
-    //
-    // {
-    //    ping: "pong"
-    // }
-    field ping() -> FieldResult<String>
-        as "Test service query"
-    {
+#[graphql_object(context = Context)]
+impl QueryRoot {
+    /// Test service query
+    fn ping() -> FieldResult<String> {
         Ok(String::from("pong"))
     }
 
-    field telemetry(
-        &executor,
+    /// Telemetry entries in database
+    fn telemetry(
+        &self,
+        context: &Context,
         timestamp_ge: Option<f64>,
         timestamp_le: Option<f64>,
         subsystem: Option<String>,
         parameter: Option<String>,
         parameters: Option<Vec<String>>,
         limit: Option<i32>,
-    ) -> FieldResult<Vec<Entry>>
-        as "Telemetry entries in database"
-    {
+    ) -> FieldResult<Vec<Entry>> {
         if parameter.is_some() && parameters.is_some() {
-            return Err(FieldError::new("The `parameter` and `parameters` input fields are mutually exclusive", Value::null()));
+            return Err(FieldError::new(
+                "The `parameter` and `parameters` input fields are mutually exclusive",
+                Value::null(),
+            ));
         }
 
         if let Some(param) = parameter {
-            query_db(&executor.context().subsystem.database, timestamp_ge, timestamp_le, subsystem, Some(vec![param]), limit)
+            query_db(
+                &context.subsystem.database,
+                timestamp_ge,
+                timestamp_le,
+                subsystem,
+                Some(vec![param]),
+                limit,
+            )
         } else {
-            query_db(&executor.context().subsystem.database, timestamp_ge, timestamp_le, subsystem, parameters, limit)
+            query_db(
+                &context.subsystem.database,
+                timestamp_ge,
+                timestamp_le,
+                subsystem,
+                parameters,
+                limit,
+            )
         }
     }
 
-    field routed_telemetry(
-        &executor,
+    /// Telemetry entries in database
+    fn routed_telemetry(
+        &self,
+        context: &Context,
         timestamp_ge: Option<f64>,
         timestamp_le: Option<f64>,
         subsystem: Option<String>,
@@ -193,18 +210,35 @@ graphql_object!(QueryRoot: Context |&self| {
         parameters: Option<Vec<String>>,
         limit: Option<i32>,
         output: String,
-        compress = true: bool,
-    ) -> FieldResult<String>
-        as "Telemetry entries in database"
-    {
+        compress: Option<bool>,
+    ) -> FieldResult<String> {
+        let compress = compress.unwrap_or(true);
+
         if parameter.is_some() && parameters.is_some() {
-            return Err(FieldError::new("The `parameter` and `parameters` input fields are mutually exclusive", Value::null()));
+            return Err(FieldError::new(
+                "The `parameter` and `parameters` input fields are mutually exclusive",
+                Value::null(),
+            ));
         }
 
         let entries = if let Some(param) = parameter {
-            query_db(&executor.context().subsystem.database, timestamp_ge, timestamp_le, subsystem, Some(vec![param]), limit)?
+            query_db(
+                &context.subsystem.database,
+                timestamp_ge,
+                timestamp_le,
+                subsystem,
+                Some(vec![param]),
+                limit,
+            )?
         } else {
-            query_db(&executor.context().subsystem.database, timestamp_ge, timestamp_le, subsystem, parameters, limit)?
+            query_db(
+                &context.subsystem.database,
+                timestamp_ge,
+                timestamp_le,
+                subsystem,
+                parameters,
+                limit,
+            )?
         };
 
         let entries = serde_json::to_vec(&entries)?;
@@ -212,9 +246,12 @@ graphql_object!(QueryRoot: Context |&self| {
         let output_str = output.clone();
         let output_path = Path::new(&output_str);
 
-        let file_name_raw = output_path.file_name()
+        let file_name_raw = output_path
+            .file_name()
             .ok_or_else(|| FieldError::new("Unable to parse output file name", Value::null()))?;
-        let file_name = file_name_raw.to_str().ok_or_else(|| FieldError::new("Unable to parse output file name to string", Value::null()))?;
+        let file_name = file_name_raw.to_str().ok_or_else(|| {
+            FieldError::new("Unable to parse output file name to string", Value::null())
+        })?;
 
         if let Some(parent) = output_path.parent() {
             fs::create_dir_all(parent)?;
@@ -240,7 +277,7 @@ graphql_object!(QueryRoot: Context |&self| {
             Ok(output)
         }
     }
-});
+}
 
 pub struct MutationRoot;
 
@@ -265,18 +302,26 @@ struct InsertEntry {
     value: String,
 }
 
-graphql_object!(MutationRoot: Context | &self | {
-    field insert(&executor, timestamp: Option<f64>, subsystem: String, parameter: String, value: String) -> FieldResult<InsertResponse> {
+#[graphql_object(context = Context)]
+impl MutationRoot {
+    fn insert(
+        &self,
+        context: &Context,
+        timestamp: Option<f64>,
+        subsystem: String,
+        parameter: String,
+        value: String,
+    ) -> FieldResult<InsertResponse> {
         let result = match timestamp {
             Some(time) => {
-                let mut db_lock = executor.context().subsystem.database.lock().map_err(|err| {
+                let mut db_lock = context.subsystem.database.lock().map_err(|err| {
                     log::error!("insert - Failed to get lock on database: {:?}", err);
                     err
                 })?;
                 db_lock.insert(time, &subsystem, &parameter, &value)
             }
             None => {
-                let mut db_lock = executor.context().subsystem.database.lock().map_err(|err| {
+                let mut db_lock = context.subsystem.database.lock().map_err(|err| {
                     log::error!("insert - Failed to get lock on database: {:?}", err);
                     err
                 })?;
@@ -293,12 +338,12 @@ graphql_object!(MutationRoot: Context | &self | {
         })
     }
 
-    field insert_bulk(
-        &executor,
+    fn insert_bulk(
+        &self,
+        context: &Context,
         timestamp: Option<f64>,
-        entries: Vec<InsertEntry>
-    ) -> FieldResult<InsertResponse>
-    {
+        entries: Vec<InsertEntry>,
+    ) -> FieldResult<InsertResponse> {
         let time = time::now_utc().to_timespec();
         let systime = time.sec as f64 + (f64::from(time.nsec) / 1_000_000_000.0);
 
@@ -314,7 +359,7 @@ graphql_object!(MutationRoot: Context | &self | {
             });
         }
 
-        let mut db_lock = executor.context().subsystem.database.lock().map_err(|err| {
+        let mut db_lock = context.subsystem.database.lock().map_err(|err| {
             log::error!("insert_bulk - Failed to get lock on database: {:?}", err);
             err
         })?;
@@ -330,14 +375,14 @@ graphql_object!(MutationRoot: Context | &self | {
         })
     }
 
-    field delete(
-        &executor,
+    fn delete(
+        &self,
+        context: &Context,
         timestamp_ge: Option<f64>,
         timestamp_le: Option<f64>,
         subsystem: Option<String>,
         parameter: Option<String>,
-    ) -> FieldResult<DeleteResponse>
-    {
+    ) -> FieldResult<DeleteResponse> {
         // We'll use a direct SQL query for delete to avoid diesel compatibility issues
         let mut conditions = Vec::new();
 
@@ -357,7 +402,7 @@ graphql_object!(MutationRoot: Context | &self | {
             conditions.push(format!("timestamp <= {}", time_le));
         }
 
-        let mut db_lock = executor.context().subsystem.database.lock().map_err(|err| {
+        let mut db_lock = context.subsystem.database.lock().map_err(|err| {
             log::error!("delete - Failed to get lock on database: {:?}", err);
             err
         })?;
@@ -368,8 +413,7 @@ graphql_object!(MutationRoot: Context | &self | {
             format!("DELETE FROM telemetry WHERE {}", conditions.join(" AND "))
         };
 
-        let result = diesel::sql_query(query)
-            .execute(&mut db_lock.connection);
+        let result = diesel::sql_query(query).execute(&mut db_lock.connection);
 
         match result {
             Ok(num) => Ok(DeleteResponse {
@@ -384,4 +428,4 @@ graphql_object!(MutationRoot: Context | &self | {
             }),
         }
     }
-});
+}

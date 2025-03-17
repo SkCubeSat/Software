@@ -202,68 +202,51 @@
 //! }
 //! ```
 
-#[macro_use]
-extern crate juniper;
+use env_logger;
+use kubos_service::Config;
+use kubos_service::Service;
+use log;
 
 mod schema;
 mod udp;
 
 use crate::schema::{MutationRoot, QueryRoot, Subsystem};
-use kubos_service::{Config, Logger, Service};
 use kubos_telemetry_db::Database;
-use log::error;
 
 fn main() {
-    Logger::init("kubos-telemetry-service").unwrap();
+    // Initialize logging
+    env_logger::init();
 
-    let config = Config::new("telemetry-service")
-        .map_err(|err| {
-            error!("Failed to load service config: {:?}", err);
-            err
-        })
-        .unwrap();
+    // Set up database connection
+    let mut database = Database::new("telemetry.db");
+    database.setup();
 
-    let db_path = config
-        .get("database")
-        .ok_or_else(|| {
-            error!("No database path found in config file");
-            "No database path found in config file"
-        })
-        .unwrap();
-    let db_path = db_path
-        .as_str()
-        .ok_or_else(|| {
-            error!("Failed to parse 'database' config value");
-            "Failed to parse 'database' config value"
-        })
-        .unwrap();
+    // Get configuration
+    let config = Config::new("telemetry-service").unwrap_or_else(|err| {
+        log::error!("Failed to load service config: {:?}", err);
+        std::process::exit(1);
+    });
 
-    let mut db = Database::new(db_path);
-    db.setup();
-
+    // Determine if we should set up a UDP connection for passively receiving
+    // telemetry for insertion
     let direct_udp = config.get("direct_port").map(|port| {
-        let host = config
-            .hosturl()
-            .ok_or_else(|| {
-                error!("Failed to load service URL");
-                "Failed to load service URL"
-            })
-            .unwrap();
+        let host = config.hosturl().unwrap_or_else(|| {
+            log::error!("Failed to load service URL");
+            std::process::exit(1);
+        });
         let mut host_parts = host.split(':').map(|val| val.to_owned());
-        let host_ip = host_parts
-            .next()
-            .ok_or_else(|| {
-                error!("Failed to parse service IP address");
-                "Failed to parse service IP address"
-            })
-            .unwrap();
+        let host_ip = host_parts.next().unwrap_or_else(|| {
+            log::error!("Failed to parse service IP address");
+            std::process::exit(1);
+        });
 
         format!("{}:{}", host_ip, port)
     });
 
+    // Create and start the service
     Service::new(
         config,
-        Subsystem::new(db, direct_udp),
+        Subsystem::new(database, direct_udp),
         QueryRoot,
         MutationRoot,
     )

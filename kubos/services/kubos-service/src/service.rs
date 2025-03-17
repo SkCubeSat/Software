@@ -14,14 +14,16 @@
 // limitations under the License.
 //
 
-use juniper::{Context as JuniperContext, GraphQLType, RootNode};
+use juniper::{
+    Context as JuniperContext, EmptySubscription, GraphQLType, GraphQLTypeAsync, RootNode,
+};
 use log::info;
 use radsat_system::Config;
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::{Arc, RwLock};
 
-use warp::{filters::BoxedFilter, Filter};
+use warp::{reply::Reply, Filter};
 
 /// Context struct used by a service to provide Juniper context,
 /// subsystem access and persistent storage.
@@ -84,7 +86,7 @@ impl<T> Context<T> {
 /// This structure represents a hardware service.
 ///
 /// Specifically the functionality provided by this struct
-/// exists to provide a GraphQL interface over UDP, a means
+/// exists to provide a GraphQL interface over HTTP, a means
 /// of exposing a subsystem to GraphQL queries and means
 /// for persistence throughout GraphQL queries.
 ///
@@ -104,8 +106,8 @@ impl<T> Context<T> {
 /// ```
 pub struct Service {
     config: Config,
-    /// The warp filter for the service
-    pub filter: BoxedFilter<(warp::http::response::Response<std::vec::Vec<u8>>,)>,
+    // Using a boxed filter that returns any type implementing Reply
+    filter: warp::filters::BoxedFilter<(Box<dyn Reply>,)>,
 }
 
 impl Service {
@@ -124,59 +126,90 @@ impl Service {
         mutation: Mutation,
     ) -> Self
     where
-        Query: GraphQLType<Context = Context<S>, TypeInfo = ()> + Send + Sync + 'static,
-        Mutation: GraphQLType<Context = Context<S>, TypeInfo = ()> + Send + Sync + 'static,
+        Query: GraphQLType<Context = Context<S>, TypeInfo = ()>
+            + GraphQLTypeAsync<Context = Context<S>>
+            + Send
+            + Sync
+            + 'static,
+        Mutation: GraphQLType<Context = Context<S>, TypeInfo = ()>
+            + GraphQLTypeAsync<Context = Context<S>>
+            + Send
+            + Sync
+            + 'static,
         S: Send + Sync + Clone + 'static,
     {
-        let root_node = RootNode::new(query, mutation);
+        // Create the root node with query, mutation, and empty subscription
+        let root_node = RootNode::new(query, mutation, EmptySubscription::<Context<S>>::new());
+
         let context = Context {
             subsystem,
             storage: Arc::new(RwLock::new(HashMap::new())),
         };
 
-        // Make the subsystem and other persistent data available to all endpoints
-        let context = warp::any().map(move || context.clone()).boxed();
+        // Wrap the root node in an Arc to share it
+        let schema = Arc::new(root_node);
 
-        let graphql_filter = juniper_warp::make_graphql_filter(root_node, context);
+        // Clone context for filter use
+        let ctx = context.clone();
 
-        // If the path ends in "graphiql" process the request using the graphiql interface
-        let filter = warp::path("graphiql")
-            .and(juniper_warp::graphiql_filter("/graphql"))
-            // Otherwise, just process the request as normal GraphQL
-            .or(graphql_filter)
-            // Wrap it all up nicely so we can save the filter for later
-            .unify()
+        // Create the GraphQL routes
+        // POST /graphql -> GraphQL API
+        let graphql =
+            warp::path("graphql")
+                .and(warp::post())
+                .and(juniper_warp::make_graphql_filter(
+                    schema,
+                    warp::any().map(move || ctx.clone()),
+                ));
+
+        // GET /graphiql -> GraphiQL interface
+        let graphiql = warp::path("graphiql")
+            .and(warp::get())
+            .and(juniper_warp::graphiql_filter("/graphql", None));
+
+        // Create a single filter that handles both routes and box the reply
+        let routes = graphql
+            .or(graphiql)
+            .map(|reply| Box::new(reply) as Box<dyn Reply>)
             .boxed();
 
-        Service { config, filter }
+        Service {
+            config,
+            filter: routes,
+        }
     }
 
-    /// Starts the service's GraphQL/UDP server. This function runs
+    /// Starts the service's GraphQL/HTTP server. This function runs
     /// without return.
     ///
     /// # Panics
     ///
-    /// The UDP interface will panic if the ip address and port provided
-    /// cannot be bound (like if they are already in use), or if for some reason the socket fails
-    /// to receive a message.
+    /// The HTTP interface will panic if the ip address and port provided
+    /// cannot be bound (like if they are already in use).
     pub fn start(self) {
-        let hosturl = self
-            .config
-            .hosturl()
-            .ok_or_else(|| {
-                log::error!("Failed to load service URL");
-                "Failed to load service URL"
-            })
-            .unwrap();
-        let addr = hosturl
-            .parse::<SocketAddr>()
-            .map_err(|err| {
-                log::error!("Failed to parse SocketAddr: {:?}", err);
-                err
-            })
-            .unwrap();
-        info!("Listening on: {}", addr);
+        let rt = tokio::runtime::Runtime::new().unwrap();
 
-        warp::serve(self.filter).run(addr);
+        rt.block_on(async {
+            let hosturl = self
+                .config
+                .hosturl()
+                .ok_or_else(|| {
+                    log::error!("Failed to load service URL");
+                    "Failed to load service URL"
+                })
+                .unwrap();
+
+            let addr = hosturl
+                .parse::<SocketAddr>()
+                .map_err(|err| {
+                    log::error!("Failed to parse SocketAddr: {:?}", err);
+                    err
+                })
+                .unwrap();
+
+            info!("Listening on: {}", addr);
+
+            warp::serve(self.filter).run(addr).await;
+        });
     }
 }

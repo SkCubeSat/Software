@@ -109,5 +109,6 @@ mod macros;
 mod service;
 
 pub use crate::service::{Context, Service};
+pub use juniper::{EmptySubscription, GraphQLType, GraphQLTypeAsync, RootNode};
 pub use radsat_system::logger as Logger;
 pub use radsat_system::Config;

@@ -16,8 +16,8 @@
 
 #![allow(clippy::blocks_in_conditions)]
 
+use anyhow::{anyhow, bail, Result};
 use channel_protocol::{ChannelMessage, ChannelProtocol};
-use failure::bail;
 use log::{error, info, warn};
 use radsat_system::Config as ServiceConfig;
 use shell_protocol::{ProcessHandler, ProtocolError, ShellMessage, ShellProtocol};
@@ -41,7 +41,7 @@ fn list_processes(
     host: &str,
     remote: &str,
     threads: &Arc<Mutex<HashMap<u32, ThreadProcess>>>,
-) -> Result<(), failure::Error> {
+) -> Result<()> {
     let proc_list: HashMap<u32, (String, u32)> = threads
         .lock()
         .map_err(|err| {
@@ -73,7 +73,7 @@ fn spawn_process(
     remote_addr: &str,
     timeout: Duration,
     shared_threads: Arc<Mutex<HashMap<u32, ThreadProcess>>>,
-) -> Result<(u32, Sender<(ChannelMessage, SocketAddr)>), failure::Error> {
+) -> Result<(u32, Sender<(ChannelMessage, SocketAddr)>)> {
     #[allow(clippy::type_complexity)]
     let (sender, receiver): (
         Sender<(ChannelMessage, SocketAddr)>,
@@ -148,14 +148,11 @@ fn thread_body(
 // Retrieves and parses next shell message
 fn get_message(
     cbor_proto: &cbor_protocol::Protocol,
-) -> Result<
-    (
-        channel_protocol::ChannelMessage,
-        shell_protocol::ShellMessage,
-        std::net::SocketAddr,
-    ),
-    failure::Error,
-> {
+) -> Result<(
+    channel_protocol::ChannelMessage,
+    shell_protocol::ShellMessage,
+    std::net::SocketAddr,
+)> {
     let (source, message) = cbor_proto.recv_message_peer()?;
 
     let channel_message = channel_protocol::parse_message(message)?;
@@ -166,17 +163,17 @@ fn get_message(
 }
 
 // Starts and runs the main loop receiving new shell protocol messages
-pub fn recv_loop(config: &ServiceConfig) -> Result<(), failure::Error> {
+pub fn recv_loop(config: &ServiceConfig) -> Result<()> {
     // Get and bind our UDP listening socket
     let host = config
         .hosturl()
-        .ok_or_else(|| failure::format_err!("Unable to fetch addr for service"))?;
+        .ok_or_else(|| anyhow!("Unable to fetch addr for service"))?;
 
     // Extract our local IP address so we can spawn child sockets later
     let mut host_parts = host.split(':').map(|val| val.to_owned());
     let host_addr = host_parts
         .next()
-        .ok_or_else(|| failure::format_err!("Failed to parse service IP address"))?;
+        .ok_or_else(|| anyhow!("Failed to parse service IP address"))?;
 
     let c_protocol =
         cbor_protocol::Protocol::new(&host.clone(), shell_protocol::CHUNK_SIZE as usize);

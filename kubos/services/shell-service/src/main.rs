@@ -16,6 +16,7 @@
 
 #![deny(warnings)]
 
+use anyhow::anyhow;
 use log::{error, info, warn};
 use radsat_system::logger as ServiceLogger;
 use radsat_system::Config as ServiceConfig;
@@ -35,7 +36,7 @@ fn main() {
         .hosturl()
         .ok_or_else(|| {
             error!("Failed to load service URL");
-            failure::format_err!("Failed to load service URL")
+            anyhow!("Failed to load service URL")
         })
         .unwrap();
 
