@@ -17,6 +17,7 @@ use std::io::{BufRead, BufReader, Read};
 use std::os::unix::fs::MetadataExt;
 use std::str::FromStr;
 
+use crate::error::Error;
 use crate::process::root_dir;
 
 #[derive(Clone)]
@@ -27,7 +28,7 @@ pub struct UserInfo {
 
 impl UserInfo {
     /// Build user/group info for a running process by PID
-    pub fn from_pid(pid: i32) -> Result<Self, failure::Error> {
+    pub fn from_pid(pid: i32) -> Result<Self, Error> {
         let meta = fs::metadata(root_path!("proc", pid))?;
         Ok(UserInfo::new(meta.uid(), meta.gid()))
     }

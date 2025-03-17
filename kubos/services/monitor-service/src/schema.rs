@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-use juniper::{self, FieldError, FieldResult};
+use juniper::{graphql_object, FieldError, FieldResult};
 
 use crate::loadavg;
 use crate::meminfo;
@@ -26,42 +26,40 @@ type Context = kubos_service::Context<()>;
 pub struct QueryRoot;
 
 // Base GraphQL query model
-graphql_object!(QueryRoot: Context as "Query" |&self| {
-    field ping() -> FieldResult<String>
-    {
+#[graphql_object(context = Context)]
+impl QueryRoot {
+    fn ping() -> FieldResult<String> {
         Ok(String::from("pong"))
     }
 
-    field mem_info(&executor) -> FieldResult<MemInfoResponse> {
-
+    fn mem_info(&self, _context: &Context) -> FieldResult<MemInfoResponse> {
         meminfo::MemInfo::from_proc()
             .map(|info| MemInfoResponse { info })
             .map_err(|err| FieldError::new(err, juniper::Value::null()))
     }
 
-    field ps(&executor, pids: Option<Vec<i32>>) -> FieldResult<Vec<PSResponse>>
-    {
+    fn ps(&self, _context: &Context, pids: Option<Vec<i32>>) -> FieldResult<Vec<PSResponse>> {
         let pids_vec: Vec<i32> = match pids {
             Some(vec) => vec,
-            None => process::running_pids()?
+            None => process::running_pids()?,
         };
 
         Ok(pids_vec.into_iter().map(PSResponse::new).collect())
     }
 
-    field load_avg(&executor) -> FieldResult<LoadAvgResponse> {
+    fn load_avg(&self, _context: &Context) -> FieldResult<LoadAvgResponse> {
         loadavg::LoadAvg::from_proc()
             .map(|avgs| LoadAvgResponse { avgs })
             .map_err(|err| FieldError::new(err, juniper::Value::null()))
     }
-});
+}
 
 pub struct MutationRoot;
 
 // Base GraphQL mutation model
-graphql_object!(MutationRoot: Context as "Mutation" |&self| {
-    field noop(&executor) -> FieldResult<()>
-    {
-        Ok(())
+#[graphql_object(context = Context)]
+impl MutationRoot {
+    fn noop(&self, _context: &Context) -> FieldResult<bool> {
+        Ok(true)
     }
-});
+}

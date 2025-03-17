@@ -17,6 +17,8 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::str;
 
+use crate::error::Error;
+
 #[derive(Clone, Debug, Default, PartialEq, PartialOrd)]
 pub struct LoadAvg {
     load_1m: Option<f64>,
@@ -40,7 +42,7 @@ impl LoadAvg {
         s.parse().ok()
     }
 
-    pub fn parse<R>(mut raw: R) -> Result<LoadAvg, failure::Error>
+    pub fn parse<R>(mut raw: R) -> Result<LoadAvg, Error>
     where
         R: BufRead,
     {
@@ -72,7 +74,7 @@ impl LoadAvg {
         Ok(load_avg)
     }
 
-    pub fn from_proc() -> Result<LoadAvg, failure::Error> {
+    pub fn from_proc() -> Result<LoadAvg, Error> {
         let file = File::open("/proc/loadavg")?;
         let reader = BufReader::new(file);
 

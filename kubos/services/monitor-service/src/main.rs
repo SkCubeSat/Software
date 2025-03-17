@@ -63,13 +63,11 @@
 //! }
 //! ```
 
-#[macro_use]
-extern crate juniper;
-
 use crate::schema::{MutationRoot, QueryRoot};
 use kubos_service::{Config, Logger, Service};
 use log::error;
 
+mod error;
 mod loadavg;
 mod meminfo;
 mod objects;

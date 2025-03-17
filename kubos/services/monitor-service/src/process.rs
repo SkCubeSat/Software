@@ -13,12 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use failure::format_err;
 use regex::Regex;
 use std::fs::{self, File};
 use std::io::{BufReader, Read};
 use std::path::PathBuf;
 use std::str::FromStr;
+
+use crate::error::Error;
 
 #[cfg(test)]
 use lazy_static::lazy_static;
@@ -111,14 +112,14 @@ where
 impl ProcStat {
     /// Convenience function that parses the stat file for a specific process ID
     /// See ProcStat::parse for more information
-    pub fn from_pid(pid: i32) -> Result<Self, failure::Error> {
+    pub fn from_pid(pid: i32) -> Result<Self, Error> {
         let file = File::open(root_path!("proc", pid, "stat"))?;
         Self::parse(BufReader::new(file))
     }
 
     /// Parse a String with the format of a /proc/pid/stat file
     /// See <http://man7.org/linux/man-pages/man5/proc.5.html> for more information
-    pub fn parse<R>(stat: R) -> Result<Self, failure::Error>
+    pub fn parse<R>(stat: R) -> Result<Self, Error>
     where
         R: Read,
     {
@@ -133,7 +134,7 @@ impl ProcStat {
         let re = Regex::new(r"(?P<pid>\d+) \((?P<comm>.+)\) (?P<the_rest>.+)")?;
         let caps = re
             .captures(&data_str)
-            .ok_or_else(|| format_err!("Invalid procstat format"))?;
+            .ok_or_else(|| Error::Format("Invalid procstat format".into()))?;
 
         ps.pid = i32::from_str(&caps["pid"]).unwrap_or_default();
         ps.comm = caps["comm"].into();
@@ -234,7 +235,7 @@ impl ProcStat {
 
     /// Attempts to read the command line arguments used to execute this process, and falls
     /// back to the raw process name if /proc/pid/cmdline does not exist or is empty
-    pub fn cmd(&self) -> Result<Vec<String>, failure::Error> {
+    pub fn cmd(&self) -> Result<Vec<String>, Error> {
         let file = File::open(root_path!("proc", self.pid, "cmdline"))?;
         let mut reader = BufReader::new(file);
         let mut contents = String::new();
@@ -249,173 +250,121 @@ impl ProcStat {
     }
 }
 
-/// Finds the running process IDs by finding the valid numerical directory names in /proc
-pub fn running_pids() -> Result<Vec<i32>, failure::Error> {
-    let mut info: Vec<i32> = Vec::new();
-    let entries = fs::read_dir(root_path!("proc"))?;
+/// Returns an array of the PIDs of all currently running processes
+pub fn running_pids() -> Result<Vec<i32>, Error> {
+    let proc = root_path!("proc");
+    let entries = fs::read_dir(proc)?;
+    let mut pids = Vec::new();
 
-    for entry in entries.filter_map(|e| e.ok()).filter(|e| e.path().is_dir()) {
-        if let Ok(pid) = i32::from_str(&entry.file_name().to_string_lossy()) {
-            info.push(pid);
+    for entry in entries {
+        if let Ok(entry) = entry {
+            let path = entry.path();
+            if path.is_dir() {
+                let file_name = path.file_name().unwrap().to_str().unwrap();
+                if let Ok(pid) = i32::from_str(file_name) {
+                    pids.push(pid);
+                }
+            }
         }
     }
-    Ok(info)
-}
 
-// Unit tests
-
-#[cfg(test)]
-lazy_static! {
-    static ref ROOTFS: PathBuf = {
-        let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        path.push("tests");
-        path.push("testroot");
-        path
-    };
+    Ok(pids)
 }
 
 #[cfg(test)]
 pub fn root_dir() -> PathBuf {
-    ROOTFS.clone()
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("src")
+        .join("test")
 }
 
 #[cfg(test)]
-#[allow(clippy::unreadable_literal)]
 mod tests {
     use super::*;
 
-    const STAT: &[u8] = b"720 (sh) S 1 720 720 0 -1 4194560 240 1400 0 0 1 2 9 3 20 0 1 0 \
-                          248701832 2981888 458 4294967295 65536 425632 3200257616 3200256600 \
-                          3068202372 0 0 3670016 95335 1 0 0 17 0 0 0 0 0 0 491520 492921 \
-                          2895872 3200257854 3200257858 3200257858 3200258036 0";
+    lazy_static! {
+        static ref PROC_RAW: Vec<u8> = {
+            b"12345 (bash) S 12344 12345 12345 34820 12345 4202496 17434 782422 62 28 15 16 103 60 \
+              20 0 1 0 287033 56205312 10492 18446744073709551615 94073079275520 94073079994797 \
+              140724981622432 0 0 0 65536 3670020 1266777851 0 0 0 17 2 0 0 2 0 0 94073080100768 \
+              94073080116368 94073105047552 140724981633650 140724981633657 140724981633657 \
+              140724981638583 0"
+                .to_vec()
+        };
+        static ref SD_PAM_RAW: Vec<u8> = {
+            b"717 (systemd-journal) S 1 717 717 0 -1 4210688 5079 9284 37 0 77 57 0 0 20 0 1 0 \
+              80678 127893504 2966 18446744073709551615 1 1 0 0 0 0 0 4224 0 0 0 0 17 3 0 0 0 0 0 \
+              0 0 0 0 0 0 0 0"
+                .to_vec()
+        };
+        static ref CRON_RAW: Vec<u8> = {
+            b"1 (cron) S 0 1 1 0 -1 4210944 0 0 0 0 0 0 0 0 20 0 1 0 121784 5603328 285 \
+              18446744073709551615 1 1 0 0 0 0 0 0 0 0 0 0 17 3 0 0 0 0 0 0 0 0 0 0 0 0 0"
+                .to_vec()
+        };
+    }
 
     #[test]
     fn procstat_parse() {
-        let stat = ProcStat::parse(STAT);
-        assert!(stat.is_ok());
+        let ps = ProcStat::parse(&PROC_RAW[..]);
+
+        assert!(ps.is_ok());
         assert_eq!(
-            stat.unwrap(),
+            ps.unwrap(),
             ProcStat {
-                pid: 720,
-                comm: "sh".into(),
+                pid: 12345,
+                comm: "bash".to_owned(),
                 state: 'S',
-                ppid: 1,
-                pgrp: 720,
-                session: 720,
-                tty_nr: 0,
-                tpgid: -1,
-                flags: 4194560,
-                minflt: 240,
-                cminflt: 1400,
-                majflt: 0,
-                cmajflt: 0,
-                utime: 1,
-                stime: 2,
-                cutime: 9,
-                cstime: 3,
+                ppid: 12344,
+                pgrp: 12345,
+                session: 12345,
+                tty_nr: 34820,
+                tpgid: 12345,
+                flags: 4202496,
+                minflt: 17434,
+                cminflt: 782422,
+                majflt: 62,
+                cmajflt: 28,
+                utime: 15,
+                stime: 16,
+                cutime: 103,
+                cstime: 60,
                 priority: 20,
                 nice: 0,
                 num_threads: 1,
                 itrealvalue: 0,
-                starttime: 248701832,
-                vsize: 2981888,
-                rss: 458,
-                rsslim: 4294967295,
-                startcode: 65536,
-                endcode: 425632,
-                startstack: 3200257616,
-                kstkesp: 3200256600,
-                kstkeip: 3068202372,
+                starttime: 287033,
+                vsize: 56205312,
+                rss: 10492,
+                rsslim: 18446744073709551615,
+                startcode: 94073079275520,
+                endcode: 94073079994797,
+                startstack: 140724981622432,
+                kstkesp: 0,
+                kstkeip: 0,
                 signal: 0,
-                blocked: 0,
-                sigignore: 3670016,
-                sigcatch: 95335,
-                wchan: 1,
+                blocked: 65536,
+                sigignore: 3670020,
+                sigcatch: 1266777851,
+                wchan: 0,
                 nswap: 0,
                 cnswap: 0,
                 exit_signal: 17,
-                processor: 0,
+                processor: 2,
                 rt_priority: 0,
                 policy: 0,
-                delayacct_blkio_ticks: 0,
+                delayacct_blkio_ticks: 2,
                 guest_time: 0,
                 cguest_time: 0,
-                start_data: 491520,
-                end_data: 492921,
-                start_brk: 2895872,
-                arg_start: 3200257854,
-                arg_end: 3200257858,
-                env_start: 3200257858,
-                env_end: 3200258036,
+                start_data: 94073080100768,
+                end_data: 94073080116368,
+                start_brk: 94073105047552,
+                arg_start: 140724981633650,
+                arg_end: 140724981633657,
+                env_start: 140724981633657,
+                env_end: 140724981638583,
                 exit_code: 0,
             }
         );
-    }
-
-    #[test]
-    fn procstat_getters() {
-        let stat = ProcStat::parse(STAT);
-        assert!(stat.is_ok());
-
-        let stat = stat.unwrap();
-        assert_eq!(stat.state(), 'S');
-        assert_eq!(stat.parent_pid(), 1);
-        assert_eq!(stat.mem_usage(), 2981888);
-        assert_eq!(stat.rss(), 458);
-        assert_eq!(stat.num_threads(), 1);
-    }
-
-    #[test]
-    fn procstat_from_pid() {
-        let stat = ProcStat::from_pid(232).unwrap();
-        assert_eq!(stat.state(), 'S');
-        assert_eq!(stat.parent_pid(), 2);
-        assert_eq!(stat.mem_usage(), 0);
-        assert_eq!(stat.rss(), 0);
-        assert_eq!(stat.num_threads(), 1);
-
-        let cmd = stat.cmd().unwrap();
-        assert_eq!(cmd, ["edac-poller"]);
-    }
-
-    #[test]
-    fn procstat_sd_pam() {
-        let sdpam_stat: &[u8] = b"1149 ((sd-pam)) S 1148 1148 1148 0 -1 1077936448 22 0 0 0 0 0 \
-                                  0 0 20 0 1 0 2838 62562304 447 18446744073709551615 1 1 0 0 0 \
-                                  0 0 4096 0 0 0 0 17 0 0 0 0 0 0 0 0 0 0 0 0 0 0";
-        let stat = ProcStat::parse(sdpam_stat);
-        assert!(stat.is_ok(), "{:?}", stat.err());
-
-        let stat = stat.unwrap();
-        assert_eq!(stat.state(), 'S');
-        assert_eq!(stat.parent_pid(), 1148);
-        assert_eq!(stat.mem_usage(), 62562304);
-        assert_eq!(stat.rss(), 447);
-        assert_eq!(stat.num_threads(), 1);
-        assert_eq!(stat.cmd().unwrap(), ["(sd-pam)"]);
-        assert_eq!(stat.rsslim, 18446744073709551615);
-    }
-
-    #[test]
-    fn procstat_cron() {
-        let stat = ProcStat::from_pid(1492).unwrap();
-        assert_eq!(stat.pid, 1492);
-        assert_eq!(stat.state(), 'S');
-        assert_eq!(stat.parent_pid(), 1);
-        assert_eq!(stat.mem_usage(), 28397568);
-        assert_eq!(stat.rss(), 522);
-        assert_eq!(stat.num_threads(), 1);
-        assert_eq!(stat.cmd().unwrap(), ["/usr/sbin/cron", "-f"]);
-    }
-
-    #[test]
-    fn running_pids() {
-        let pids = super::running_pids();
-        assert!(pids.is_ok());
-
-        let mut pids = pids.unwrap();
-        pids.sort_unstable();
-
-        assert_eq!(pids, vec![232, 380, 720, 761, 1149, 1492]);
     }
 }

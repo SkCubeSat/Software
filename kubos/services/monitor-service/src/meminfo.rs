@@ -18,6 +18,8 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::str::FromStr;
 
+use crate::error::Error;
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MemInfo {
     total: Option<u32>,
@@ -48,7 +50,7 @@ impl MemInfo {
         }
     }
 
-    pub fn parse<R>(info: R) -> Result<MemInfo, failure::Error>
+    pub fn parse<R>(info: R) -> Result<MemInfo, Error>
     where
         R: BufRead,
     {
@@ -73,7 +75,7 @@ impl MemInfo {
         Ok(mem_info)
     }
 
-    pub fn from_proc() -> Result<MemInfo, failure::Error> {
+    pub fn from_proc() -> Result<MemInfo, Error> {
         let file = File::open("/proc/meminfo")?;
         let reader = BufReader::new(file);
         Self::parse(reader)
