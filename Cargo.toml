@@ -57,7 +57,7 @@ members = [
     "kubos/examples/rust-c-service/service",
     "kubos/services/iobc-supervisor-service",
     "kubos/services/isis-ants-service",
-    "kubos/test/integration/linux/isis-ants",
+    "kubos/test/integration/linux/isis-ants", "services/csp-service",
 ]
 
 exclude = ["kubos/apis/nosengine-rust", "kubos/test/integration/nosengine-rust"]

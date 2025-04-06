@@ -33,6 +33,10 @@ port = 8040
 ip = "127.0.0.1"
 port = 8030
 
+[csp-service.addr]
+ip = "127.0.0.1"
+port = 8005
+
 [shell-service.addr]
 ip = "127.0.0.1"
 port = 8050
