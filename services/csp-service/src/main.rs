@@ -2,12 +2,14 @@ use kubos_service::{Config, Service, Context};
 use juniper::{FieldResult, EmptyMutation};
 use std::ffi::CString;
 use crate::schema::{MutationRoot, QueryRoot};
+use libcsp::*;
 
-mod bindings {
-    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-}
+// mod bindings {
+//     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+// }
 
 mod schema;
+// mod csp_wrapper;
 
 // #[derive(Clone)]
 // struct Subsystem;
@@ -25,7 +27,7 @@ mod schema;
 
 fn main() {
     unsafe {
-        bindings::csp_init();
+        csp_init();
     }
 
     let config = Config::new("csp-service").unwrap();

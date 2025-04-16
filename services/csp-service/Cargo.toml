@@ -9,6 +9,8 @@ kubos-service = { path = "../../kubos/services/kubos-service" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 juniper = "0.16.1"
+libcsp = { git = "https://egit.irs.uni-stuttgart.de/rust/libcsp-rust.git", package = "libcsp" }
 
 [build-dependencies]
 bindgen = "0.69"
+libcsp-cargo-build = { git = "https://egit.irs.uni-stuttgart.de/rust/libcsp-rust.git", package = "libcsp-cargo-build" }
