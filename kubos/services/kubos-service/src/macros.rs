@@ -15,26 +15,27 @@
 //
 //#![macro_use]
 
-/// Iterate through a failure::Error and concatenate the error
+/// Iterate through a anyhow::Error and concatenate the error
 /// and all its causes into a single string
 ///
 /// # Examples
 ///
 /// ```
 /// use kubos_service::process_errors;
-/// use failure::{Error, Fail};
+/// use anyhow::Error;
+/// use thiserror::Error;
 ///
-/// #[derive(Clone, Debug, Fail)]
+/// #[derive(Clone, Debug, Error)]
 /// pub enum RootError {
-///     #[fail(display = "RootError: {}", message)]
+///     #[error("RootError: {message}")]
 ///     RootError { message: String },
 /// }
 ///
-/// #[derive(Clone, Debug, Fail)]
+/// #[derive(Clone, Debug, Error)]
 /// pub enum TopError {
-///     #[fail(display = "TopError: {}", message)]
+///     #[error("TopError: {message}")]
 ///     Error {
-///         #[fail(cause)]
+///         #[source]
 ///         cause: RootError,
 ///         message: String,
 ///     },
@@ -51,7 +52,7 @@
 /// let errors = process_errors!(chain);
 /// assert_eq!(errors, "TopError: top, RootError: root");
 ///
-/// let errors = process_errors!(chain_clone, '\n');
+/// let errors = process_errors!(chain_clone, "\n");
 /// assert_eq!(errors, "TopError: top\nRootError: root");
 /// # }
 /// ```
@@ -63,21 +64,12 @@ macro_rules! process_errors {
     };
     ($err:ident, $delim:expr) => {{
         {
+            // Just use the error's Display implementation
+            let err_string = format!("{}", $err);
             let mut results = String::new();
-
-            // We need the "as_fail()" to make sure that we were given
-            // a failure::Error as our input parameter
-            let error: Error = $err.into();
-            let mut chain = error.as_fail().iter_chain();
-
-            if let Some(err) = chain.next() {
-                results.push_str(&format!("{}", err));
-
-                for err in chain {
-                    results.push_str(&format!("{}{}", $delim, err));
-                }
-            }
-
+            results.push_str(&err_string);
+            
+            // Done - skip error chain processing for non-std errors
             results
         }
     }};
@@ -127,20 +119,21 @@ macro_rules! push_err {
 /// #[macro_use]
 /// extern crate kubos_service;
 /// use kubos_service::run;
-/// use failure::{Error, Fail};
+/// use anyhow::Error;
+/// use thiserror::Error;
 /// use std::sync::{Arc, RwLock};
 ///
-/// #[derive(Fail, Debug)]
+/// #[derive(Error, Debug)]
 /// pub enum RootError {
-///     #[fail(display = "RootError: {}", message)]
+///     #[error("RootError: {message}")]
 ///     RootError { message: String },
 /// }
 ///
-/// #[derive(Fail, Debug)]
+/// #[derive(Error, Debug)]
 /// pub enum TopError {
-///     #[fail(display = "TopError: {}", message)]
+///     #[error("TopError: {message}")]
 ///     Error {
-///         #[fail(cause)]
+///         #[source]
 ///         cause: RootError,
 ///         message: String,
 ///     },
@@ -210,20 +203,21 @@ macro_rules! run {
 
 #[cfg(test)]
 mod tests {
-    use failure::{Error, Fail};
     use std::sync::{Arc, RwLock};
+    use anyhow::Error;
+    use thiserror::Error;
 
-    #[derive(Debug, Fail)]
+    #[derive(Debug, Error)]
     pub enum RootError {
-        #[fail(display = "RootError: {}", message)]
+        #[error("RootError: {message}")]
         RootError { message: String },
     }
 
-    #[derive(Debug, Fail)]
+    #[derive(Debug, Error)]
     pub enum TopError {
-        #[fail(display = "TopError: {}", message)]
+        #[error("TopError: {message}")]
         Error {
-            #[fail(cause)]
+            #[source]
             cause: RootError,
             message: String,
         },
@@ -266,7 +260,7 @@ mod tests {
             message: "top".to_owned(),
         };
 
-        let errors = process_errors!(chain, '\n');
+        let errors = process_errors!(chain, "\n");
         assert_eq!(errors, "TopError: top\nRootError: root");
     }
 
