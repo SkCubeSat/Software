@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NodeDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <IsModule>true</IsModule>
+  <Name>cube-sense-common</Name>
+  <CodeName>CubeSenseCommon</CodeName>
+  <InterfaceVersion>1</InterfaceVersion>
+  <CanLog>false</CanLog>
+
+	<Ttcs CanSet="true" CanGet="false" CodeName="CamAutoAdjust" DisplayName="Set Camera Auto Adjust" Description="Enable or disable auto-adjust for camera exposure" Len="1" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="Enabled" DisplayName="Enabled" Description="Automatic exposure adjustment" BitOffset="0" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+	<Ttcs CanSet="true" CanGet="false" CodeName="CamSettings" DisplayName="Set Camera Settings" Description="Change camera settings" Len="5" PartOfStartItem="0" PartOfNumItems="0" Group="">
+		<Item CodeName="Exposure" DisplayName="Exposure" Description="Value for exposure register" BitOffset="0" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="AGC" DisplayName="Gain Control" Description="Value for Gain Control register" BitOffset="16" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="BlueGain" DisplayName="Blue Gain" Description="Value for Blue Gain register" BitOffset="24" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="RedGain" DisplayName="Red Gain" Description="Value for Red Gain register" BitOffset="32" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+	</Ttcs>
+
+	<Ttcs CanSet="false" CanGet="true" CodeName="Config" DisplayName="Configuration" Description="Configuration data for the CubeSense" Len="7" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="CamThreshold" DisplayName="Cam detection threshold" Description="Byte value 0-255 indicating light threshold level" BitOffset="0" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="CamAutoAdjust" DisplayName="Cam sensor auto adjust mode" Description="0 = disabled, 1 = enabled" BitOffset="8" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Reserved" DisplayName="" Description="" BitOffset="9" BitLength="7" ValueType="Reserved" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="CamExposure" DisplayName="Cam sensor exposure time" Description="exposure time register value" BitOffset="16" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="CamAgc" DisplayName="Cam sensor AGC" Description="Common Gain" BitOffset="32" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="CamBlueGain" DisplayName="Cam blue gain" Description="Blue Gain" BitOffset="40" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="CamRedGain" DisplayName="Cam red gain" Description="Red Gain" BitOffset="48" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="HealthTlm" DisplayName="Health Telemetry" Description="Health Telemetry for CubeSense" Len="21" PartOfStartItem="0" PartOfNumItems="0" Group="">
+  	<Item CodeName="McuCurrent" DisplayName="Current" Description="MCU current" BitOffset="0" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="0" />
+	<Item CodeName="McuTemp" DisplayName="Temperature" Description="MCU temperature in deg C" BitOffset="16" BitLength="16" ValueType="SignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="deg C" RangeMin="0" RangeMax="0" />
+	<Item CodeName="McuVoltage" DisplayName="MCU Voltage" Description="MCU supply voltage" BitOffset="32" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mV" RangeMin="0" RangeMax="0" />
+    <Item CodeName="CurrentCam" DisplayName="CAM current" Description="Camera current" BitOffset="48" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="0" />
+    <Item CodeName="CurrentSram" DisplayName="SRAM current" Description="SRAM current" BitOffset="64" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="0" />
+	<Item CodeName="CurrentCamMax" DisplayName="Max recorded CAM current" Description="Max recorded Camera current" BitOffset="80" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="0" />
+    <Item CodeName="CurrentSramMax" DisplayName="Max recorded SRAM current" Description="Max recorded SRAM current" BitOffset="96" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="0" />
+    <Item CodeName="OvercurrentCam" DisplayName="CAM overcurrent" Description="CAM overcurrent detected" BitOffset="112" BitLength="8" ValueType="Enumeration" EnumerationName="OvercurrentResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="OvercurrentSram" DisplayName="SRAM overcurrent" Description="SRAM overcurrent detected" BitOffset="120" BitLength="8" ValueType="Enumeration" EnumerationName="OvercurrentResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+	<Item CodeName="WatchdogCount" DisplayName="Watchdog Counters"    Description="Bitmask representing virtual watchdog region warning counters." BitOffset="128"  BitLength="40" ValueType="ByteArray"   EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+	<Enum>
+		<CodeName>OvercurrentResult</CodeName>
+		<EnumValue NumericalValue="0" CodeName="NoOvercurrent" DisplayName="" Description="No Overcurrent" />
+		<EnumValue NumericalValue="1" CodeName="Overcurrent" DisplayName="" Description="Overcurrent detected" />
+	</Enum>
+
+	<!-- !!! common-component ID's should start from the high-end (127 TC & 254 TLM) and decrement !!! -->
+
+	<!-- TC -->
+	<TtcIds TtcName="CamAutoAdjust"               GetId="255" SetId="127"   LogId="0" />
+	<TtcIds TtcName="CamSettings"                 GetId="255" SetId="126"   LogId="0" />
+
+	<!-- TLM -->
+	<TtcIds TtcName="Config"                      GetId="254" SetId="255" LogId="0" />
+	<TtcIds TtcName="HealthTlm"                   GetId="253" SetId="255" LogId="0" />
+
+</NodeDefinition>

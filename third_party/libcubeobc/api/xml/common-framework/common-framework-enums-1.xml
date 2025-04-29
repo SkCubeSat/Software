@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NodeDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <IsModule>false</IsModule>
+  <IsGlobalEnums>true</IsGlobalEnums>
+  <Name>common-framework-enums</Name>
+  <CodeName>CommonFrameworkEnums</CodeName>
+  <InterfaceVersion>1</InterfaceVersion>
+  <CanLog>false</CanLog>
+
+  <!-- ****************** ENUMERATIONS ****************** -->
+
+  <Enum>
+		<CodeName>TcTlmError</CodeName>
+		<EnumValue NumericalValue="0" CodeName="Ok"               DisplayName="Ok"                Description="No Error" />
+		<EnumValue NumericalValue="1" CodeName="InvalidId"        DisplayName="Invalid ID"        Description="Invalid TcTlm ID" />
+    <EnumValue NumericalValue="2" CodeName="InvalidLength"    DisplayName="Invalid Length"    Description="Invalid Length" />
+    <EnumValue NumericalValue="3" CodeName="InvalidParam"     DisplayName="Invalid Parameter" Description="Invalid Parameter" />
+    <EnumValue NumericalValue="4" CodeName="Crc"              DisplayName="CRC"               Description="CRC Check Failed" />
+    <EnumValue NumericalValue="5" CodeName="NotImplemented"   DisplayName="Not Implemented"   Description="TCTLM not implemented" />
+    <EnumValue NumericalValue="6" CodeName="TcTlmBusy"        DisplayName="Busy"              Description="Busy" />
+    <EnumValue NumericalValue="7" CodeName="Sequence"         DisplayName="Sequence"          Description="Error in sequence of commands" />
+    <EnumValue NumericalValue="8" CodeName="Internal"         DisplayName="Internal"          Description="Internal error" />
+    <EnumValue NumericalValue="9" CodeName="PassTimeout"      DisplayName="Passthrough Timeout" Description="Passthrough node timeout error" />
+    <EnumValue NumericalValue="10" CodeName="PassTarget"      DisplayName="Passthrough Target" Description="Passthrough target is invalid (passthrough is disabled)" />
+  </Enum>
+
+  <Enum>
+    <CodeName>NodeTypeLegacy</CodeName>
+    <EnumValue NumericalValue="0" CodeName="NodeTypeLegacyInvalid"                  DisplayName="Invalid"                   Description="Invalid Node Type" />
+    <EnumValue NumericalValue="1" CodeName="NodeTypeLegacyCubeComputer"             DisplayName="CubeComputer"              Description="CubeComputer Type - version independant" />
+    <EnumValue NumericalValue="2" CodeName="NodeTypeLegacyCubeSense"                DisplayName="CubeSense"                 Description="CubeSense Type - version independant" />
+    <EnumValue NumericalValue="3" CodeName="NodeTypeLegacyCubeWheel"                DisplayName="CubeWheel"                 Description="CubeWheel Type - version independant" />
+    <EnumValue NumericalValue="4" CodeName="NodeTypeLegacyCubeIr"                   DisplayName="CubeIr"                    Description="CubeIR Type - version independant" />
+    <EnumValue NumericalValue="5" CodeName="NodeTypeLegacyCubeMagDeploy"            DisplayName="CubeMag Deploy"            Description="CubeMag Deploy Type - version independant" />
+    <EnumValue NumericalValue="6" CodeName="NodeTypeLegacyCubeMagCompact"           DisplayName="CubeMag Compact"           Description="CubeMag Compact Type - version independant" />
+    <EnumValue NumericalValue="7" CodeName="NodeTypeLegacyCubeStar"                 DisplayName="CubeStar"                  Description="CubeStar Type - version independant" />
+    <EnumValue NumericalValue="8" CodeName="NodeTypeLegacyAuriga"                   DisplayName="CubeAuriga"                Description="CubeAuriga Type - version independant" />
+    <EnumValue NumericalValue="9" CodeName="NodeTypeLegacyCubeNode"                 DisplayName="CubeNode"                  Description="CubeNode General Type - version independant" />
+    <EnumValue NumericalValue="10" CodeName="NodeTypeLegacyCubeNodeSlt"             DisplayName="CubeNode-SLT"              Description="CubeNode SLT Type - version independant" />
+    <EnumValue NumericalValue="11" CodeName="NodeTypeLegacyCubeNodePst3s"           DisplayName="CubeNode-PST3S"            Description="CubeNode PST3S Type - version independant" />
+    <EnumValue NumericalValue="12" CodeName="NodeTypeLegacyCubeNodeNssrwl"          DisplayName="CubeNode-NSSRWL"           Description="CubeNode NSSRWL Type - version independant" />
+    <!-- ****************** end of legacy node types ****************** -->
+    <EnumValue NumericalValue="15" CodeName="NodeTypeLegacyExtended"                DisplayName="NodeTypeLegacyExtended"    Description="Marks the end of the 4-bit legacy enum - Make use of a different telemetry that uses the NodeType enum (Identification2)" />
+  </Enum>
+
+  <Enum>
+    <CodeName>NodeType</CodeName>
+    <EnumValue NumericalValue="0" CodeName="NodeTypeInvalid"                  DisplayName="Invalid"                   Description="Invalid Node Type" />
+    <EnumValue NumericalValue="1" CodeName="NodeTypeCubeComputer"             DisplayName="CubeComputer"              Description="CubeComputer Type - version independant" />
+    <EnumValue NumericalValue="2" CodeName="NodeTypeCubeSense"                DisplayName="CubeSense"                 Description="CubeSense Type - version independant" />
+    <EnumValue NumericalValue="3" CodeName="NodeTypeCubeWheel"                DisplayName="CubeWheel"                 Description="CubeWheel Type - version independant" />
+    <EnumValue NumericalValue="4" CodeName="NodeTypeCubeIr"                   DisplayName="CubeIr"                    Description="CubeIR Type - version independant" />
+    <EnumValue NumericalValue="5" CodeName="NodeTypeCubeMagDeploy"            DisplayName="CubeMag Deploy"            Description="CubeMag Deploy Type - version independant" />
+    <EnumValue NumericalValue="6" CodeName="NodeTypeCubeMagCompact"           DisplayName="CubeMag Compact"           Description="CubeMag Compact Type - version independant" />
+    <EnumValue NumericalValue="7" CodeName="NodeTypeCubeStar"                 DisplayName="CubeStar"                  Description="CubeStar Type - version independant" />
+    <EnumValue NumericalValue="8" CodeName="NodeTypeAuriga"                   DisplayName="CubeAuriga"                Description="CubeAuriga Type - version independant" />
+    <EnumValue NumericalValue="9" CodeName="NodeTypeCubeNode"                 DisplayName="CubeNode"                  Description="CubeNode General Type - version independant" />
+    <EnumValue NumericalValue="10" CodeName="NodeTypeCubeNodeSlt"             DisplayName="CubeNode-SLT"              Description="CubeNode SLT Type - version independant" />
+    <EnumValue NumericalValue="11" CodeName="NodeTypeCubeNodePst3s"           DisplayName="CubeNode-PST3S"            Description="CubeNode PST3S Type - version independant" />
+    <EnumValue NumericalValue="12" CodeName="NodeTypeCubeNodeNssrwl"          DisplayName="CubeNode-NSSRWL"           Description="CubeNode NSSRWL Type - version independant" />
+    <!-- ****************** end of legacy node types - value 15 is reserved and should not be used ****************** -->
+    <EnumValue NumericalValue="16" CodeName="NodeTypeCubeNodeQuad"            DisplayName="CubeNodeQuad"              Description="CubeNodeQuad General Type - version independant" />
+    <EnumValue NumericalValue="17" CodeName="NodeTypeCubeNodeQuadPst3s"       DisplayName="CubeNodeQuad-PST3S"        Description="CubeNodeQuad PST3S Type - version independant" />
+    <EnumValue NumericalValue="18" CodeName="NodeTypeCubeNodeQuadNssrwl"      DisplayName="CubeNodeQuad-NSSRWL"       Description="CubeNodeQuad NSSRWL Type - version independant" />
+    <EnumValue NumericalValue="19" CodeName="NodeTypeCubeNodeQuadLitefufors"  DisplayName="CubeNodeQuad-LITEFUFORS"   Description="CubeNodeQuad LITEFUFORS Type - version independant" />
+  </Enum>
+
+  <Enum>
+    <CodeName>ProgramType</CodeName>
+    <EnumValue NumericalValue="0" CodeName="ProgramTypeInvalid"             DisplayName="Invalid"               Description="Invalid Program Type" />
+    <EnumValue NumericalValue="1" CodeName="ProgramTypeControl"             DisplayName="control-program"       Description="control-program primary product application" />
+    <EnumValue NumericalValue="4" CodeName="ProgramTypeBootloader"          DisplayName="flash-bootloader"      Description="cube-computer flash-bootloader Bootloader application" />
+    <EnumValue NumericalValue="5" CodeName="ProgramTypeHealthCheck"         DisplayName="health-check"          Description="health-check Health Check application" />
+  </Enum>
+
+  <Enum>
+    <CodeName>AbstractNode</CodeName>
+    <EnumValue NumericalValue="0" CodeName="NodeInvalid"   DisplayName="Invalid"  Description="Invalid Abstract Node" />
+    <EnumValue NumericalValue="1" CodeName="NodeComputer"   DisplayName="Computer"  Description="CubeComputer" />
+    <EnumValue NumericalValue="2" CodeName="NodeStr0"       DisplayName="Str0"      Description="Star tracker 0" />
+    <EnumValue NumericalValue="3" CodeName="NodeStr1"       DisplayName="Str1"      Description="Star tracker 1" />
+    <EnumValue NumericalValue="4" CodeName="NodeFss0"       DisplayName="Fss0"      Description="Fine sun sensor 0" />
+    <EnumValue NumericalValue="5" CodeName="NodeFss1"       DisplayName="Fss1"      Description="Fine sun sensor 1" />
+    <EnumValue NumericalValue="6" CodeName="NodeFss2"       DisplayName="Fss2"      Description="Fine sun sensor 2" />
+    <EnumValue NumericalValue="7" CodeName="NodeFss3"       DisplayName="Fss3"      Description="Fine sun sensor 3" />
+    <EnumValue NumericalValue="8" CodeName="NodeHss0"       DisplayName="Hss0"      Description="Horizon sun sensor 0" />
+    <EnumValue NumericalValue="9" CodeName="NodeHss1"       DisplayName="Hss1"      Description="Horizon sun sensor 1" />
+    <EnumValue NumericalValue="10" CodeName="NodeMag0"       DisplayName="Mag0"      Description="Magnetometer sensor 0" />
+    <EnumValue NumericalValue="11" CodeName="NodeMag1"       DisplayName="Mag1"      Description="Magnetometer sensor 1" />
+    <EnumValue NumericalValue="12" CodeName="NodeExt0"       DisplayName="Ext0"      Description="External sensor 0" />
+    <EnumValue NumericalValue="13" CodeName="NodeExt1"       DisplayName="Ext1"      Description="External sensor 1" />
+    <EnumValue NumericalValue="14" CodeName="NodeRwl0"       DisplayName="Rwl0"      Description="Reaction wheel 0" />
+    <EnumValue NumericalValue="15" CodeName="NodeRwl1"       DisplayName="Rwl1"      Description="Reaction wheel 1" />
+    <EnumValue NumericalValue="16" CodeName="NodeRwl2"       DisplayName="Rwl2"      Description="Reaction wheel 2" />
+    <EnumValue NumericalValue="17" CodeName="NodeRwl3"       DisplayName="Rwl3"      Description="Reaction wheel 3" />
+    <EnumValue NumericalValue="18" CodeName="NodeRwl4"       DisplayName="Rwl4"      Description="Reaction wheel 4" />
+    <EnumValue NumericalValue="19" CodeName="NodeExtGyr0"    DisplayName="ExtGyr0"   Description="External gyro 0" />
+    <EnumValue NumericalValue="20" CodeName="NodeExtGyr1"    DisplayName="ExtGyr1"   Description="External gyro 1" />
+
+    <EnumValue NumericalValue="21" CodeName="NodeCq0"        DisplayName="CQ0"        Description="CubeNode-Quad 0 (internal/reporting use only)" />
+    <EnumValue NumericalValue="22" CodeName="NodeCq1"        DisplayName="CQ1"        Description="CubeNode-Quad 1 (internal/reporting use only)" />
+    <EnumValue NumericalValue="23" CodeName="NodeCq2"        DisplayName="CQ2"        Description="CubeNode-Quad 2 (internal/reporting use only)" />
+    <EnumValue NumericalValue="24" CodeName="NodeCq3"        DisplayName="CQ3"        Description="CubeNode-Quad 3 (internal/reporting use only)" />
+  </Enum>
+
+  <Enum>
+    <CodeName>SerialSource</CodeName>
+    <EnumValue NumericalValue="0" CodeName="SourceOtp"        DisplayName="OTP"       Description="Serial number sourced from OTP" />
+    <EnumValue NumericalValue="1" CodeName="SourceConfig"     DisplayName="Config"    Description="Serial number sourced from Config" />
+  </Enum>
+
+</NodeDefinition>

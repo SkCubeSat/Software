@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NodeDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <IsModule>false</IsModule>
+  <Name>cube-sense-4-control-program-5</Name>
+  <CodeName>CubeSenseControlProgram</CodeName>
+  <InterfaceVersion>5</InterfaceVersion>
+  <NodeTypeId>18</NodeTypeId> <!-- NodeTypeCubeNodeSense & ProgramTypeControl ~ See NodeType/ProgramType Enums in common-framework.xml -->
+  <NodeTypeIdMask>255</NodeTypeIdMask> <!-- Match NodeType(0x0F) & ProgramType(0xF0) -->
+  <NodeTypeId2>258</NodeTypeId2> <!-- NodeTypeCubeNodeSense & ProgramTypeControl ~ See NodeType/ProgramType Enums in common-framework.xml -->
+  <NodeTypeIdMask2>65535</NodeTypeIdMask2> <!-- Match NodeType(0x00FF) & ProgramType(0xFF00) -->
+  <CanLog>false</CanLog>
+
+  <Ttcs CanSet="true" CanGet="true" CodeName="CamLensDistortion" DisplayName="CAM Distortion" Description="Distortion coefficients for CAM" Len="20" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="C0" DisplayName="Coefficient 0" Description="Coefficient 0" BitOffset="0" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100.0" RangeMax="100.0" />
+	<Item CodeName="C1" DisplayName="Coefficient 1" Description="Coefficient 0" BitOffset="32" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100.0" RangeMax="100.0" />
+	<Item CodeName="C2" DisplayName="Coefficient 2" Description="Coefficient 0" BitOffset="64" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100.0" RangeMax="100.0" />
+	<Item CodeName="C3" DisplayName="Coefficient 3" Description="Coefficient 0" BitOffset="96" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100.0" RangeMax="100.0" />
+	<Item CodeName="C4" DisplayName="Coefficient 4" Description="Coefficient 0" BitOffset="128" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100.0" RangeMax="100.0" />
+  </Ttcs>
+  <Ttcs CanSet="false" CanGet="true" CodeName="CamMasks" DisplayName="Request Masking Areas" Description="5 masked areas each specified by 4 coordinates" Len="40" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="Area1Xmin" DisplayName="Minimum X of area 1" Description="Minimum X of Area 1" BitOffset="0" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Area1Xmax" DisplayName="Maximum X of area 1" Description="Maximum X of Area 1" BitOffset="16" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Area1Ymin" DisplayName="Minimum Y of area 1" Description="Minimum Y of Area 1" BitOffset="32" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Area1Ymax" DisplayName="Maximum Y of area 1" Description="Maximum Y of Area 1" BitOffset="48" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Area2Xmin" DisplayName="Minimum X of area 2" Description="Minimum X of Area 2" BitOffset="64" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Area2Xmax" DisplayName="Maximum X of area 2" Description="Maximum X of Area 2" BitOffset="80" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Area2Ymin" DisplayName="Minimum Y of area 2" Description="Minimum Y of Area 2" BitOffset="96" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Area2Ymax" DisplayName="Maximum Y of area 2" Description="Maximum Y of Area 2" BitOffset="112" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Area3Xmin" DisplayName="Minimum X of area 3" Description="Minimum X of Area 3" BitOffset="128" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Area3Xmax" DisplayName="Maximum X of area 3" Description="Maximum X of Area 3" BitOffset="144" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Area3Ymin" DisplayName="Minimum Y of area 3" Description="Minimum Y of Area 3" BitOffset="160" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Area3Ymax" DisplayName="Maximum Y of area 3" Description="Maximum Y of Area 3" BitOffset="176" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Area4Xmin" DisplayName="Minimum X of area 4" Description="Minimum X of Area 4" BitOffset="192" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Area4Xmax" DisplayName="Maximum X of area 4" Description="Maximum X of Area 4" BitOffset="208" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Area4Ymin" DisplayName="Minimum Y of area 4" Description="Minimum Y of Area 4" BitOffset="224" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Area4Ymax" DisplayName="Maximum Y of area 4" Description="Maximum Y of Area 4" BitOffset="240" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Area5Xmin" DisplayName="Minimum X of area 5" Description="Minimum X of Area 5" BitOffset="256" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Area5Xmax" DisplayName="Maximum X of area 5" Description="Maximum X of Area 5" BitOffset="272" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Area5Ymin" DisplayName="Minimum Y of area 5" Description="Minimum Y of Area 5" BitOffset="288" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Area5Ymax" DisplayName="Maximum Y of area 5" Description="Maximum Y of Area 5" BitOffset="304" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+  <Ttcs CanSet="true" CanGet="false" CodeName="CaptureDetect" DisplayName="Capture and detect" Description="Capture image and perform detection" Len="0" PartOfStartItem="0" PartOfNumItems="0" Group="" />
+  <Ttcs CanSet="true" CanGet="false" CodeName="Detect" DisplayName="Detect Only" Description="Performs sun detection only" Len="0" PartOfStartItem="0" PartOfNumItems="0" Group="" />
+  <Ttcs CanSet="true" CanGet="false" CodeName="ClearOvercurrentFlags" DisplayName="Clear overcurrent flags" Description="Clear overcurrent flags" Len="0" PartOfStartItem="0" PartOfNumItems="0" Group="" />
+  <Ttcs CanSet="true" CanGet="false" CodeName="ImageCapture" DisplayName="Capture Image" Description="Capture image to specified location" Len="1" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="LocSelect" DisplayName="Location Selection" Description="Location in SRAM to save image" BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="LocSelection" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+  <Ttcs CanSet="true" CanGet="false" CodeName="ImageTransferSetup" DisplayName="Setup Image Transfer" Description="Setup image transfer details" Len="3" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="LocSelect" DisplayName="Location Selection" Description="Location in SRAM from which to download" BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="LocSelection" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ImageSize" DisplayName="Image size" Description="Resolution selection of image to be downloaded" BitOffset="8" BitLength="8" ValueType="Enumeration" EnumerationName="ImageSize" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+	<Item CodeName="Direction" DisplayName="Download or Upload" Description="Download or upload image" BitOffset="16" BitLength="8" ValueType="Enumeration" EnumerationName="DirSelection" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+  <Ttcs CanSet="false" CanGet="true" CodeName="SensorResults" DisplayName="Sensor results" Description="Sensor results" Len="6" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="SensorA" DisplayName="Sensor alpha angle" Description="Alpha Angle" BitOffset="0" BitLength="16" ValueType="SignedInteger" EnumerationName="" CalibrationUserToRaw="USERVAL*100.0f" CalibrationRawToUser="RAWVAL*0.01f" MeasurementUnit="deg" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SensorB" DisplayName="Sensor beta angle" Description="Beta Angle" BitOffset="16" BitLength="16" ValueType="SignedInteger" EnumerationName="" CalibrationUserToRaw="USERVAL*100.0f" CalibrationRawToUser="RAWVAL*0.01f" MeasurementUnit="deg" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SensorCaptureResult" DisplayName="Sensor Capture result" Description="0 = Start-up, 1 = Result pending, 2 = Success, 3 = Timeout, 4 = SRAMErr" BitOffset="32" BitLength="8" ValueType="Enumeration" EnumerationName="CaptureResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SensorDetectionResult" DisplayName="Sensor Detection result" Description="0 = Start-up, 1 = No Detection Performed, 2 = Detection Pending, 6 = Sun not found, 7 = Succesful Detection" BitOffset="40" BitLength="8" ValueType="Enumeration" EnumerationName="DetectResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+  <Ttcs CanSet="false" CanGet="true" CodeName="SensorResultsTimestamp" DisplayName="Sensor results timestamp" Description="Timestamp of last results" Len="8" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="UnixTimestampSeconds"      DisplayName="Unix timestamp seconds"      Description="Unix timestamp s"   BitOffset="0"   BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="s" RangeMin="0" RangeMax="0" />
+    <Item CodeName="UnixTimestampNanoSeconds"  DisplayName="Unix timestamp nanoseconds"  Description="Unix timestamp ns"  BitOffset="32"  BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="ns" RangeMin="0" RangeMax="999999999" />
+  </Ttcs>
+  <Ttcs CanSet="false" CanGet="true" CodeName="SensorResultTrigger" DisplayName="Sensor Results Trigger" Description="Sensor Results with Auto-trigger" Len="6" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="SensorA" DisplayName="Sensor alpha angle" Description="Alpha Angle" BitOffset="0" BitLength="16" ValueType="SignedInteger" EnumerationName="" CalibrationUserToRaw="USERVAL*100.0f" CalibrationRawToUser="RAWVAL*0.01f" MeasurementUnit="deg" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SensorB" DisplayName="Sensor beta angle" Description="Beta Angle" BitOffset="16" BitLength="16" ValueType="SignedInteger" EnumerationName="" CalibrationUserToRaw="USERVAL*100.0f" CalibrationRawToUser="RAWVAL*0.01f" MeasurementUnit="deg" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SensorCaptureResult" DisplayName="Sensor Capture result" Description="0 = Start-up, 1 = Result pending, 2 = Success, 3 = Timeout, 4 = SRAMErr" BitOffset="32" BitLength="8" ValueType="Enumeration" EnumerationName="CaptureResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SensorDetectionResult" DisplayName="Sensor Detection result" Description="0 = Start-up, 1 = No Detection Performed, 2 = Detection Pending, 6 = Sun not found, 7 = Succesful Detection" BitOffset="40" BitLength="8" ValueType="Enumeration" EnumerationName="DetectResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+  <Ttcs CanSet="true" CanGet="true" CodeName="CamBoresight" DisplayName="Set Camera boresight" Description="Set Camera boresight pixel location" Len="4" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="Xpixel" DisplayName="X Pixel" Description="100*(X Pixel location of camera boresight)" BitOffset="0" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="USERVAL*100.0f" CalibrationRawToUser="RAWVAL*0.01f" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Ypixel" DisplayName="Y Pixel" Description="100*(Y Pixel location of camera boresight)" BitOffset="16" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="USERVAL*100.0f" CalibrationRawToUser="RAWVAL*0.01f" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+  <Ttcs CanSet="true" CanGet="false" CodeName="CamMask" DisplayName="Set Sensor Masking Area" Description="Specify which areas of sensor to mask" Len="9" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="AreaNumber" DisplayName="Area Number" Description="Number indicating which of 5 (0-4) areas will be specified" BitOffset="0" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Xmin" DisplayName="X minimum" Description="Minimum X value of the area (X=0 is left side of image)" BitOffset="8" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Xmax" DisplayName="X maximum" Description="Maximum X value of the area" BitOffset="24" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Ymin" DisplayName="Y minimum" Description="Minimum Y value of the area (Y=0 is top of image)" BitOffset="40" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Ymax" DisplayName="Y maximum" Description="Maximum Y value of the area" BitOffset="56" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+  <Ttcs CanSet="true" CanGet="false" CodeName="CamThreshold" DisplayName="Set Cam Detection Threshold" Description="Set threshold for cam detection" Len="1" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="Threshold" DisplayName="Threshold" Description="Threshold for detection" BitOffset="0" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+  <Ttcs CanSet="false" CanGet="true" CodeName="AutoCamSensorRaw" DisplayName="Auto Cam Sensor Raw" Description="Raw pixel values for calibration perposes" Len="4" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="PixelX" DisplayName="Pixel X" Description="The raw X pixel value" BitOffset="0" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="USERVAL*60.0f" CalibrationRawToUser="RAWVAL/60.0f" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="PixelY" DisplayName="Pixel Y" Description="The raw Y pixel value" BitOffset="16" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="USERVAL*60.0f" CalibrationRawToUser="RAWVAL/60.0f" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+  <Ttcs CanSet="true" CanGet="false" CodeName="DetectionAreaRowSelect" DisplayName="Detection Area Row Select" Description="Detection Area Row Select" Len="1" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="RowSelect" DisplayName="Row select" Description="Row select" BitOffset="0" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+  <Ttcs CanSet="false" CanGet="true" CodeName="DetectionAreaRow" DisplayName="Detection Area Row" Description="Detection Area Row (25 pixels)" Len="25" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="RowBytes" DisplayName="Row bytes" Description="Row bytes" BitOffset="0" BitLength="200" ValueType="ByteArray" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+  <Enum>
+    <CodeName>LocSelection</CodeName>
+    <EnumValue NumericalValue="0" CodeName="Top" DisplayName="Top Half" Description="Top Half of SRAM" />
+    <EnumValue NumericalValue="1" CodeName="Bot" DisplayName="Bottom Half" Description="Bottom Half of SRAM" />
+  </Enum>
+  <Enum>
+    <CodeName>DirSelection</CodeName>
+    <EnumValue NumericalValue="0" CodeName="Download" DisplayName="Download" Description="Download from node" />
+    <EnumValue NumericalValue="1" CodeName="Upload" DisplayName="Upload" Description="Upload to node" />
+  </Enum>
+  <Enum>
+    <CodeName>ImageSize</CodeName>
+    <EnumValue NumericalValue="0" CodeName="size1024x1024" DisplayName="1024 x 1024" Description="1024 x 1024" />
+    <EnumValue NumericalValue="1" CodeName="size512x512" DisplayName="512 x 512" Description="512 x 512" />
+    <EnumValue NumericalValue="2" CodeName="size256x256" DisplayName="256 x 256" Description="256 x 256" />
+    <EnumValue NumericalValue="3" CodeName="size128x128" DisplayName="128 x 128" Description="128 x 128" />
+    <EnumValue NumericalValue="4" CodeName="size64x64" DisplayName="64 x 64" Description="64 x 64" />
+  </Enum>
+  <Enum>
+    <CodeName>DetectResult</CodeName>
+    <EnumValue NumericalValue="0" CodeName="DetStartup" DisplayName="Startup" Description="Initialized" />
+    <EnumValue NumericalValue="1" CodeName="NoDetect" DisplayName="NoDetect" Description="Nothing Detected" />
+    <EnumValue NumericalValue="2" CodeName="DetPending" DisplayName="Pending" Description="Pending a result" />
+    <EnumValue NumericalValue="6" CodeName="SunNotFound" DisplayName="SunNotFound" Description="No Sun found" />
+    <EnumValue NumericalValue="7" CodeName="Success" DisplayName="Success" Description="Sun detected" />
+  </Enum>
+  <Enum>
+	<CodeName>CaptureResult</CodeName>
+	<EnumValue NumericalValue="0" CodeName="CapStartup" DisplayName="Start-up" Description="Initialized" />
+	<EnumValue NumericalValue="1" CodeName="CapPending" DisplayName="Result Pending" Description="Issued but not complete" />
+	<EnumValue NumericalValue="2" CodeName="CaptureSuccessNormal" DisplayName="Successful capture to first SRAM position (not flipped)" Description="Successful capture" />
+	<EnumValue NumericalValue="3" CodeName="Timeout" DisplayName="Camera timeout" Description="Response Timeout" />
+	<EnumValue NumericalValue="4" CodeName="SRAMErr" DisplayName="SRAM Overcurrent" Description="Overcurrent Detected" />
+	<EnumValue NumericalValue="5" CodeName="CaptureSuccessFlipped" DisplayName="Successful capture to first SRAM position (flipped)" Description="Successful capture but result flipped" />
+  </Enum>
+
+	<!-- !!! app-specific ID's should start from the mid-point (64 TC & 192 TLM) and should increment & decrement towards the common ID's !!! -->
+
+	<!-- Specific TC -->
+  <TtcIds TtcName="CamLensDistortion"          GetId="255" SetId="65"   LogId="0" />
+  <TtcIds TtcName="CaptureDetect"              GetId="255" SetId="63"   LogId="0" />
+  <TtcIds TtcName="Detect"                     GetId="255" SetId="66"   LogId="0" />
+  <TtcIds TtcName="ClearOvercurrentFlags"      GetId="255" SetId="62"  LogId="0" />
+  <TtcIds TtcName="ImageCapture"               GetId="255" SetId="67"  LogId="0" />
+  <TtcIds TtcName="ImageTransferSetup"         GetId="255" SetId="61"  LogId="0" />
+  <TtcIds TtcName="CamBoresight"               GetId="255" SetId="60"  LogId="0" />
+  <TtcIds TtcName="CamMask"                    GetId="255" SetId="69"  LogId="0" />
+  <TtcIds TtcName="CamThreshold"               GetId="255" SetId="59"  LogId="0" />
+  <TtcIds TtcName="DetectionAreaRowSelect"     GetId="255" SetId="58"  LogId="0" />
+
+  <!-- Specific TLM -->
+
+  <TtcIds TtcName="SensorResultsTimestamp"     GetId="192" SetId="255" LogId="0" />
+  <TtcIds TtcName="CamLensDistortion"          GetId="193" SetId="255" LogId="0" />
+  <TtcIds TtcName="CamMasks"                   GetId="191" SetId="255" LogId="0" />
+  <TtcIds TtcName="SensorResults"              GetId="195" SetId="255" LogId="0" />
+  <TtcIds TtcName="SensorResultTrigger"        GetId="189" SetId="255" LogId="0" />
+  <TtcIds TtcName="AutoCamSensorRaw"           GetId="196" SetId="255" LogId="0" />
+  <TtcIds TtcName="DetectionAreaRow"           GetId="197" SetId="255" LogId="0" />
+  <TtcIds TtcName="CamBoresight"               GetId="187" SetId="255" LogId="0" />
+
+  <!-- ****************** MODULES ****************** -->
+
+  <Modules>
+		<string>common-framework/common-framework-1.xml</string>
+    <string>cube-sense-4/cube-sense-common-1.xml</string>
+    <string>common-transfer/common-transfer-1.xml</string>
+  </Modules>
+
+  <!-- ****************** GLOBAL ENUMS ****************** -->
+  <GlobalEnums>
+    <string>common-framework/common-framework-enums-1.xml</string>
+  </GlobalEnums>
+
+  <!-- ****************** END ****************** -->
+</NodeDefinition>

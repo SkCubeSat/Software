@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NodeDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <IsModule>true</IsModule>
+  <Name>common-framework</Name>
+  <CodeName>CommonFramework</CodeName>
+  <InterfaceVersion>1</InterfaceVersion>
+  <NodeTypeId>255</NodeTypeId>
+  <NodeTypeIdMask>255</NodeTypeIdMask>
+  <CanLog>false</CanLog>
+
+  <!-- ****************** IDENTIFICATION ****************** -->
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="Identification" DisplayName="Identification" Description="Identification information for this node (Legacy definition - use Identification2 instead)" Len="8" PartOfStartItem="0" PartOfNumItems="0" Group="Identification">
+    <Item CodeName="NodeType"             DisplayName="Node type identifier"      Description="Node type identifier"                                              BitOffset="0"   BitLength="4"   ValueType="Enumeration" EnumerationName="NodeTypeLegacy" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ProgramType"          DisplayName="Program type identifier"   Description="Program type identifier"                                           BitOffset="4"   BitLength="4"   ValueType="Enumeration" EnumerationName="ProgramType" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="InterfaceVersion"     DisplayName="Interface version"         Description="Interface version"                                                 BitOffset="8"   BitLength="8"   ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FirmwareMajorVersion" DisplayName="Firmware version (Major)"  Description="Firmware version (Major)"                                          BitOffset="16"  BitLength="8"   ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FirmwareMinorVersion" DisplayName="Firmware version (Minor)"  Description="Firmware version (Minor)"                                          BitOffset="24"  BitLength="8"   ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="RuntimeSeconds"       DisplayName="Runtime (seconds)"         Description="Seconds since processor start-up"                                  BitOffset="32"  BitLength="16"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="RuntimeMilliseconds"  DisplayName="Runtime (milliseconds)"    Description="Milliseconds (after the integer second) since processor start-up"  BitOffset="48"  BitLength="16"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="Identification2" DisplayName="Identification2" Description="Identification information for this node" Len="21" PartOfStartItem="0" PartOfNumItems="0" Group="Identification">
+    <Item CodeName="NodeType"             DisplayName="Node type identifier"      Description="Node type identifier"                                                                                        BitOffset="0"   BitLength="8"   ValueType="Enumeration" EnumerationName="NodeType" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ProgramType"          DisplayName="Program type identifier"   Description="Program type identifier"                                                                                     BitOffset="8"   BitLength="8"   ValueType="Enumeration" EnumerationName="ProgramType" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SerialInt"            DisplayName="Serial Integer"            Description="Integer representation of the integer portion the serial number of this module sourced from active serial"   BitOffset="16"  BitLength="32"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="InterfaceVersion"     DisplayName="Interface version"         Description="Interface version"                                                                                           BitOffset="48"  BitLength="8"   ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FirmwareMajorVersion" DisplayName="Firmware version (Major)"  Description="Firmware version (Major)"                                                                                    BitOffset="56"  BitLength="8"   ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FirmwareMinorVersion" DisplayName="Firmware version (Minor)"  Description="Firmware version (Minor)"                                                                                    BitOffset="64"  BitLength="8"   ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FirmwarePatchVersion" DisplayName="Firmware version (Patch)"  Description="Firmware version (Patch)"                                                                                    BitOffset="72"  BitLength="16"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SystemMajorVersion"   DisplayName="System version (Major)"    Description="System version (Major)"                                                                                      BitOffset="88"  BitLength="8"   ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SystemMinorVersion"   DisplayName="System version (Minor)"    Description="System version (Minor)"                                                                                      BitOffset="96"  BitLength="8"   ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+	  <Item CodeName="SystemPatchVersion"   DisplayName="System version (Patch)"    Description="System version (Patch)"                                                                                      BitOffset="104" BitLength="16"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="HardwareMinorVersion" DisplayName="Hardware version (Minor)"  Description="Hardware version (Minor)"                                                                                    BitOffset="120" BitLength="8"   ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="RuntimeSeconds"       DisplayName="Runtime (seconds)"         Description="Seconds since processor start-up"                                                                            BitOffset="128" BitLength="16"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="RuntimeMilliseconds"  DisplayName="Runtime (milliseconds)"    Description="Milliseconds (after the integer second) since processor start-up"                                            BitOffset="144" BitLength="16"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Reserved"             DisplayName="Reserved"                  Description="Reserved"                                                                                                    BitOffset="160" BitLength="8"   ValueType="Reserved" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+  
+  <Ttcs CanSet="false" CanGet="true" CodeName="Version" DisplayName="Version" Description="Firmware Version" Len="22" PartOfStartItem="0" PartOfNumItems="0" Group="Identification">
+    <Item CodeName="FirmwareMajorVersion" DisplayName="Firmware version (Major)"  Description="Firmware version (Major)"                                              BitOffset="0"   BitLength="8"   ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FirmwareMinorVersion" DisplayName="Firmware version (Minor)"  Description="Firmware version (Minor)"                                              BitOffset="8"   BitLength="8"   ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+	  <Item CodeName="FirmwarePatchVersion" DisplayName="Firmware version (Patch)"  Description="Firmware version (Patch)"                                              BitOffset="16"  BitLength="16"   ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+	  <Item CodeName="SystemMajorVersion" DisplayName="System version (Major)"  Description="System version (Major)"                                                    BitOffset="32"  BitLength="8"   ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SystemMinorVersion" DisplayName="System version (Minor)"  Description="System version (Minor)"                                                    BitOffset="40"  BitLength="8"   ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+	  <Item CodeName="SystemPatchVersion" DisplayName="System version (Patch)"  Description="System version (Patch)"                                                    BitOffset="48"  BitLength="16"   ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="GitBranch"          DisplayName="Git Branch"              Description="The git branch of the firmware build"                                      BitOffset="64"  BitLength="8" ValueType="Enumeration" EnumerationName="GitBranch" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="GitHash"            DisplayName="Git Hash"                Description="Git has for the firmware build"                                            BitOffset="72"  BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="BuildHash"          DisplayName="Build Hash"              Description="Build hash"                                                                BitOffset="104" BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="BuildTimeSeconds"   DisplayName="Build Time (seconds)"    Description="Timestamp of the firmware build"                                           BitOffset="136" BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="s" RangeMin="0" RangeMax="0" />
+    <Item CodeName="HardwareMinorVersion" DisplayName="Hardware version (Minor)"  Description="Hardware version (Minor)"                                              BitOffset="168" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="SerialNumber" DisplayName="Serial Number" Description="Unique serial number of the CubeSpace Component" Len="70" PartOfStartItem="0" PartOfNumItems="0" Group="Identification">
+    <Item CodeName="OtpSerial"     DisplayName="OTP Serial"                                           Description="OTP ASCII string of chars denoting the serial number of this module"                                         BitOffset="0"   BitLength="256" ValueType="String" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="CfgSerial"     DisplayName="Config Serial"                                        Description="Config ASCII string of chars denoting the serial number of this module"                                      BitOffset="256" BitLength="256" ValueType="String" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="NodeType"      DisplayName="Node type identifier"                                 Description="Node type identifier sourced from active serial"                                                             BitOffset="512" BitLength="8"   ValueType="Enumeration" EnumerationName="NodeType" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SerialInt"     DisplayName="Serial Integer"                                       Description="Integer representation of the integer portion the serial number of this module sourced from active serial"   BitOffset="520" BitLength="32"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ActiveSerial"  DisplayName="Active Serial Number"                                 Description="Which area the serial number (OTP/Config) is being used internally"                                          BitOffset="552" BitLength="8"   ValueType="Enumeration" EnumerationName="SerialSource" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <!-- ****************** TIME ****************** -->
+
+  <Ttcs CanSet="true" CanGet="true" CodeName="UnixTime" DisplayName="Current Unix time" Description="Current Unix time" Len="8" PartOfStartItem="0" PartOfNumItems="0" Group="Time">
+    <Item CodeName="UnixTimeSeconds"      DisplayName="Current Unix seconds"      Description="Current Unix time s"   BitOffset="0"   BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="s" RangeMin="0" RangeMax="0" />
+    <Item CodeName="UnixTimeNanoSeconds"  DisplayName="Current Unix Nanoseconds"  Description="Current Unix time ns"  BitOffset="32"  BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="ns" RangeMin="0" RangeMax="999999999" />
+  </Ttcs>
+
+	<!-- ****************** COMMANDS ****************** -->
+
+	<Ttcs CanSet="true" CanGet="false" CodeName="Reset" DisplayName="Reset" Description="Perform a soft reset" Len="1" PartOfStartItem="0" PartOfNumItems="0" Group="Commands">
+		<Item CodeName="ResetType" DisplayName="Reset Type" Description="The type of reset to perform" BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="ResetVal" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+	</Ttcs>
+	
+	<!-- ****************** COMMS ****************** -->
+	
+	<Ttcs CanSet="false" CanGet="true" CodeName="CommsStatus" DisplayName="Communication Status" Description="Communication Status" Len="32" PartOfStartItem="0" PartOfNumItems="0" Group="">
+		<Item CodeName="uartTcCounter" DisplayName="UART Telecommand counter" Description="UART No. of telecommands received"                         BitOffset="0" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="uartTlmCounter" DisplayName="UART Telemetry request counter" Description="UART No. of telemetry requests received"            BitOffset="16" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="uartSoftwareProtoErrors" DisplayName="UART Errors reported in SW checks" Description="UART Errors reported in SW checks"      BitOffset="32" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="uartHardwareFlagErrors" DisplayName="UART Errors reported by HW Flags" Description="UART Errors reported by HW Flags"          BitOffset="48" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="uart2TcCounter" DisplayName="UART2 Telecommand counter" Description="UART2 No. of telecommands received"                      BitOffset="64" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="uart2TlmCounter" DisplayName="UART2 Telemetry request counter" Description="UART2 No. of telemetry requests received"         BitOffset="80" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="uart2SoftwareProtoErrors" DisplayName="UART2 Errors reported in SW checks" Description="UART2 Errors reported in SW checks"   BitOffset="96" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="uart2HardwareFlagErrors" DisplayName="UART2 Errors reported by HW Flags" Description="UART2 Errors reported by HW Flags"       BitOffset="112" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="canTcCounter" DisplayName="CAN Telecommand counter" Description="CAN No. of telecommands received"                            BitOffset="128" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="canTlmCounter" DisplayName="CAN Telemetry request counter" Description="CAN No. of telemetry requests received"               BitOffset="144" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="canSoftwareProtoErrors" DisplayName="CAN Errors reported in SW checks" Description="CAN Errors reported in SW checks"         BitOffset="160" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="canHardwareFlagErrors" DisplayName="CAN Errors reported by HW Flags" Description="CAN Errors reported by HW Flags"            BitOffset="176" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="i2cTcCounter" DisplayName="I2C Telecommand counter" Description="I2C No. of telecommands received"                            BitOffset="192" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="i2cTlmCounter" DisplayName="I2C Telemetry request counter" Description="I2C No. of telemetry requests received"               BitOffset="208" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="i2cSoftwareProtoErrors" DisplayName="I2C Errors reported in SW checks" Description="I2C Errors reported in SW checks"         BitOffset="224" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="i2cHardwareFlagErrors" DisplayName="I2C Errors reported by HW Flags" Description="I2C Errors reported by HW Flags"            BitOffset="240" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+	</Ttcs>
+
+  <!-- ****************** CONFIG ****************** -->
+
+	<Ttcs CanSet="true" CanGet="false" CodeName="ConfigPersist" DisplayName="Persist Config" Description="Writes volatile config items to flash" Len="0" PartOfStartItem="0" PartOfNumItems="0" Group="Configuration">
+  </Ttcs>
+
+	<Ttcs CanSet="false" CanGet="true" CodeName="ConfigPersistDiagnostics" DisplayName="Persist Config Diagnostics" Description="Diagnostics data for config persistence" Len="6" PartOfStartItem="0" PartOfNumItems="0" Group="Configuration">
+		<Item CodeName="State"								DisplayName="State"				Description="Config Persistence Task State"		BitOffset="0"  BitLength="8"  ValueType="Enumeration"     EnumerationName="ConfigPersistState"  CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="LastResult"						DisplayName="Last Result"	Description="Config Persistence Last Result"	BitOffset="8"  BitLength="8"  ValueType="Enumeration"     EnumerationName="ConfigPersistResult"  CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="Timestamp"     				DisplayName="Timestamp"   Description="Timestamp of last result"   			BitOffset="16" BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="s" RangeMin="0" RangeMax="0" />
+	</Ttcs>
+
+  <!-- ****************** ERROR LOG ****************** -->
+
+  <Ttcs CanSet="true" CanGet="true" CodeName="ErrorLogIndex" DisplayName="Error Log Index" Description="Describes the index of the error log that will be read when calling GetErrorLogEntry" Len="5" PartOfStartItem="0" PartOfNumItems="0" Group="ErrorLog">
+    <Item CodeName="ErrorLogIndexReference" DisplayName="Error Log Index Reference"  Description="0 = Head, 1 = Tail"                                          BitOffset="0"  BitLength="8"  ValueType="Enumeration"     EnumerationName="ErrorLogSearch"  CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ErrorLogIndexValue"     DisplayName="Error Log Index Value"      Description="Error Log Index Value ~ Relative to ErrorLogIndexReference"  BitOffset="8"  BitLength="16" ValueType="UnsignedInteger" EnumerationName=""                CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="256" />
+	  <Item CodeName="ErrorLogEntries"        DisplayName="Error Log Entries"          Description="Number of Error Log Entries Present"                         BitOffset="24" BitLength="16" ValueType="UnsignedInteger" EnumerationName=""                CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="256" />
+  </Ttcs>
+
+  <Ttcs CanSet="true" CanGet="true" CodeName="ErrorLogEntry" DisplayName="Error Log Entry" Description="Error Log Entry" Len="8" PartOfStartItem="0" PartOfNumItems="0" Group="ErrorLog">
+    <Item CodeName="ErrorLogEntryTimestamp" DisplayName="Error Log Entry Timestamp" Description="Timestamp of this Error Log Entry" BitOffset="0"  BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+	  <Item CodeName="ErrorLogEntryErrorCode" DisplayName="ErrorLogEntryErrorCode"    Description="ErrorCode of this Error Log Entry" BitOffset="32" BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="true" CanGet="true" CodeName="ErrorLogSettings" DisplayName="Error Log Settings" Description="Error Log Settings" Len="1" PartOfStartItem="0" PartOfNumItems="0" Group="ErrorLog">
+    <Item CodeName="ActiveState"      DisplayName="Active State"        Description="Error Logging Enabled state"     BitOffset="0" BitLength="1" ValueType="Enumeration" EnumerationName="ActiveState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="BufferFullAction" DisplayName="Buffer Full Action"  Description="Action to take when log is full" BitOffset="1" BitLength="1" ValueType="Enumeration" EnumerationName="BufferFullAction" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Reserved"         DisplayName="Reserved"            Description="Reserved"                        BitOffset="2" BitLength="6" ValueType="Reserved"    EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="true" CanGet="false" CodeName="ErrorLogClear" DisplayName="Error Log Clear" Description="Clear the Error Log" Len="0" PartOfStartItem="0" PartOfNumItems="0" Group="ErrorLog">
+  </Ttcs>
+
+  <!-- ****************** FDIR ****************** -->
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="BootStatus" DisplayName="Boot Status" Description="State information about the device boot process" Len="3" PartOfStartItem="0" PartOfNumItems="0" Group="FDIR">
+		<Item CodeName="State"								DisplayName="State"				                                      Description="Boot State"		                                                                                                    BitOffset="0"  BitLength="8"  ValueType="Enumeration"     EnumerationName="BootState"  CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="ResetReason"					DisplayName="Reset Reason"	                                    Description="Cause of the last reset"                                                                                           BitOffset="8"  BitLength="8"  ValueType="Enumeration"     EnumerationName="BootResetReason"  CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SharedParamsError"  	DisplayName="Shared Params Error"                               Description="CRC check of shared parameters from bootloader failed - app will use its own config values"                        BitOffset="16" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="PortValidationError"  DisplayName="Port Validation Error"                             Description="Port validation failed. Only applicable to CubeComputer."                                                          BitOffset="17" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="PortDiscoveryError"   DisplayName="Port Discovery Error"                              Description="Auto-Discovery failed. Only applicable to CubeComputer."                                                           BitOffset="18" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="OtpSerialError"       DisplayName="OTP Serial Number Error"                           Description="OTP serial number is invalid"                                                                                      BitOffset="19" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="CfgSerialError"       DisplayName="Config Serial Number Error"                        Description="Config serial number is invalid"                                                                                   BitOffset="20" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SerialMismatchError"  DisplayName="Serial Number Mismatch Error"                      Description="OTP/Config serial numbers do not match"                                                                            BitOffset="21" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ConfigInvalidError"   DisplayName="Config invalid error"                              Description="Set if the applications config is invalid and the default configuration is being used (if available)."             BitOffset="22" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+	</Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="CommonErrorCodes" DisplayName="Common Error Codes" Description="Error codes common to all applications" Len="16" PartOfStartItem="0" PartOfNumItems="0" Group="FDIR">    
+	  <Item CodeName="SlaveSvcCan"		DisplayName="Slave Service - CAN"			      Description="Tctlm comms slave service error code for CAN interface (OBC comms)."         BitOffset="0"   BitLength="32"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+	  <Item CodeName="SlaveSvcUart"   DisplayName="Slave Service - UART"          Description="Tctlm comms slave service error code for UART interface (OBC comms)."        BitOffset="32" 	BitLength="32"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+	  <Item CodeName="SlaveSvcI2c"    DisplayName="Slave Service - I2C"           Description="Tctlm comms slave service error code for I2C interface (OBC comms)." 				BitOffset="64"  BitLength="32"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>    
+    <Item CodeName="ErrorLogSvc"    DisplayName="Error Log Service"             Description="Error-log service error code."                                               BitOffset="96"  BitLength="32"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  	<Ttcs CanSet="false" CanGet="true" CodeName="TelecommandAcknowledge" DisplayName="Telecommand Acknowledge" Description="Used with the I2C protocol to receive Telecommand Ack/Nack" Len="4" PartOfStartItem="0" PartOfNumItems="0" Group="">
+		<Item CodeName="Id"								    DisplayName="TCTLM ID"				      Description="Last TcTlm ID"		                                                          BitOffset="0"  BitLength="8"  ValueType="UnsignedInteger"     EnumerationName=""  CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="Error"						    DisplayName="Error"	                Description="Last TcTlm Error"                                                          BitOffset="8"  BitLength="8"  ValueType="Enumeration"     EnumerationName="TcTlmError"  CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="ErrorIndex"     			DisplayName="ErrorIndex"            Description="Buffer index of error"                                                     BitOffset="16" BitLength="8"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Read"     			      DisplayName="Read"                  Description="Flag indicating if this acknowledgement has been read sinc the last TCTLM" BitOffset="24" BitLength="1"  ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+	</Ttcs>
+
+  <!-- ****************** EVENTS ****************** -->
+
+  <Event CodeName="ResetCommanded" DisplayName="Reset Commanded" Description="Soft reset has been commanded" Class="Info" >
+  </Event>
+
+  <Event CodeName="UnixTimeChanged" DisplayName="Unix Time Change Commanded" Description="Unix time change has been commanded" Class="Info" >
+		<Item CodeName="UnixTimeSeconds"      DisplayName="New Unix seconds"      Description="New Unix time s"   BitOffset="0"   BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="s" RangeMin="0" RangeMax="0" />
+		<Item CodeName="UnixTimeNanoSeconds"  DisplayName="New Unix Nanoseconds"  Description="New Unix time ns"  BitOffset="32"  BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="ns" RangeMin="0" RangeMax="999999999" />
+  </Event>
+  
+  <Event CodeName="ConfigPersisted" DisplayName="Config Persisted" Description="Volatile config items were written to flash" Class="Info">
+  </Event>
+
+  <Event CodeName="ConfigPersistError" DisplayName="Config Persist Error" Description="Error occured while writing config items to flash" Class="WarnMajor">
+		<Item CodeName="Result"						DisplayName="Persist Result"	Description="Config Persistence Last Result"	BitOffset="0"  BitLength="8"  ValueType="Enumeration"     EnumerationName="ConfigPersistResult"  CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="ErrorCode"					DisplayName="Error Code"		Description="Config Persistence Error Code"	BitOffset="8"  BitLength="32"  ValueType="UnsignedInteger"     EnumerationName=""  CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Event>
+
+  <Event CodeName="VirtualWatchdogWarn" DisplayName="Virtual Watchdog Warning" Description="A service protected by the virtual watchdog did not check in in time." Class="WarnMajor" >
+    <Item CodeName="RegionMask"       DisplayName="Region Mask"    Description="Bitmask representing the warning count of each region, if a flag is set, the region that was not refreshed. Please consult with CubeSpace as to the service that uses the specified region"    BitOffset="0" BitLength="40" ValueType="ByteArray" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Event>
+
+  <Event CodeName="VirtualWatchdogError" DisplayName="Virtual Watchdog Error" Description="A service protected by the virtual watchdog did not check for three successive warnings." Class="Critical" >
+    <Item CodeName="RegionMask"       DisplayName="Region Mask"    Description="Bitmask representing the warning count of each region, if a flag is set, the region that was not refreshed repeatedly and is presumed dead. Please consult with CubeSpace as to the service that uses the specified region"    BitOffset="0" BitLength="40" ValueType="ByteArray" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Event>
+
+  <!-- ****************** ENUMERATIONS ****************** -->
+
+  <Enum>
+    <CodeName>ErrorLogSearch</CodeName>
+    <EnumValue NumericalValue="0" CodeName="ReferenceHead" DisplayName="ReferenceHead" Description="ReferenceHead" />
+    <EnumValue NumericalValue="1" CodeName="ReferenceTail" DisplayName="ReferenceTail" Description="ReferenceTail" />
+  </Enum>
+
+  <Enum>
+    <CodeName>ActiveState</CodeName>
+    <EnumValue NumericalValue="0" CodeName="Disabled" DisplayName="Enabled"   Description="Logging is disabled" />
+    <EnumValue NumericalValue="1" CodeName="Enabled"  DisplayName="Disabled"  Description="Logging is enabled" />
+  </Enum>
+
+  <Enum>
+    <CodeName>BufferFullAction</CodeName>
+    <EnumValue NumericalValue="0" CodeName="Ignore" DisplayName="Ignore"  Description="Ignore new entries when buffer is full" />
+    <EnumValue NumericalValue="1" CodeName="Erase"  DisplayName="Erase"   Description="Erase log and add new entry when buffer is full" />
+  </Enum>
+
+  <Enum>
+    <CodeName>ResetVal</CodeName>
+    <EnumValue NumericalValue="0"   CodeName="DoNothing"  DisplayName="Do Nothing"  Description="Dummy Value" />
+    <EnumValue NumericalValue="55"  CodeName="Soft" DisplayName="Soft" Description="Performs a list of final() operations before resetting" />
+		<EnumValue NumericalValue="66"  CodeName="Hard" DisplayName="Hard" Description="Performs reset immediately" />
+  </Enum>
+
+	<Enum>
+		<CodeName>ConfigPersistState</CodeName>
+		<EnumValue NumericalValue="0" CodeName="ConfigPersistIdle" DisplayName="Idle"  Description="Config Persist task is IDLE" />
+		<EnumValue NumericalValue="1" CodeName="ConfigPersistBusy"  DisplayName="Busy"   Description="Config Persist task is BUSY" />
+	</Enum>
+
+	<Enum>
+		<CodeName>ConfigPersistResult</CodeName>
+		<EnumValue NumericalValue="0" CodeName="ConfigPersistNone"					  DisplayName="None"						  Description="No result yet for config persist" />
+    <EnumValue NumericalValue="1" CodeName="ConfigPersistSuccess"					DisplayName="Success"						Description="Config Persist SUCCESSFUL" />
+		<EnumValue NumericalValue="2" CodeName="ConfigPersistErrorParamLock"	DisplayName="Error Param Lock"	Description="Config Persist failed due to a parameter mutex timeout" />
+		<EnumValue NumericalValue="3" CodeName="ConfigPersistErrorFlash"			DisplayName="ErrorFlash"				Description="Config Persist failed due to faillure during flash operations" />
+	</Enum>
+
+  <Enum>
+		<CodeName>GitBranch</CodeName>
+		<EnumValue NumericalValue="0" CodeName="Master" DisplayName="Master"  Description="master branch" />
+		<EnumValue NumericalValue="1" CodeName="Release"  DisplayName="Release"   Description="release branch" />
+    <EnumValue NumericalValue="2" CodeName="Other"  DisplayName="Other"   Description="all other informal/development branches - not expected for software bundle firmware" />
+  </Enum>
+
+  <Enum>
+		<CodeName>BootState</CodeName>
+    <EnumValue NumericalValue="0" CodeName="ApplicationInit"            DisplayName="Application Initializing"      Description="Application is busy booting and initializing" />
+    <EnumValue NumericalValue="1" CodeName="PortValidation"             DisplayName="Port Validation"               Description="CubeComputer control-program is running and performing port validation of connected nodes. Only applicable to CubeComputer" />
+    <EnumValue NumericalValue="2" CodeName="AutoDiscover"               DisplayName="Auto-discovery"                Description="CubeComputer control-program is running and performing node auto discovery of connected nodes. Only applicable to CubeComputer" />
+    <EnumValue NumericalValue="3" CodeName="ApplicationRunning"		      DisplayName="Application Running"				    Description="Application is running after successful bootloader execution and initialization" />
+    <EnumValue NumericalValue="4" CodeName="AssertError"                DisplayName="ASSERT Error"				          Description="Application has triggered an ASSERT and will immediately. This is transitory and is not expected to be read as the state. It will be reflected in the reset reason. " />
+	</Enum>
+
+  <Enum>
+		<CodeName>BootResetReason</CodeName>
+		<EnumValue NumericalValue="0" CodeName="ResetUnknown"					      DisplayName="Unkown"						  Description="Reset reason is unknown" />
+		<EnumValue NumericalValue="1" CodeName="ResetFirewall"              DisplayName="Firewall"            Description="Firewall (Unused)" />
+		<EnumValue NumericalValue="2" CodeName="ResetObl"                   DisplayName="Option bytes reload" Description="Option-byte reset. This will have a dedicated reset reason if commanded, otherwise, is signals that the bootloader reloaded option bytes automatically before exitting." />
+    <EnumValue NumericalValue="3" CodeName="ResetExtPin"		            DisplayName="EXT Pin"				      Description="External Pin reset (Unused)" />
+    <EnumValue NumericalValue="4" CodeName="ResetBrownOut"		          DisplayName="Brown Out"				    Description="Brown Out reset" />
+    <EnumValue NumericalValue="5" CodeName="ResetSoft"		              DisplayName="Soft Reset"				  Description="Software reset" />
+    <EnumValue NumericalValue="6" CodeName="ResetWatchdog"		          DisplayName="WatchDog"				    Description="WatchDog Reset" />
+    <EnumValue NumericalValue="7" CodeName="ResetLowPower"		          DisplayName="Low Power"				    Description="Low Power Reset" />
+    <EnumValue NumericalValue="8" CodeName="ResetAssertErr"             DisplayName="ASSERT error"        Description="The running application triggered an ASSERT and reset - check error log for error code" />
+	</Enum>
+
+	<!-- !!! common-framework ID's should start from the low-end (1 TC & 128 TLM) and increment !!! -->
+
+  <!-- TLM -->
+  <TtcIds TtcName="Identification"             GetId="128" SetId="255" LogId="0" />
+  <TtcIds TtcName="SerialNumber"               GetId="129" SetId="255" LogId="0" />
+  <TtcIds TtcName="ErrorLogIndex"              GetId="130" SetId="255" LogId="0" />
+  <TtcIds TtcName="ErrorLogEntry"              GetId="131" SetId="255" LogId="0" />
+  <TtcIds TtcName="ErrorLogSettings"           GetId="132" SetId="255" LogId="0" />
+  <TtcIds TtcName="UnixTime"                   GetId="133" SetId="255" LogId="0" />
+  <TtcIds TtcName="ConfigPersistDiagnostics"   GetId="134" SetId="255" LogId="0" />
+  <TtcIds TtcName="CommsStatus"   			       GetId="135" SetId="255" LogId="0" />
+  <TtcIds TtcName="Version"   				         GetId="136" SetId="255" LogId="0" />
+  <TtcIds TtcName="BootStatus"   				       GetId="137" SetId="255" LogId="0" />
+  <TtcIds TtcName="TelecommandAcknowledge"     GetId="138" SetId="255" LogId="0" />
+  <TtcIds TtcName="CommonErrorCodes"           GetId="139" SetId="255" LogId="0" />
+  <TtcIds TtcName="Identification2"            GetId="140" SetId="255" LogId="0" />
+
+  <!-- TC -->
+  <TtcIds TtcName="Reset"                      GetId="255" SetId="1"   LogId="0" />
+  <TtcIds TtcName="UnixTime"                   GetId="255" SetId="2"   LogId="0" />
+  <TtcIds TtcName="ErrorLogIndex"              GetId="255" SetId="3"   LogId="0" />
+  <TtcIds TtcName="ErrorLogEntry"              GetId="255" SetId="4"   LogId="0" />
+  <TtcIds TtcName="ErrorLogClear"              GetId="255" SetId="5"   LogId="0" />
+  <TtcIds TtcName="ErrorLogSettings"           GetId="255" SetId="6"   LogId="0" />
+  <TtcIds TtcName="ConfigPersist"              GetId="255" SetId="7"   LogId="0" />
+
+  <!-- Events -->
+  <EventIds EventName="ResetCommanded"         Id="254" />
+  <EventIds EventName="UnixTimeChanged"        Id="253" />  
+  <EventIds EventName="ConfigPersisted"        Id="252" />
+  <EventIds EventName="ConfigPersistError"     Id="251" />
+  <EventIds EventName="VirtualWatchdogWarn"    Id="250" />
+  <EventIds EventName="VirtualWatchdogError"   Id="249" />
+  
+  <!-- ****************** GLOBAL ENUMS ****************** -->
+  <GlobalEnums>
+    <string>common-framework/common-framework-enums-1.xml</string>
+  </GlobalEnums>
+
+</NodeDefinition>

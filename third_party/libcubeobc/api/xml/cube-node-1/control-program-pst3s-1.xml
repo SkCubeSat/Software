@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NodeDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <IsModule>false</IsModule>
+  <Name>cube-node-1-control-program-pst3s-1</Name>
+  <CodeName>CubeNodeControlProgramPst3s</CodeName>
+  <InterfaceVersion>1</InterfaceVersion>
+  <NodeTypeId>27</NodeTypeId> <!-- NodeTypeCubeNodePst3s & ProgramTypeControl ~ See NodeType/ProgramType Enums in common-framework.xml -->
+  <NodeTypeIdMask>255</NodeTypeIdMask> <!-- Match NodeType(0x0F) & ProgramType(0xF0) -->
+  <NodeTypeId2>267</NodeTypeId2> <!-- NodeTypeCubeNodePst3s & ProgramTypeControl ~ See NodeType/ProgramType Enums in common-framework.xml -->
+  <NodeTypeIdMask2>65535</NodeTypeIdMask2> <!-- Match NodeType(0x00FF) & ProgramType(0xFF00) -->
+  <CanLog>false</CanLog>
+
+	<!-- ****************** StarTracker TC ****************** -->
+
+	<!-- ****************** StarTracker TLM ****************** -->
+
+	<!-- ****************** ENUMERATIONS ****************** -->
+
+	<!-- !!! app-specific ID's should start from the mid-point (64 TC & 192 TLM) and should increment & decrement towards the common ID's !!! -->
+
+	<!-- TC -->
+
+  <!-- TLM -->
+
+   <!-- ****************** MODULES ****************** -->
+
+   <Modules>
+     <string>common-framework/common-framework-1.xml</string>
+     <string>cube-node-1/cube-node-common-1.xml</string>
+     <string>cube-node-1/control-program-pst3s-common-1.xml</string>
+   </Modules>
+
+   <!-- ****************** GLOBAL ENUMS ****************** -->
+  <GlobalEnums>
+    <string>common-framework/common-framework-enums-1.xml</string>
+    <string>cube-node-1/control-program-pst3s-common-enums-1.xml</string>
+  </GlobalEnums>
+
+</NodeDefinition>

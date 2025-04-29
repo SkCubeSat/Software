@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NodeDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <IsModule>false</IsModule>
+  <Name>cube-mag-4-control-program-deploy-1</Name>
+  <CodeName>CubeMagControlProgramDeploy</CodeName>
+  <InterfaceVersion>1</InterfaceVersion>
+  <NodeTypeId>21</NodeTypeId> <!-- NodeTypeCubeMagDeploy & ProgramTypeControl ~ See NodeType/ProgramType Enums in common-framework.xml -->
+  <NodeTypeIdMask>255</NodeTypeIdMask> <!-- Match NodeType(0x0F) & ProgramType(0xF0) -->
+  <NodeTypeId2>261</NodeTypeId2> <!-- NodeTypeCubeMagDeploy & ProgramTypeControl ~ See NodeType/ProgramType Enums in common-framework.xml -->
+  <NodeTypeIdMask2>65535</NodeTypeIdMask2> <!-- Match NodeType(0x00FF) & ProgramType(0xFF00) -->
+  <CanLog>false</CanLog>
+
+  <!-- ****************** CONFIGURATION ****************** -->
+
+  <Ttcs CanSet="true" CanGet="true" CodeName="PniConfig" DisplayName="PNI Magnetometer Config" Description="PNI Magnetometer Specific Config" Len="12" PartOfStartItem="0" PartOfNumItems="0" Group="Configuration">
+		<Item CodeName="AutoSample"         DisplayName="PNI Auto-Sample"		    	Description="PNI Auto-Sample Enable/Disable"									BitOffset="0" BitLength="1"		ValueType="Boolean"					EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="AutoSamplePeriod"	DisplayName="PNI Sample Period"				Description="PNI Auto Sample Period"											BitOffset="1" BitLength="7"		ValueType="Enumeration"			EnumerationName="SamplePeriod" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="SampleFilterType"	DisplayName="PNI Sample Filter Type"		Description="PNI Sample Filter Type"	                            			BitOffset="8" BitLength="4"	  ValueType="Enumeration"   EnumerationName="FilterType" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="SampleFilterOrder"	DisplayName="PNI Sample Filter Order"		Description="PNI Sample Butterworth filter order"	                			BitOffset="12" BitLength="4"	  ValueType="Enumeration"   EnumerationName="FilterOrder" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="SampleFilterDepth"	DisplayName="PNI Sample Filter Depth"		Description="PNI Sample Filter Depth when using Simple Averaging"				BitOffset="16" BitLength="8"		ValueType="UnsignedInteger"			EnumerationName="SamplePeriod" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="SingleSampleTime"	DisplayName="PNI Single-Sample Time"		Description="PNI Sample Duration when Auto-Sample is disabled"					BitOffset="24" BitLength="5"		ValueType="Enumeration"			EnumerationName="SampleDuration" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="SampleBusyAction"	DisplayName="PNI Sample Busy Action"		Description="PNI Action to take when sample is busy when requested"				BitOffset="29" BitLength="3"		ValueType="Enumeration"			EnumerationName="SampleBusy" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="MaxErrorsMag"	    DisplayName="PNI Max Errors Magnetometer"	Description="PNI Maximum number of allowed megnetometer measurement errors"		BitOffset="32" BitLength="32"		ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="MaxErrorsTmp"	    DisplayName="PNI Max Errors Temperature"	Description="PNI Maximum number of allowed temperature measurement errors"		BitOffset="64" BitLength="32"		ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+	</Ttcs>
+
+  <!-- ****************** CALIBRATION ****************** -->
+
+	<Ttcs CanSet="true" CanGet="true" CodeName="PniCalibration" DisplayName="PNI Calibration Parameters" Description="PNI Magnetometer Calibration Parameters" Len="48" PartOfStartItem="0" PartOfNumItems="0" Group="Calibration">
+		<Item CodeName="Xd1"       DisplayName="X-d1"			Description="X-Axis: d1"		BitOffset="0"	BitLength="32"	ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100000" RangeMax="100000" />
+		<Item CodeName="Xd2"       DisplayName="X-d2"			Description="X-Axis: d2"		BitOffset="32"	BitLength="32"	ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100000" RangeMax="100000" />
+		<Item CodeName="Xs1"       DisplayName="X-s1"			Description="X-Axis: s1"		BitOffset="64"	BitLength="32"	ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100000" RangeMax="100000" />
+		<Item CodeName="Xs2"       DisplayName="X-s2"			Description="X-Axis: s2"		BitOffset="96"	BitLength="32"	ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100000" RangeMax="100000" />
+		<Item CodeName="Yd1"       DisplayName="Y-d1"			Description="Y-Axis: d1"		BitOffset="128"	BitLength="32"	ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100000" RangeMax="100000" />
+		<Item CodeName="Yd2"       DisplayName="Y-d2"			Description="Y-Axis: d2"		BitOffset="160"	BitLength="32"	ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100000" RangeMax="100000" />
+		<Item CodeName="Ys1"       DisplayName="Y-s1"			Description="Y-Axis: s1"		BitOffset="192"	BitLength="32"	ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100000" RangeMax="100000" />
+		<Item CodeName="Ys2"       DisplayName="Y-s2"			Description="Y-Axis: s2"		BitOffset="224"	BitLength="32"	ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100000" RangeMax="100000" />
+		<Item CodeName="Zd1"       DisplayName="Z-d1"			Description="Z-Axis: d1"		BitOffset="256"	BitLength="32"	ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100000" RangeMax="100000" />
+		<Item CodeName="Zd2"       DisplayName="Z-d2"			Description="Z-Axis: d2"		BitOffset="288"	BitLength="32"	ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100000" RangeMax="100000" />
+		<Item CodeName="Zs1"       DisplayName="Z-s1"			Description="Z-Axis: s1"		BitOffset="320"	BitLength="32"	ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100000" RangeMax="100000" />
+		<Item CodeName="Zs2"       DisplayName="Z-s2"			Description="Z-Axis: s2"		BitOffset="352"	BitLength="32"	ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100000" RangeMax="100000" />
+	</Ttcs>
+
+  <!-- ****************** APPLICATION ****************** -->
+
+  <Ttcs CanSet="true" CanGet="false" CodeName="SampleRed" DisplayName="Sample Redundant" Description="Trigger a single Sample the Redundant Magnetometer (auto-sample == OFF)" Len="0" PartOfStartItem="0" PartOfNumItems="0" Group="Application">
+	</Ttcs>
+
+	<Ttcs CanSet="false" CanGet="true" CodeName="RedMagMeasurement" DisplayName="Redundant Magnetometer Measurement" Description="Redundant Magnetometer Measurement" Len="13" PartOfStartItem="0" PartOfNumItems="0" Group="Application">
+		<Item CodeName="X_axis" DisplayName="X_axis" Description="X_axis" BitOffset="0" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="nT" RangeMin="-800000" RangeMax="800000" />
+		<Item CodeName="Y_axis" DisplayName="Y_axis" Description="Y_axis" BitOffset="32" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="nT" RangeMin="-800000" RangeMax="800000" />
+		<Item CodeName="Z_axis" DisplayName="Z_axis" Description="Z_axis" BitOffset="64" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="nT" RangeMin="-800000" RangeMax="800000" />
+		<Item CodeName="DataValid" DisplayName="Data Valid" Description="Is Data Valid" BitOffset="96" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+	</Ttcs>
+
+	<Ttcs CanSet="false" CanGet="true" CodeName="RedMagMeasurementRaw" DisplayName="Redundant Magnetometer Measurement Raw" Description="Unfiltered last Redundant Magnetometer Measurement" Len="13" PartOfStartItem="0" PartOfNumItems="0" Group="Application">
+		<Item CodeName="X_axis" DisplayName="X_axis" Description="X_axis" BitOffset="0" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="nT" RangeMin="-800000" RangeMax="800000" />
+		<Item CodeName="Y_axis" DisplayName="Y_axis" Description="Y_axis" BitOffset="32" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="nT" RangeMin="-800000" RangeMax="800000" />
+		<Item CodeName="Z_axis" DisplayName="Z_axis" Description="Z_axis" BitOffset="64" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="nT" RangeMin="-800000" RangeMax="800000" />
+		<Item CodeName="DataValid" DisplayName="Data Valid" Description="Is Data Valid" BitOffset="96" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+	</Ttcs>
+
+	<Ttcs CanSet="false" CanGet="true" CodeName="DeploymentStatus" DisplayName="Deployment Status" Description="Deployment Status. Only Applicable to CubeMag Deploy type" Len="5" PartOfStartItem="0" PartOfNumItems="0" Group="Deployment">
+		<Item CodeName="burnCurrent"				DisplayName="Burn Current"			Description="Burn Wire Current"													BitOffset="0"  BitLength="32"	ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="0" />
+		<Item CodeName="DeploymentPinState"	DisplayName="Deployment Pin State"			Description="Deployment Detection Pin State"									BitOffset="32" BitLength="1"		ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="1" />
+		<Item CodeName="burnPinState"				DisplayName="Burn Pin State"		Description="Deployment Burn Wire Enable Pin State"								BitOffset="33" BitLength="1"		ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="1" />
+		<Item CodeName="burnUnderCurrent"		DisplayName="Burn UnderCurrent"			Description="Burn Wire Under Current Flag"										BitOffset="34" BitLength="1"		ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="1" />
+		<Item CodeName="burnOverCurrent"		DisplayName="Burn OverCurrent"			Description="Burn Wire Over Current Flag"										BitOffset="35" BitLength="1"		ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="1" />
+		<Item CodeName="DeploymentTimeout"		DisplayName="Deployment Timeout"		Description="CubeMag did not detect deployment before configured timeout"		BitOffset="36" BitLength="1"		ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="1" />
+	</Ttcs>
+
+	<Ttcs CanSet="true" CanGet="false" CodeName="DeployArm" DisplayName="Arm Deploy" Description="Arm CubeMag for Deployment" Len="1" PartOfStartItem="0" PartOfNumItems="0" Group="Deployment">
+		<Item CodeName="Magic" DisplayName="Magic number" Description="Magic number to make sure it is a valid command. Should equal enumeration options" BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="MagicDeployArm" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+	</Ttcs>
+
+	<Ttcs CanSet="true" CanGet="false" CodeName="Deploy" DisplayName="Deploy" Description="Deploy CubeMag" Len="1" PartOfStartItem="0" PartOfNumItems="0" Group="Deployment">
+		<Item CodeName="Magic" DisplayName="Magic number" Description="Magic number to make sure it is a valid command. Should equal enumeration options" BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="MagicDeploy" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+	</Ttcs>
+
+  <!-- ****************** HOUSEKEEPING ****************** -->
+
+	<Ttcs CanSet="false" CanGet="true" CodeName="HealthTlm" DisplayName="Health Telemetry" Description="Health Telemetry for CubeMagDeploy" Len="24" PartOfStartItem="0" PartOfNumItems="0" Group="HousekeepingTelemetry">
+		<Item CodeName="McuCurrent"   		DisplayName="MCU Current"           		Description="MCU current"                     									BitOffset="0"   BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="0" />
+		<Item CodeName="McuTemp"      		DisplayName="MCU Temperature"       		Description="MCU temperature in deg C"        									BitOffset="16"  BitLength="16" ValueType="SignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="deg C" RangeMin="0" RangeMax="0" />
+		<Item CodeName="McuVoltage"   		DisplayName="MCU Voltage"           		Description="MCU supply voltage"              									BitOffset="32"  BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mV" RangeMin="0" RangeMax="5000" />
+		<Item CodeName="PrimMagTemp"  		DisplayName="Primary Mag Temperature"       Description="Primary Magnetometer Temperature"        							BitOffset="48"  BitLength="32" ValueType = "FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-75" RangeMax="150" />
+		<Item CodeName="RedMagTemp"			DisplayName="Redundant Mag Temperature"		Description="Redundant Magnetometer Temperature"        						BitOffset="80"  BitLength="32" ValueType = "FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-75" RangeMax="150" />
+		<Item CodeName="burnCurrent"		DisplayName="Burn Current"					Description="Burn Wire Current"													BitOffset="112" BitLength="32"	ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="0" />
+		<Item CodeName="DeploymentPinState"	DisplayName="Deployment Pin State"			Description="Deployment Detection Pin State"									BitOffset="144" BitLength="1"	ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="1" />
+		<Item CodeName="burnPinState"		DisplayName="Burn Pin State"				Description="Deployment Burn Wire Enable Pin State"								BitOffset="145" BitLength="1"	ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="1" />
+		<Item CodeName="burnUnderCurrent"	DisplayName="Burn UnderCurrent"				Description="Burn Wire Under Current Flag"										BitOffset="146" BitLength="1"	ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="1" />
+		<Item CodeName="burnOverCurrent"	DisplayName="Burn OverCurrent"				Description="Burn Wire Over Current Flag"										BitOffset="147" BitLength="1"	ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="1" />
+		<Item CodeName="DeploymentTimeout"	DisplayName="Deployment Timeout"			Description="CubeMag did not detect deployment before configured timeout"		BitOffset="148" BitLength="1"	ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="1" />
+		<Item CodeName="Reserved"			DisplayName=""								Description=""																	BitOffset="149" BitLength="3"	ValueType="Reserved" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="1" />
+		<Item CodeName="WatchdogCount"		DisplayName="Watchdog Counters"    			Description="Bitmask representing virtual watchdog region warning counters."	BitOffset="152"  BitLength="40" ValueType="ByteArray"   EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  	</Ttcs>
+
+	<Ttcs CanSet="false" CanGet="true" CodeName="RedMagTemp" DisplayName="Redundant Magnetometer Temperature" Description="Redundant Magnetometer Measurement" Len="4" PartOfStartItem="0" PartOfNumItems="0" Group="">
+		<Item CodeName="Temp" DisplayName="Temperature" Description="Temperature" BitOffset="0" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-75" RangeMax="125" />
+	</Ttcs>
+
+	<Ttcs CanSet="false" CanGet="true" CodeName="RedMagDiagnostics" DisplayName="Redundant Magnetometer Diagnostics" Description="Redundant Magnetometer Diagnostics" Len="16" PartOfStartItem="0" PartOfNumItems="0" Group="Housekeeping">
+		<Item CodeName="lastErrorMag"		DisplayName="Last Error Magnetometer"			Description="Last Error Code from magnetometer measurement"		BitOffset="0"	BitLength="32"	ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="errorCountMag"		DisplayName="Error Count Magnetometer"			Description="Error Counter for megnetometer measurement"		BitOffset="32" BitLength="32"	ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="lastErrorTmp"		DisplayName="Last Error Temperature"			Description="Last Error Code from temperature measurement"		BitOffset="64"	BitLength="32"	ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="errorCountTmp"		DisplayName="Error Count Temperature"			Description="Error Counter for temperature measurement"			BitOffset="96" BitLength="32"	ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+	</Ttcs>
+
+  <!-- ****************** ENUMERATIONS ****************** -->
+
+	<Enum>
+		<CodeName>MagicDeployArm</CodeName>
+		<EnumValue NumericalValue="11" CodeName="MagicArm"		DisplayName="Arm" Description="Magic number to Arm CubeMag for deployment" />
+	</Enum>
+
+	<Enum>
+		<CodeName>MagicDeploy</CodeName>
+		<EnumValue NumericalValue="22" CodeName="MagicDeploy"		DisplayName="Deploy" Description="Deploy CubeMag" />
+	</Enum>
+
+	<!-- ****************** TCTLM IDS ****************** -->
+
+	<!-- !!! app-specific ID's should start from the mid-point (64 TC & 192 TLM) and should increment & decrement towards the common ID's !!! -->
+
+	<!-- TC -->
+  <TtcIds TtcName="PniConfig"													GetId="255" SetId="64" LogId="0" />
+  <TtcIds TtcName="SampleRed"													GetId="255" SetId="65" LogId="0" />
+  <TtcIds TtcName="Deploy"														GetId="255" SetId="63" LogId="0" />
+	<TtcIds TtcName="DeployArm"													GetId="255" SetId="66" LogId="0" />
+	<TtcIds TtcName="PniCalibration"										GetId="255" SetId="62" LogId="0" />
+
+	<!-- TLM -->
+
+  <TtcIds TtcName="HealthTlm"					GetId="254" SetId="255" LogId="0" />
+  <TtcIds TtcName="PniConfig"					GetId="192" SetId="255" LogId="0" />
+  <TtcIds TtcName="RedMagMeasurement"			GetId="193" SetId="255" LogId="0" />
+  <TtcIds TtcName="RedMagMeasurementRaw"		GetId="191" SetId="255" LogId="0" />
+  <TtcIds TtcName="RedMagTemp"					GetId="194" SetId="255" LogId="0" />
+  <TtcIds TtcName="DeploymentStatus"			GetId="190" SetId="255" LogId="0" />
+  <TtcIds TtcName="RedMagDiagnostics"			GetId="195" SetId="255" LogId="0" />
+  <TtcIds TtcName="PniCalibration"				GetId="189" SetId="255" LogId="0" />
+  
+  <!-- ****************** MODULES ****************** -->
+  <Modules>
+	  <string>common-framework/common-framework-1.xml</string>
+    <string>cube-mag-4/control-program-common-1.xml</string>
+    <string>cube-mag-4/cube-mag-common-1.xml</string>
+  </Modules>
+
+  <!-- ****************** GLOBAL ENUMS ****************** -->
+  <GlobalEnums>
+    <string>common-framework/common-framework-enums-1.xml</string>
+	<string>cube-mag-4/control-program-common-enums-1.xml</string>
+  </GlobalEnums>
+  
+  <!-- ****************** END ****************** -->
+
+</NodeDefinition>

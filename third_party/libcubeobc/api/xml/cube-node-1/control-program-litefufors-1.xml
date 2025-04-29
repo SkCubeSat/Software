@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NodeDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <IsModule>false</IsModule>
+  <Name>cube-node-1-control-program-litefufors-1</Name>
+  <CodeName>CubeNodeControlProgramLitefufors</CodeName>
+  <InterfaceVersion>1</InterfaceVersion>
+  <NodeTypeId2>275</NodeTypeId2> <!-- NodeTypeCubeNodeQuadLitefufors & ProgramTypeControl ~ See NodeType/ProgramType Enums in common-framework.xml -->
+  <NodeTypeIdMask2>65535</NodeTypeIdMask2> <!-- Match NodeType(0x00FF) & ProgramType(0xFF00) -->
+  <CanLog>false</CanLog>
+
+  <Ttcs CanSet="true" CanGet="false" CodeName="UforsPower" DisplayName="uFORS Power State" Description="Set the uFORS Power States" Len="1" PartOfStartItem="0" PartOfNumItems="0" Group="uFORS">
+    <Item CodeName="PowerUforsX"            DisplayName="Power State uFORS X"            Description="X-axis uFORS Power State"           BitOffset="0"   BitLength="2" ValueType="Enumeration" EnumerationName="UforsPowerState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="PowerUforsY"            DisplayName="Power State uFORS Y"            Description="Y-axis uFORS1 Power State"          BitOffset="2"   BitLength="2" ValueType="Enumeration" EnumerationName="UforsPowerState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="PowerUforsZ"            DisplayName="Power State uFORS Z"            Description="Z-axis uFORS2 Power State"          BitOffset="4"   BitLength="2" ValueType="Enumeration" EnumerationName="UforsPowerState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="true" CanGet="true" CodeName="NodeSvcSettings" DisplayName="Node Service Settings" Description="Set/Get the Node Service Settings" Len="1" PartOfStartItem="0" PartOfNumItems="0" Group="uFORS">
+    <Item CodeName="UforsAutoBoot"        DisplayName="uFORS Auto Boot"        Description="uFORS Auto-Boot on Startup Enable/Disable"      BitOffset="0"  BitLength="1"	ValueType="Boolean"			EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="true" CanGet="true" CodeName="UforsPortMap" DisplayName="uFORS Port Map" Description="Mapping of connected uFORS(s) from port to the axis of the uFORS (there should not be duplicates, the unused port should be INVALID)" Len="1" PartOfStartItem="0" PartOfNumItems="0" Group="uFORS">
+    <Item CodeName="UforsAxisPort1"         DisplayName="uFORS Axis Port 1"        Description="Selects which axis is represented by the uFORS connected to port 1" 						BitOffset="0"  BitLength="2"	ValueType="Enumeration"			EnumerationName="UforsAxis" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="UforsAxisPort2"         DisplayName="uFORS Axis Port 2"        Description="Selects which axis is represented by the uFORS connected to port 2" 						BitOffset="2"  BitLength="2"	ValueType="Enumeration"			EnumerationName="UforsAxis" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="UforsAxisPort3"         DisplayName="uFORS Axis Port 3"        Description="Selects which axis is represented by the uFORS connected to port 3" 						BitOffset="4"  BitLength="2"	ValueType="Enumeration"			EnumerationName="UforsAxis" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="UforsAxisPort4"         DisplayName="uFORS Axis Port 4"        Description="Selects which axis is represented by the uFORS connected to port 4" 						BitOffset="6"  BitLength="2"	ValueType="Enumeration"			EnumerationName="UforsAxis" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="true" CanGet="true" CodeName="UforsSvcSettings" DisplayName="uFORS Service Settings" Description="Set/Get the uFORS Service Settings - used by all instances" Len="7" PartOfStartItem="0" PartOfNumItems="0" Group="uFORS">
+  	<Item CodeName="MaxReqErrors"           DisplayName="Max Request Errors"       Description="uFORS Maximum Number of data request Errors Before Entering Error State"  BitOffset="0"   BitLength="32"	ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SampleFrequency"        DisplayName="Sample Frequency"       Description="uFORS Sample Frequency"           								                          BitOffset="32"  BitLength="16"	ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="Hz" RangeMin="5" RangeMax="1000" />
+    <Item CodeName="AutoSample"             DisplayName="Auto Sample"            Description="uFORS Auto-Sample Enable/Disable" 								                          BitOffset="48"  BitLength="1"	ValueType="Boolean"					EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="NodeSvcStatus" DisplayName="Node Service Status" Description="Node Service Status" Len="13" PartOfStartItem="0" PartOfNumItems="0" Group="uFORS">
+    <Item CodeName="NodeState"              DisplayName="Node State"              Description="CubeNode Node Service State"       BitOffset="0"   BitLength="8" ValueType="Enumeration" EnumerationName="NodeState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="BootErrorCodeUforsX"    DisplayName="Boot Error Code uFORS X"  Description="uFORS X Boot Error Code"          BitOffset="8"   BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="BootErrorCodeUforsY"    DisplayName="Boot Error Code uFORS Y"  Description="uFORS Y Boot Error Code"          BitOffset="40"   BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="BootErrorCodeUforsZ"    DisplayName="Boot Error Code uFORS Z"  Description="uFORS Y Boot Error Code"          BitOffset="72"   BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="UforsSvcStatus" DisplayName="uFORS Service Status" Description="uFORS Service Status" Len="30" PartOfStartItem="0" PartOfNumItems="0" Group="uFORS">
+    <Item CodeName="StateUforsX"          		    DisplayName="Service State uFORS X"                  Description="uFORS X Service State"                            BitOffset="0"   BitLength="8" ValueType="Enumeration" EnumerationName="UforsState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailCountUforsX"           	  DisplayName="Req Failure Count uFORS X"              Description="uFORS X Request Failure Count"                    BitOffset="8"   BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailCountLastSuccessUforsX"   DisplayName="Req Last Success Failure Count uFORS X" Description="uFORS X Request Failure Count at Last Success"    BitOffset="40"  BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="LastReqResultUforsX"  	      DisplayName="Last Req Result uFORS X"                Description="uFORS X Last Request Result" 		                  BitOffset="72"  BitLength="8" ValueType="Enumeration" EnumerationName="UforsReqResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="StateUforsY"          		    DisplayName="Service State uFORS Y"                  Description="uFORS Y Service State"                            BitOffset="80"   BitLength="8" ValueType="Enumeration" EnumerationName="UforsState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailCountUforsY"           	  DisplayName="Req Failure Count uFORS Y"              Description="uFORS Y Request Failure Count"                    BitOffset="88"   BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailCountLastSuccessUforsY"   DisplayName="Req Last Success Failure Count uFORS Y" Description="uFORS Y Request Failure Count at Last Success"    BitOffset="120"  BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="LastReqResultUforsY"  	      DisplayName="Last Req Result uFORS Y"                Description="uFORS Y Last Request Result" 		                  BitOffset="152"  BitLength="8" ValueType="Enumeration" EnumerationName="UforsReqResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="StateUforsZ"          		    DisplayName="Service State uFORS Z"                  Description="uFORS Z Service State"                            BitOffset="160"   BitLength="8" ValueType="Enumeration" EnumerationName="UforsState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailCountUforsZ"           	  DisplayName="Req Failure Count uFORS Z"              Description="uFORS Z Request Failure Count"                    BitOffset="168"   BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailCountLastSuccessUforsZ"   DisplayName="Req Last Success Failure Count uFORS Z" Description="uFORS Z Request Failure Count at Last Success"    BitOffset="200"  BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="LastReqResultUforsZ"  	      DisplayName="Last Req Result uFORS z"                Description="uFORS Z Last Request Result" 		                  BitOffset="232"  BitLength="8" ValueType="Enumeration" EnumerationName="UforsReqResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+	<!-- ****************** uFORS ****************** -->
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="UforsTlm" DisplayName="uFORS TLM" Description="Get latest uFORS TLM Packets (does not perform a new request)" Len="15" PartOfStartItem="0" PartOfNumItems="0" Group="uFORS">
+    <Item CodeName="RateUforsX"                   DisplayName="Rate uFORS X"					           Description="uFORS X Angular rate"					                        BitOffset="0"   BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="degps" RangeMin="-20" RangeMax="20" />
+    <Item CodeName="RateUforsY"                   DisplayName="Rate uFORS Y"					           Description="uFORS Y  Angular rate"					                      BitOffset="32"  BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="degps" RangeMin="-20" RangeMax="20" />
+    <Item CodeName="RateUforsZ"                   DisplayName="Rate uFORS Z"					           Description="uFORS Z  Angular rate"					                      BitOffset="64"  BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="degps" RangeMin="-20" RangeMax="20" />
+		<Item CodeName="NogoUforsX"                   DisplayName="NOGO uFORS X"                     Description="uFORS XStatus - NOGO bit"				                      BitOffset="96"  BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="RstAckUforsX"                 DisplayName="Reset Ack uFORS X"                Description="uFORS X Status - Reset acknowledge bit"				        BitOffset="97"  BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="TempWarnUforsX"               DisplayName="Temp Warning uFORS X"             Description="uFORS X Status - temperature warning bit"				      BitOffset="98"  BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="AuxControlLoopErrUforsX"      DisplayName="Aux Control Loop Err uFORS X"     Description="uFORS X Status - auxiliary control loop error bit"    BitOffset="99"  BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="HardBitErrUforsX"             DisplayName="Hardware BIT Err uFORS X"         Description="uFORS X Status - Hardware BIT error bit"				      BitOffset="100" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="MeasRangeErrUforsX"           DisplayName="Measurement Range Err uFORS X"    Description="uFORS X Status - Measurement range exceeded bit"			BitOffset="101" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="UnknwnCmdUforsX"              DisplayName="Unknown Command uFORS X"          Description="uFORS X Status - unknown command bit"				          BitOffset="102" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="NogoUforsY"                   DisplayName="NOGO uFORS Y"                     Description="uFORS Y  Status - NOGO bit"				                    BitOffset="103" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="RstAckUforsY"                 DisplayName="Reset Ack uFORS Y"                Description="uFORS Y  Status - Reset acknowledge bit"				      BitOffset="104" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="TempWarnUforsY"               DisplayName="Temp Warning uFORS Y"             Description="uFORS Y  Status - temperature warning bit"				    BitOffset="105" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="AuxControlLoopErrUforsY"      DisplayName="Aux Control Loop Err uFORS Y"     Description="uFORS Y  Status - auxiliary control loop error bit"   BitOffset="106" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="HardBitErrUforsY"             DisplayName="Hardware BIT Err uFORS Y"         Description="uFORS Y  Status - Hardware BIT error bit"				      BitOffset="107" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="MeasRangeErrUforsY"           DisplayName="Measurement Range Err uFORS Y"    Description="uFORS Y  Status - Measurement range exceeded bit"			BitOffset="108" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="UnknwnCmdUforsY"              DisplayName="Unknown Command uFORS Y"          Description="uFORS Y  Status - unknown command bit"				        BitOffset="109" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="NogoUforsZ"                   DisplayName="NOGO uFORS Z"                     Description="uFORS Z  Status - NOGO bit"				                    BitOffset="110" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="RstAckUforsZ"                 DisplayName="Reset Ack uFORS Z"                Description="uFORS Z  Status - Reset acknowledge bit"				      BitOffset="111" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="TempWarnUforsZ"               DisplayName="Temp Warning uFORS Z"             Description="uFORS Z  Status - temperature warning bit"				    BitOffset="112" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="AuxControlLoopErrUforsZ"      DisplayName="Aux Control Loop Err uFORS Z"     Description="uFORS Z  Status - auxiliary control loop error bit"   BitOffset="113" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="HardBitErrUforsZ"             DisplayName="Hardware BIT Err uFORS Z"         Description="uFORS Z  Status - Hardware BIT error bit"				      BitOffset="114" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="MeasRangeErrUforsZ"           DisplayName="Measurement Range Err uFORS Z"    Description="uFORS Z  Status - Measurement range exceeded bit"			BitOffset="115" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="UnknwnCmdUforsZ"              DisplayName="Unknown Command uFORS Z"          Description="uFORS Z  Status - unknown command bit"				        BitOffset="116" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="UforsTlmX" DisplayName="uFORS X TLM" Description="Get uFORS X TLM Packet (performs a new request only if auto-sample is disabled)" Len="5" PartOfStartItem="0" PartOfNumItems="0" Group="uFORS">
+    <Item CodeName="Rate"                   DisplayName="Rate"					           Description="Angular rate"					                        BitOffset="0"  BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="degps" RangeMin="-20" RangeMax="20" />
+		<Item CodeName="Nogo"                   DisplayName="NOGO"                     Description="Status - NOGO bit"				                    BitOffset="32" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="RstAck"                 DisplayName="Reset Ack"                Description="Status - Reset acknowledge bit"				        BitOffset="33" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="TempWarn"               DisplayName="Temp Warning"             Description="Status - temperature warning bit"				      BitOffset="34" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="AuxControlLoopErr"      DisplayName="Aux Control Loop Err"     Description="Status - auxiliary control loop error bit"    BitOffset="35" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="HardBitErr"             DisplayName="Hardware BIT Err"         Description="Status - Hardware BIT error bit"				      BitOffset="36" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="MeasRangeErr"           DisplayName="Measurement Range Err"    Description="Status - Measurement range exceeded bit"			BitOffset="37" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="UnknwnCmd"              DisplayName="Unknown Command"          Description="Status - unknown command bit"				          BitOffset="38" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="UforsTlmY" DisplayName="uFORS Y TLM" Description="Get uFORS Y TLM Packet (performs a new request only if auto-sample is disabled)" Len="5" PartOfStartItem="0" PartOfNumItems="0" Group="uFORS">
+    <Item CodeName="Rate"                   DisplayName="Rate"					           Description="Angular rate"					                        BitOffset="0"  BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="degps" RangeMin="-20" RangeMax="20" />
+		<Item CodeName="Nogo"                   DisplayName="NOGO"                     Description="Status - NOGO bit"				                    BitOffset="32" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="RstAck"                 DisplayName="Reset Ack"                Description="Status - Reset acknowledge bit"				        BitOffset="33" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="TempWarn"               DisplayName="Temp Warning"             Description="Status - temperature warning bit"				      BitOffset="34" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="AuxControlLoopErr"      DisplayName="Aux Control Loop Err"     Description="Status - auxiliary control loop error bit"    BitOffset="35" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="HardBitErr"             DisplayName="Hardware BIT Err"         Description="Status - Hardware BIT error bit"				      BitOffset="36" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="MeasRangeErr"           DisplayName="Measurement Range Err"    Description="Status - Measurement range exceeded bit"			BitOffset="37" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="UnknwnCmd"              DisplayName="Unknown Command"          Description="Status - unknown command bit"				          BitOffset="38" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="UforsTlmZ" DisplayName="uFORS Z TLM" Description="Get uFORS Z TLM Packet (performs a new request only if auto-sample is disabled)" Len="5" PartOfStartItem="0" PartOfNumItems="0" Group="uFORS">
+    <Item CodeName="Rate"                   DisplayName="Rate"					           Description="Angular rate"					                        BitOffset="0"  BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="degps" RangeMin="-20" RangeMax="20" />
+		<Item CodeName="Nogo"                   DisplayName="NOGO"                     Description="Status - NOGO bit"				                    BitOffset="32" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="RstAck"                 DisplayName="Reset Ack"                Description="Status - Reset acknowledge bit"				        BitOffset="33" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="TempWarn"               DisplayName="Temp Warning"             Description="Status - temperature warning bit"				      BitOffset="34" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="AuxControlLoopErr"      DisplayName="Aux Control Loop Err"     Description="Status - auxiliary control loop error bit"    BitOffset="35" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="HardBitErr"             DisplayName="Hardware BIT Err"         Description="Status - Hardware BIT error bit"				      BitOffset="36" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="MeasRangeErr"           DisplayName="Measurement Range Err"    Description="Status - Measurement range exceeded bit"			BitOffset="37" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="UnknwnCmd"              DisplayName="Unknown Command"          Description="Status - unknown command bit"				          BitOffset="38" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+	<!-- ****************** ENUMERATIONS ****************** -->
+
+  <Enum>
+    <CodeName>NodeState</CodeName>
+		<EnumValue NumericalValue="0" CodeName="NodeOff"            DisplayName="Off" Description="Node is Off" />
+    <EnumValue NumericalValue="1" CodeName="NodeIdle"           DisplayName="Idle" Description="Node is Idle" />
+    <EnumValue NumericalValue="2" CodeName="NodeUforsPwr"       DisplayName="uFORS Power CHange"  Description="Node is powering on or off one or more uFORS" />
+  </Enum>
+
+  <Enum>
+    <CodeName>UforsAxis</CodeName>
+    <EnumValue NumericalValue="0" CodeName="UforsAxisX"          DisplayName="X-axis"     Description="uFORS on the X-axis" />
+    <EnumValue NumericalValue="1" CodeName="UforsAxisY"          DisplayName="Y-axis"     Description="uFORS on the Y-axis" />
+    <EnumValue NumericalValue="2" CodeName="UforsAxisZ"          DisplayName="Z-axis"     Description="uFORS on the Z-axis" />
+    <EnumValue NumericalValue="3" CodeName="UforsAxisInvalid"    DisplayName="Invalid"    Description="Used to signal not-in-use" />
+  </Enum>
+
+  <Enum>
+    <CodeName>UforsState</CodeName>
+    <EnumValue NumericalValue="0" CodeName="UforsOff"           DisplayName="Off"         Description="uFORS is Off" />
+    <EnumValue NumericalValue="1" CodeName="UforsBoot"          DisplayName="Boot"        Description="uFORS is Booting" />
+    <EnumValue NumericalValue="2" CodeName="UforsReset"         DisplayName="Reset"       Description="uFORS is being reset" />
+    <EnumValue NumericalValue="3" CodeName="UforsIdle"          DisplayName="Idle"        Description="uFORS is Idle" />
+    <EnumValue NumericalValue="4" CodeName="UforsAuto"          DisplayName="uFORS Auto"  Description="uFORS is Auto-Sampling" />
+    <EnumValue NumericalValue="5" CodeName="UforsError"         DisplayName="uFORS Error" Description="uFORS is in an Error State" />
+  </Enum>
+
+  <Enum>
+    <CodeName>UforsPowerState</CodeName>
+    <EnumValue NumericalValue="0" CodeName="PoweredNoChange" DisplayName="No Change" Description="No change" />
+    <EnumValue NumericalValue="1" CodeName="PoweredOff" DisplayName="uFORS Off" Description="uFORS Power Off" />
+    <EnumValue NumericalValue="2" CodeName="PoweredOn"  DisplayName="uFORS On"  Description="uFORS Power On" />
+  </Enum>
+
+  <Enum>
+    <CodeName>UforsReqResult</CodeName>
+    <EnumValue NumericalValue="0" CodeName="ReqNone" DisplayName="Request None" Description="No Request Yet" />
+    <EnumValue NumericalValue="1" CodeName="Req" DisplayName="Request Response" Description="Request Response" />
+    <EnumValue NumericalValue="2" CodeName="SumError" DisplayName="Sum Error" Description="Sum Error" />
+    <EnumValue NumericalValue="3" CodeName="CorruptData" DisplayName="Corrupt Data" Description="Corrupt Data" />
+    <EnumValue NumericalValue="4" CodeName="JunkData" DisplayName="Junk Data" Description="Junk Data" />
+    <EnumValue NumericalValue="5" CodeName="IncompleteMsg" DisplayName="Incomplete Message" Description="Incomplete Message" />
+    <EnumValue NumericalValue="6" CodeName="Timeout" DisplayName="Timeout" Description="Timeout" />
+    <EnumValue NumericalValue="7" CodeName="Overflow" DisplayName="Overflow" Description="Overflow" />
+  </Enum>
+
+	<!-- !!! app-specific ID's should start from the mid-point (64 TC & 192 TLM) and should increment & decrement towards the common ID's !!! -->
+
+	<!-- TC -->
+
+	<TtcIds TtcName="UforsPower"			    		      GetId="255" SetId="68" LogId="0" />
+  <TtcIds TtcName="NodeSvcSettings"			    		  GetId="255" SetId="69" LogId="0" />
+  <TtcIds TtcName="UforsPortMap"			    		    GetId="255" SetId="67" LogId="0" />
+  <TtcIds TtcName="UforsSvcSettings"			    		GetId="255" SetId="70" LogId="0" />
+
+  <!-- TLM -->
+  <TtcIds TtcName="NodeSvcSettings"			    		  GetId="192" SetId="255" LogId="0" />
+  <TtcIds TtcName="UforsPortMap"			    		    GetId="193" SetId="255" LogId="0" />
+  <TtcIds TtcName="UforsSvcSettings"			    		GetId="191" SetId="255" LogId="0" />
+  <TtcIds TtcName="NodeSvcStatus"			    		    GetId="194" SetId="255" LogId="0" />
+  <TtcIds TtcName="UforsSvcStatus"			    		  GetId="190" SetId="255" LogId="0" />
+  <TtcIds TtcName="UforsTlm"			    		        GetId="195" SetId="255" LogId="0" />
+  <TtcIds TtcName="UforsTlmX"			    		        GetId="189" SetId="255" LogId="0" />
+  <TtcIds TtcName="UforsTlmY"			    		        GetId="196" SetId="255" LogId="0" />
+  <TtcIds TtcName="UforsTlmZ"			    		        GetId="188" SetId="255" LogId="0" />
+
+
+   <!-- ****************** MODULES ****************** -->
+
+   <Modules>
+     <string>common-framework/common-framework-1.xml</string>
+     <string>cube-node-1/cube-node-common-1.xml</string>
+   </Modules>
+
+   <!-- ****************** GLOBAL ENUMS ****************** -->
+  <GlobalEnums>
+    <string>common-framework/common-framework-enums-1.xml</string>
+  </GlobalEnums>
+
+</NodeDefinition>

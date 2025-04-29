@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NodeDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <IsModule>true</IsModule>
+  <Name>cube-node-1-control-program-pst3s-common-1</Name>
+  <CodeName>CubeNodeControlProgramPst3sCommon</CodeName>
+  <InterfaceVersion>1</InterfaceVersion>
+  <CanLog>false</CanLog>
+
+  <Ttcs CanSet="true" CanGet="false" CodeName="Pst3sPower" DisplayName="PST3S Power State" Description="Set the PST3S Power State" Len="9" PartOfStartItem="0" PartOfNumItems="0" Group="PST3S">
+    <Item CodeName="UnixTimeSeconds"      DisplayName="Current Unix seconds"        Description="Current Unix time s (used for second calibration)"   				BitOffset="0"   BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="s" RangeMin="0" RangeMax="0" />
+		<Item CodeName="UnixTimeNanoSeconds"  DisplayName="Current Unix Nanoseconds"    Description="Current Unix time ns (used for second calibration)"  				BitOffset="32"  BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="ns" RangeMin="0" RangeMax="999999999" />
+    <Item CodeName="PowerStr0"            DisplayName="Power State STR0"            Description="STR0 Power State"                                            BitOffset="64"  BitLength="2" ValueType="Enumeration" EnumerationName="Pst3sPowerState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="PowerStr1"            DisplayName="Power State STR1"            Description="STR1 Power State"                                            BitOffset="66"  BitLength="2" ValueType="Enumeration" EnumerationName="Pst3sPowerState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="PowerStr2"            DisplayName="Power State STR2"            Description="STR2 Power State"                                            BitOffset="68"  BitLength="2" ValueType="Enumeration" EnumerationName="Pst3sPowerState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="PowerStr3"            DisplayName="Power State STR3"            Description="STR3 Power State"                                            BitOffset="70"  BitLength="2" ValueType="Enumeration" EnumerationName="Pst3sPowerState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="true" CanGet="true" CodeName="NodeSvcSettings" DisplayName="Node Service Settings" Description="Set/Get the Node Service Settings" Len="1" PartOfStartItem="0" PartOfNumItems="0" Group="PST3S">
+    <Item CodeName="Pst3sAutoBoot"          DisplayName="PST3S Auto Boot"        Description="PST3S Auto-Boot on Startup Enable/Disable" 						BitOffset="0"  BitLength="1"	ValueType="Boolean"			EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="true" CanGet="true" CodeName="Pst3sSvcSettings" DisplayName="PST3S Service Settings" Description="Set/Get the PST3S Service Settings" Len="6" PartOfStartItem="0" PartOfNumItems="0" Group="PST3S">
+  	<Item CodeName="MaxTcTlmErrors"         DisplayName="Max TcTlm Errors"       Description="PST3S Maximum Number of TcTlm Errors Before Entering Error State" BitOffset="0"   BitLength="32"	ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SampleFrequency"        DisplayName="Sample Frequency"       Description="PST3S Sample Frequency"           								BitOffset="32"  BitLength="8"	ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="Hz" RangeMin="1" RangeMax="15" />
+    <Item CodeName="AutoSample"             DisplayName="Auto Sample"            Description="PST3S Auto-Sample Enable/Disable" 								BitOffset="40"  BitLength="1"	ValueType="Boolean"					EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="ApiVersion"             DisplayName="API Version"            Description="PST3S API Version"								 								BitOffset="41"  BitLength="7"	ValueType="Enumeration"			EnumerationName="Pst3sApiVersion" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="NodeSvcStatus" DisplayName="Node Service Status" Description="Node Service Status" Len="17" PartOfStartItem="0" PartOfNumItems="0" Group="PST3S">
+    <Item CodeName="NodeState"            DisplayName="Node State"                Description="CubeNode Node Service State"           BitOffset="0"   BitLength="8" ValueType="Enumeration" EnumerationName="NodeState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="BootErrorCodeStr0"    DisplayName="Boot Error Code STR0"      Description="STR0 Boot Error Code"                  BitOffset="8"   BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="BootErrorCodeStr1"    DisplayName="Boot Error Code STR1"      Description="STR1 Boot Error Code"                  BitOffset="40"  BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="BootErrorCodeStr2"    DisplayName="Boot Error Code STR2"      Description="STR2 Boot Error Code"                  BitOffset="72"  BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="BootErrorCodeStr3"    DisplayName="Boot Error Code STR3"      Description="STR3 Boot Error Code"                  BitOffset="104" BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="Pst3sSvcStatus" DisplayName="PST3S Service Status" Description="PST3S Service Status" Len="44" PartOfStartItem="0" PartOfNumItems="0" Group="PST3S">
+    <Item CodeName="StateStr0"                    DisplayName="Service State STR0"                    Description="STR0 Service State"                        BitOffset="0"   BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailureCountStr0"           	DisplayName="TcTlm Failure Count STR0"              Description="STR0 TcTlm Failure Count"                  BitOffset="8"   BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailureCountLastSuccessStr0"	DisplayName="TcTlm Last Success Failure Count STR0" Description="STR0 TcTlm Failure Count at Last Success"  BitOffset="40"  BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="LastTransactionStr0"        	DisplayName="Last Transaction STR0"                 Description="STR0 Last Transaction"        		          BitOffset="72"  BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sTcTlms" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="LastTransactionResultStr0"  	DisplayName="Last Transaction Result STR0"          Description="STR0 Last Transaction Result" 		          BitOffset="80"  BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sTcTlmResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="StateStr1"                    DisplayName="Service State STR1"                    Description="STR1 Service State"                        BitOffset="88"  BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailureCountStr1"           	DisplayName="TcTlm Failure Count STR1"              Description="STR1 TcTlm Failure Count"                  BitOffset="96"  BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailureCountLastSuccessStr1"	DisplayName="TcTlm Last Success Failure Count STR1" Description="STR1 TcTlm Failure Count at Last Success"  BitOffset="128" BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="LastTransactionStr1"        	DisplayName="Last Transaction STR1"                 Description="STR1 Last Transaction"        		          BitOffset="160" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sTcTlms" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="LastTransactionResultStr1"  	DisplayName="Last Transaction Result STR1"          Description="STR1 Last Transaction Result" 		          BitOffset="168" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sTcTlmResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="StateStr2"                    DisplayName="Service State STR2"                    Description="STR2 Service State"                        BitOffset="176" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailureCountStr2"           	DisplayName="TcTlm Failure Count STR2"              Description="STR2 TcTlm Failure Count"                  BitOffset="184" BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailureCountLastSuccessStr2"	DisplayName="TcTlm Last Success Failure Count STR2" Description="STR2 TcTlm Failure Count at Last Success"  BitOffset="216" BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="LastTransactionStr2"        	DisplayName="Last Transaction STR2"                 Description="STR2 Last Transaction"        		          BitOffset="248" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sTcTlms" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="LastTransactionResultStr2"  	DisplayName="Last Transaction Result STR2"          Description="STR2 Last Transaction Result" 		          BitOffset="256" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sTcTlmResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="StateStr3"                    DisplayName="Service State STR3"                    Description="STR3 Service State"                        BitOffset="264" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailureCountStr3"           	DisplayName="TcTlm Failure Count STR3"              Description="STR3 TcTlm Failure Count"                  BitOffset="272" BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailureCountLastSuccessStr3"	DisplayName="TcTlm Last Success Failure Count STR3" Description="STR3 TcTlm Failure Count at Last Success"  BitOffset="304" BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="LastTransactionStr3"        	DisplayName="Last Transaction STR3"                 Description="STR3 Last Transaction"        		          BitOffset="336" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sTcTlms" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="LastTransactionResultStr3"  	DisplayName="Last Transaction Result STR3"          Description="STR3 Last Transaction Result" 		          BitOffset="344" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sTcTlmResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+	<!-- ****************** StarTracker TC ****************** -->
+
+  <Ttcs CanSet="true" CanGet="false" CodeName="Pst3sNumberNavigationStars" DisplayName="PST3S Number of Navigation Stars" Description="Set the PST3S Number of navigation stars" Len="2" PartOfStartItem="0" PartOfNumItems="0" Group="StarTrackerTC">
+    <Item CodeName="StrHandle"    DisplayName="STR Handle"                  Description="Target STR instance"               BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sHandle" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="NumberStars"  DisplayName="Number of Navigation Stars"  Description="PST3S Number of Navigation Stars"  BitOffset="8" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="7" />
+  </Ttcs>
+  <Ttcs CanSet="true" CanGet="false" CodeName="Pst3sExposure" DisplayName="PST3S Image Exposure" Description="Set the PST3S Image Exposure" Len="2" PartOfStartItem="0" PartOfNumItems="0" Group="StarTrackerTC">
+    <Item CodeName="StrHandle"    DisplayName="STR Handle"                  Description="Target STR instance"               BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sHandle" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Exposure"     DisplayName="Exposure"                    Description="PST3S Image Exposure"              BitOffset="8" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="ms" RangeMin="0" RangeMax="100" />
+  </Ttcs>
+  <Ttcs CanSet="true" CanGet="false" CodeName="Pst3sImageFixedThreshold" DisplayName="PST3S Image Fixed Threshold" Description="Set the PST3S Image Fixed Threshold (Factory Only)" Len="2" PartOfStartItem="0" PartOfNumItems="0" Group="StarTrackerTC">
+    <Item CodeName="StrHandle"    DisplayName="STR Handle"                  Description="Target STR instance"               BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sHandle" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Threshold"    DisplayName="Threshold"                   Description="PST3S Image Fixed Threshold"       BitOffset="8" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+  <Ttcs CanSet="true" CanGet="false" CodeName="Pst3sSaaMode" DisplayName="PST3S SAA Mode" Description="Set the PST3S SAA Mode" Len="2" PartOfStartItem="0" PartOfNumItems="0" Group="StarTrackerTC">
+    <Item CodeName="StrHandle"    DisplayName="STR Handle"                  Description="Target STR instance"               BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sHandle" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SaaMode"      DisplayName="SAA Mode"                    Description="PST3S SAA Mode"                    BitOffset="8" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sSaaWorkingMode" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+  <Ttcs CanSet="true" CanGet="false" CodeName="Pst3sSaaThreshold" DisplayName="PST3S SAA Threshold" Description="Set the PST3S SAA Threshold" Len="2" PartOfStartItem="0" PartOfNumItems="0" Group="StarTrackerTC">
+    <Item CodeName="StrHandle"    DisplayName="STR Handle"                  Description="Target STR instance"               BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sHandle" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SaaThreshold" DisplayName="SAA Threshold"               Description="PST3S SAA Threshold"               BitOffset="8" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="31" />
+  </Ttcs>
+  <Ttcs CanSet="true" CanGet="false" CodeName="Pst3sFourStarSearchThreshold" DisplayName="PST3S Four Star Search Threshold" Description="Set the PST3S Four Star Search Threshold (Not Recommended)" Len="2" PartOfStartItem="0" PartOfNumItems="0" Group="StarTrackerTC">
+    <Item CodeName="StrHandle"    DisplayName="STR Handle"                  Description="Target STR instance"               BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sHandle" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Threshold"    DisplayName="Threshold"                   Description="PST3S Four Star Search Threshold"  BitOffset="8" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+  <Ttcs CanSet="true" CanGet="false" CodeName="Pst3sSecondCalibration" DisplayName="PST3S Second Calibration (Unix Time)" Description="Set the PST3S Second Calibration (Unix Time)" Len="5" PartOfStartItem="0" PartOfNumItems="0" Group="StarTrackerTC">
+    <Item CodeName="StrHandle"    DisplayName="STR Handle"                  Description="Target STR instance"                   BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sHandle" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="UnixTime"     DisplayName="Unix Time"                   Description="PST3S Second Calibration (Unix Time)"  BitOffset="8" BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="S" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+  <Ttcs CanSet="true" CanGet="false" CodeName="Pst3sTrackingModeThreshold" DisplayName="PST3S Tracking Mode Threshold" Description="Set the PST3S Tracking Mode Threshold (Not Recommended)" Len="2" PartOfStartItem="0" PartOfNumItems="0" Group="StarTrackerTC">
+    <Item CodeName="StrHandle"    DisplayName="STR Handle"                  Description="Target STR instance"               BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sHandle" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Threshold"    DisplayName="Tracking Mode Threshold"     Description="PST3S Tracking Mode Threshold"     BitOffset="8" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+  <Ttcs CanSet="true" CanGet="false" CodeName="Pst3sDynamicMode" DisplayName="PST3S Dynamic Mode" Description="Set the PST3S Dynamic Mode" Len="2" PartOfStartItem="0" PartOfNumItems="0" Group="StarTrackerTC">
+    <Item CodeName="StrHandle"    DisplayName="STR Handle"                  Description="Target STR instance"               BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sHandle" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="DynamicMode"  DisplayName="Dynamic Mode"                Description="PST3S Dynamic Mode"                BitOffset="8" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sDynamicModeEnum" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+  <Ttcs CanSet="true" CanGet="false" CodeName="Pst3sQuaternionFiltering" DisplayName="PST3S Quaternion Filtering" Description="Set the PST3S Quaternion Filtering" Len="2" PartOfStartItem="0" PartOfNumItems="0" Group="StarTrackerTC">
+    <Item CodeName="StrHandle"            DisplayName="STR Handle"            Description="Target STR instance"             BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sHandle" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="QuaternionFiltering"  DisplayName="Quaternion Filtering"  Description="PST3S Quaternion Filtering"      BitOffset="8" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sQFilteringSetState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+  <Ttcs CanSet="true" CanGet="false" CodeName="Pst3sEdacOff" DisplayName="PST3S EDAC Off" Description="Set the PST3S EDAC Off" Len="1" PartOfStartItem="0" PartOfNumItems="0" Group="StarTrackerTC">
+    <Item CodeName="StrHandle"    DisplayName="STR Handle"                  Description="Target STR instance"               BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sHandle" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+  <Ttcs CanSet="true" CanGet="false" CodeName="Pst3sSystemReset" DisplayName="PST3S System Reset" Description="Set the PST3S System Reset" Len="1" PartOfStartItem="0" PartOfNumItems="0" Group="StarTrackerTC">
+    <Item CodeName="StrHandle"    DisplayName="STR Handle"                  Description="Target STR instance"               BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sHandle" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+	<!-- ****************** StarTracker TLM ****************** -->
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="Pst3sTlm0" DisplayName="PST3S RAW TLM STR0" Description="Get PST3S TLM Packet from STR0. Triggers TLM Request" Len="63" PartOfStartItem="0" PartOfNumItems="0" Group="StarTrackerTLM">
+		<Item CodeName="ApiVersion"             	DisplayName="API Version"            				Description="PST3S API Version"								 												 BitOffset="0"   BitLength="8"	ValueType="Enumeration"			EnumerationName="Pst3sApiVersion" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Quat1"                    DisplayName="Quaternion 1"					        Description="PST3S Quaternion 1"					                             BitOffset="8"   BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-1" RangeMax="1" />
+    <Item CodeName="Quat2"                    DisplayName="Quaternion 2"					        Description="PST3S Quaternion 2"					                             BitOffset="40"  BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-1" RangeMax="1" />
+    <Item CodeName="Quat3"                    DisplayName="Quaternion 3"					        Description="PST3S Quaternion 3"					                             BitOffset="72"  BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-1" RangeMax="1" />
+    <Item CodeName="Quat4"                    DisplayName="Quaternion 4"					        Description="PST3S Quaternion 4"					                             BitOffset="104" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-1" RangeMax="1" />
+    <Item CodeName="AngVelX"                  DisplayName="Angular Velocity X"					  Description="PST3S Angular Valocity X"					                       BitOffset="136" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="degps" RangeMin="-1000" RangeMax="1000" />
+    <Item CodeName="AngVelY"                  DisplayName="Angular Velocity Y"					  Description="PST3S Angular Valocity Y"					                       BitOffset="168" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="degps" RangeMin="-1000" RangeMax="1000" />
+    <Item CodeName="AngVelZ"                  DisplayName="Angular Velocity Z"					  Description="PST3S Angular Valocity Z"					                       BitOffset="200" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="degps" RangeMin="-1000" RangeMax="1000" />
+    <Item CodeName="RateQuality"              DisplayName="Rate Quality"				 	        Description="PST3S Rate Quality"					                             BitOffset="232" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sRateQuality" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="UnixSeconds"              DisplayName="Unix Seconds"				 	        Description="PST3S Unix Seconds"					                             BitOffset="240" BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="S" RangeMin="0" RangeMax="0" />
+    <Item CodeName="UnixSecondsDecimal"       DisplayName="Unix Seconds Decimal"		      Description="PST3S Unix Seconds Decimal"		                           BitOffset="272" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="S" RangeMin="0" RangeMax="1" />
+    <Item CodeName="Temperature"              DisplayName="Temperature"					          Description="PST3S Temperature"						                             BitOffset="304" BitLength="8" ValueType="SignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="C" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ImageExposure"            DisplayName="Image Exposure"				        Description="PST3S Image Exposure"					                           BitOffset="312" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ImageThreshold"           DisplayName="Image Threshold"				        Description="PST3S Image Threshold"					                           BitOffset="320" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="BackGroundValues"         DisplayName="Background Values"				      Description="PST3S BackGround Values"				                           BitOffset="328" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="InternalProcessCode"      DisplayName="Internal Process Code"			    Description="PST3S Internal Process Code"			                         BitOffset="336" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="CmosChipIdResult"         DisplayName="CMOS Chip ID Self-test Result" Description="PST3S CMOS Chip ID Self-test Result"	                     BitOffset="344" BitLength="4" ValueType="Enumeration" EnumerationName="Pst3sSelfTestResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FpgaMRamResult"           DisplayName="FPGA MRAM Self-test Result"	  Description="PST3S FPGA MRAM Self-test Result"		                     BitOffset="348" BitLength="4" ValueType="Enumeration" EnumerationName="Pst3sSelfTestResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="NumberOfExtractedStars"		DisplayName="Number of Extracted Stars"		  Description="PST3S Number of Extracted Stars"		                       BitOffset="352" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="OperatingMode"            DisplayName="Operating Mode"                Description="PST3S Operating Mode"					                           BitOffset="360" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sOperatingModes" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ImagingGain"              DisplayName="Imaging Gain"                  Description="PST3S Imaging Gain"					                             BitOffset="368" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="MinNavigationStars"       DisplayName="Minimum Navigation Stars"		  Description="PST3S Minimum Navigation Stars When Quaternion is Valid"  BitOffset="376" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="DataValid"                DisplayName="Data Valid"                    Description="PST3S Data Valid"						                             BitOffset="384" BitLength="4" ValueType="Enumeration" EnumerationName="Pst3sDataValid" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ExtImageState"            DisplayName="External Image State"          Description="PST3S External Image State"			                         BitOffset="388" BitLength="4" ValueType="Enumeration" EnumerationName="Pst3sExtImageState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="IdentifiedStars"          DisplayName="Number of Identified Stars"	  Description="PST3S Number of Identified Stars"		                     BitOffset="392" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="DeviceNumber"             DisplayName="Device Number"                 Description="PST3S Device Number"					                             BitOffset="400" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SoftwareVersion"          DisplayName="Software Version"              Description="PST3S Software Version"				                           BitOffset="408" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="EdacErrorCount"           DisplayName="EDAC Error Count"              Description="PST3S EDAC Error Count"				                           BitOffset="416" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ImageFrameNumber"         DisplayName="Image Frame Number"            Description="PST3S Image Frame Number"				                         BitOffset="424" BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="DynamicMode"              DisplayName="Dynamic Mode"                  Description="PST3S Dynamic Mode"			                                 BitOffset="456" BitLength="4" ValueType="Enumeration" EnumerationName="Pst3sDynamicModeEnum" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="SaaMode"                  DisplayName="SAA Mode"                      Description="PST3S SAA Mode"			                                     BitOffset="460" BitLength="4" ValueType="Enumeration" EnumerationName="Pst3sSaaWorkingMode" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="SaaThreshold"             DisplayName="SAA Threshold"                 Description="PST3S SAA Threshold"					                             BitOffset="464" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="QuaternionFilteringState" DisplayName="Quaternion Filtering State"	  Description="PST3S Quaternion Filtering State"		                     BitOffset="472" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sQFilteringGetState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FourStarCaptureThreshold" DisplayName="Four Star Capture Threshold"   Description="PST3S Four Star Capture Threshold"		                     BitOffset="480" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="TrackingThreshold"        DisplayName="Tracking Threshold"            Description="PST3S Tracking Threshold"				                         BitOffset="488" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="EdacSwitch"               DisplayName="EDAC Switch"                   Description="PST3S EDAC Enabled/Disabled"				                       BitOffset="496" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="Pst3sAttitude0" DisplayName="PST3S Attitude Data STR0" Description="Get the Last Sampled PST3S Attitude Specific Data from STR0" Len="43" PartOfStartItem="0" PartOfNumItems="0" Group="StarTrackerTLM">
+		<Item CodeName="ApiVersion"               DisplayName="API Version"                   Description="PST3S API Version"								 								         BitOffset="0"   BitLength="8"	ValueType="Enumeration"			EnumerationName="Pst3sApiVersion" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Quat1"                    DisplayName="Quaternion 1"					        Description="PST3S Quaternion 1"					                             BitOffset="8"   BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-1" RangeMax="1" />
+    <Item CodeName="Quat2"                    DisplayName="Quaternion 2"					        Description="PST3S Quaternion 2"					                             BitOffset="40"  BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-1" RangeMax="1" />
+    <Item CodeName="Quat3"                    DisplayName="Quaternion 3"					        Description="PST3S Quaternion 3"					                             BitOffset="72"  BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-1" RangeMax="1" />
+    <Item CodeName="Quat4"                    DisplayName="Quaternion 4"					        Description="PST3S Quaternion 4"					                             BitOffset="104" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-1" RangeMax="1" />
+    <Item CodeName="AngVelX"                  DisplayName="Angular Velocity X"					  Description="PST3S Angular Valocity X"					                       BitOffset="136" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="degps" RangeMin="-1000" RangeMax="1000" />
+    <Item CodeName="AngVelY"                  DisplayName="Angular Velocity Y"					  Description="PST3S Angular Valocity Y"					                       BitOffset="168" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="degps" RangeMin="-1000" RangeMax="1000" />
+    <Item CodeName="AngVelZ"                  DisplayName="Angular Velocity Z"					  Description="PST3S Angular Valocity Z"					                       BitOffset="200" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="degps" RangeMin="-1000" RangeMax="1000" />
+    <Item CodeName="RateQuality"              DisplayName="Rate Quality"				 	        Description="PST3S Rate Quality"					                             BitOffset="232" BitLength="8" ValueType="Enumeration" EnumerationName="Pst3sRateQuality" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="UnixSeconds"              DisplayName="Unix Seconds"				 	        Description="PST3S Unix Seconds"					                             BitOffset="240" BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="S" RangeMin="0" RangeMax="0" />
+    <Item CodeName="UnixSecondsDecimal"       DisplayName="Unix Seconds Decimal"		      Description="PST3S Unix Seconds Decimal"		                           BitOffset="272" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="S" RangeMin="0" RangeMax="0" />
+    <Item CodeName="NumberOfExtractedStars"		DisplayName="Number of Extracted Stars"		  Description="PST3S Number of Extracted Stars"		                       BitOffset="304" BitLength="8"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="OperatingMode"            DisplayName="Operating Mode"                Description="PST3S Operating Mode"					                           BitOffset="312" BitLength="8"  ValueType="Enumeration" EnumerationName="Pst3sOperatingModes" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="DataValid"                DisplayName="Data Valid"                    Description="PST3S Data Valid"						                             BitOffset="320" BitLength="8"  ValueType="Enumeration" EnumerationName="Pst3sDataValid" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="IdentifiedStars"          DisplayName="Number of Identified Stars"	  Description="PST3S Number of Identified Stars"		                     BitOffset="328" BitLength="8"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="QuaternionFilteringState" DisplayName="Quaternion Filtering State"	  Description="PST3S Quaternion Filtering State"		                     BitOffset="336" BitLength="8"  ValueType="Enumeration" EnumerationName="Pst3sQFilteringGetState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="Pst3sHousekeeping0" DisplayName="PST3S Housekeeping Data STR0" Description="Get the Last Sampled PST3S Housekeeping related data from STR0" Len="15" PartOfStartItem="0" PartOfNumItems="0" Group="StarTrackerTLM">
+		<Item CodeName="ApiVersion"               DisplayName="API Version"                   Description="PST3S API Version"								 								         BitOffset="0"  BitLength="8"	ValueType="Enumeration"			EnumerationName="Pst3sApiVersion" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Temperature"              DisplayName="Temperature"					          Description="PST3S Temperature"						                             BitOffset="8"  BitLength="8"  ValueType="SignedInteger"   EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="C" RangeMin="0" RangeMax="0" />
+    <Item CodeName="BackGroundValues"         DisplayName="Background Values"				      Description="PST3S BackGround Values"				                           BitOffset="16"  BitLength="8"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="InternalProcessCode"      DisplayName="Internal Process Code"			    Description="PST3S Internal Process Code"			                         BitOffset="24" BitLength="8"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="CmosChipIdResult"         DisplayName="CMOS Chip ID Self-test Result" Description="PST3S CMOS Chip ID Self-test Result"	                     BitOffset="32" BitLength="4"  ValueType="Enumeration"     EnumerationName="Pst3sSelfTestResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FpgaMRamResult"           DisplayName="FPGA MRAM Self-test Result"	  Description="PST3S FPGA MRAM Self-test Result"		                     BitOffset="36" BitLength="4"  ValueType="Enumeration"     EnumerationName="Pst3sSelfTestResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="OperatingMode"            DisplayName="Operating Mode"                Description="PST3S Operating Mode"					                           BitOffset="40" BitLength="8"  ValueType="Enumeration"     EnumerationName="Pst3sOperatingModes" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ExtImageState"            DisplayName="External Image State"          Description="PST3S External Image State"			                         BitOffset="48" BitLength="8"  ValueType="Enumeration"     EnumerationName="Pst3sExtImageState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="DeviceNumber"             DisplayName="Device Number"                 Description="PST3S Device Number"					                             BitOffset="56" BitLength="8"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SoftwareVerion"           DisplayName="Software Version"              Description="PST3S Software Version"				                           BitOffset="64" BitLength="8"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="EdacErrorCount"           DisplayName="EDAC Error Count"              Description="PST3S EDAC Error Count"				                           BitOffset="72" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ImageFrameNumber"         DisplayName="Image Frame Number"            Description="PST3S Image Frame Number"				                         BitOffset="80" BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="QuaternionFilteringState" DisplayName="Quaternion Filtering State"	  Description="PST3S Quaternion Filtering State"		                     BitOffset="112" BitLength="8"  ValueType="Enumeration"     EnumerationName="Pst3sQFilteringGetState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="Pst3sConfig0" DisplayName="PST3S Config STR0" Description="Get the Last Sampled PST3S Config related data from STR0" Len="13" PartOfStartItem="0" PartOfNumItems="0" Group="StarTrackerTLM">
+		<Item CodeName="ApiVersion"               DisplayName="API Version"                   Description="PST3S API Version"								 								         BitOffset="0"  BitLength="8"	ValueType="Enumeration"			EnumerationName="Pst3sApiVersion" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ImageExposure"            DisplayName="Image Exposure"				        Description="PST3S Image Exposure"					                           BitOffset="8"  BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ImageThreshold"           DisplayName="Image Threshold"				        Description="PST3S Image Threshold"					                           BitOffset="16"  BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="BackGroundValues"         DisplayName="Background Values"				      Description="PST3S BackGround Values"				                           BitOffset="24" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="OperatingMode"            DisplayName="Operating Mode"                Description="PST3S Operating Mode"					                           BitOffset="32" BitLength="8" ValueType="Enumeration"     EnumerationName="Pst3sOperatingModes" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ImagingGain"              DisplayName="Imaging Gain"                  Description="PST3S Imaging Gain"					                             BitOffset="40" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="MinNavigationStars"       DisplayName="Minimum Navigation Stars"		  Description="PST3S Minimum Navigation Stars When Quaternion is Valid"  BitOffset="48" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="DynamicMode"              DisplayName="Dynamic Mode"                  Description="PST3S Dynamic Mode"			                                 BitOffset="56" BitLength="4" ValueType="Enumeration" EnumerationName="Pst3sDynamicModeEnum" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="SaaMode"                  DisplayName="SAA Mode"                      Description="PST3S SAA Mode"			                                     BitOffset="60" BitLength="4" ValueType="Enumeration" EnumerationName="Pst3sSaaWorkingMode" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="SaaThreshold"             DisplayName="SAA Threshold"                 Description="PST3S SAA Threshold"					                             BitOffset="64" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="QuaternionFilteringState" DisplayName="Quaternion Filtering State"	  Description="PST3S Quaternion Filtering State"		                     BitOffset="72" BitLength="8" ValueType="Enumeration"     EnumerationName="Pst3sQFilteringGetState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FourStarCaptureThreshold" DisplayName="Four Star Capture Threshold"   Description="PST3S Four Star Capture Threshold"		                     BitOffset="80" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="TrackingThreshold"        DisplayName="Tracking Threshold"            Description="PST3S Tracking Threshold"				                         BitOffset="88" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+		<Item CodeName="EdacSwitch"               DisplayName="EDAC Switch"                   Description="PST3S EDAC Enabled/Disabled"				                       BitOffset="96" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+	<!-- ****************** ENUMERATIONS ****************** -->
+
+  <Enum>
+    <CodeName>NodeState</CodeName>
+		<EnumValue NumericalValue="0" CodeName="NodeOff"          DisplayName="Off" Description="Node is Off" />
+    <EnumValue NumericalValue="1" CodeName="NodeIdle"         DisplayName="Idle" Description="Node is Idle" />
+    <EnumValue NumericalValue="2" CodeName="NodePst3sPwr"     DisplayName="PST3S Power CHange"  Description="Node is powering on or off one or more PST3S's" />
+  </Enum>
+
+  <Enum>
+    <CodeName>Pst3sState</CodeName>
+    <EnumValue NumericalValue="0" CodeName="Pst3sOff"          DisplayName="Off"        Description="PSST3S is Off" />
+    <EnumValue NumericalValue="1" CodeName="Pst3sBoot"          DisplayName="Boot"        Description="PSST3S is Booting" />
+    <EnumValue NumericalValue="2" CodeName="Pst3sIdle"          DisplayName="Idle"        Description="PSST3S is Idle" />
+    <EnumValue NumericalValue="3" CodeName="Pst3sAuto"          DisplayName="PST3S Auto"  Description="PST3S is Auto-Sampling" />
+    <EnumValue NumericalValue="4" CodeName="Pst3sError"         DisplayName="PST3S Error" Description="PST3S is in an Error State" />
+  </Enum>
+
+  <Enum>
+    <CodeName>Pst3sPowerState</CodeName>
+    <EnumValue NumericalValue="0" CodeName="PoweredNoChange" DisplayName="No Change" Description="No change" />
+    <EnumValue NumericalValue="1" CodeName="PoweredOff" DisplayName="Pst3s Off" Description="PST3S Power Off" />
+    <EnumValue NumericalValue="2" CodeName="PoweredOn"  DisplayName="Pst3s On"  Description="PST3S Power On" />
+  </Enum>
+
+  <Enum>
+    <CodeName>Pst3sTcTlms</CodeName>
+    <EnumValue NumericalValue="0" CodeName="None" DisplayName="None Tlm" Description="No TcTlm history" />
+    <EnumValue NumericalValue="1" CodeName="SetOperatingMode" DisplayName="Set Operating Mode" Description="Set Operating Mode" />
+    <EnumValue NumericalValue="2" CodeName="SetNumNavigationStars" DisplayName="Set Number of Navigation Stars" Description="Set Number of Navigation Stars" />
+    <EnumValue NumericalValue="3" CodeName="SetExposure" DisplayName="Set Exposure" Description="Set Exposure" />
+    <EnumValue NumericalValue="4" CodeName="SetIFT" DisplayName="Set Image Fixed Threshold" Description="Set Image Fixed Threshold" />
+    <EnumValue NumericalValue="5" CodeName="SetSAAMode" DisplayName="Set SAA Mode" Description="Set SAA Mode" />
+    <EnumValue NumericalValue="6" CodeName="SetSAAThreshold" DisplayName="Set SAA Threshold" Description="Set SAA Threshold" />
+    <EnumValue NumericalValue="7" CodeName="SetExtImg" DisplayName="Set EXT Image Transfer" Description="Set Ext Image transfer" />
+    <EnumValue NumericalValue="8" CodeName="SetImgGain" DisplayName="Set Imaging Gain" Description="Set Imaging Gain" />
+    <EnumValue NumericalValue="9" CodeName="SetFSST" DisplayName="Set Four Star Search Threshold" Description="Set Four Star Search Threshold" />
+    <EnumValue NumericalValue="10" CodeName="SetSecondCalibration" DisplayName="Set Second Calibration" Description="Set Second Calibration" />
+    <EnumValue NumericalValue="11" CodeName="SetTMT" DisplayName="Set Tracking Mode Threshold" Description="Set Tracking Mode Threshold" />
+    <EnumValue NumericalValue="12" CodeName="SetQuatFiltering" DisplayName="Set Quaternion Filtering" Description="Set Quaternion Filtering" />
+    <EnumValue NumericalValue="13" CodeName="SetDynMode" DisplayName="Set Dynamic Mode" Description="Set Dynamic Mode" />
+    <EnumValue NumericalValue="14" CodeName="SetEdacOff" DisplayName="Set EDAC Off" Description="Set EDAC off" />
+    <EnumValue NumericalValue="15" CodeName="SetICT" DisplayName="Set Image Capture Transfer" Description="Set Image Capture Transfer" />
+    <EnumValue NumericalValue="16" CodeName="SetSystemReset" DisplayName="Set System Reset" Description="Set System Reset" />
+    <EnumValue NumericalValue="17" CodeName="GetTlm" DisplayName="Get Tlm" Description="Get Tlm" />
+  </Enum>
+  <Enum>
+    <CodeName>Pst3sTcTlmResult</CodeName>
+    <EnumValue NumericalValue="0" CodeName="TcTlmNone" DisplayName="TcTlm None" Description="No Transaction Yet" />
+    <EnumValue NumericalValue="1" CodeName="TcNack" DisplayName="TC Nack" Description="TC Nack" />
+    <EnumValue NumericalValue="2" CodeName="TcAck" DisplayName="TC Ack" Description="TC Ack" />
+    <EnumValue NumericalValue="3" CodeName="Tlm" DisplayName="TLM Response" Description="TLM Response" />
+    <EnumValue NumericalValue="4" CodeName="SumError" DisplayName="Sum Error" Description="Sum Error" />
+    <EnumValue NumericalValue="5" CodeName="CorruptData" DisplayName="Corrupt Data" Description="Corrupt Data" />
+    <EnumValue NumericalValue="6" CodeName="JunkData" DisplayName="Junk Data" Description="Junk Data" />
+    <EnumValue NumericalValue="7" CodeName="IncompleteMsg" DisplayName="Incomplete Message" Description="Incomplete Message" />
+    <EnumValue NumericalValue="8" CodeName="Timeout" DisplayName="Timeout" Description="Timeout" />
+    <EnumValue NumericalValue="9" CodeName="TxError" DisplayName="Tx Error" Description="Tx Error" />
+    <EnumValue NumericalValue="10" CodeName="Overflow" DisplayName="Overflow" Description="Overflow" />
+  </Enum>
+
+	<!-- !!! app-specific ID's should start from the mid-point (64 TC & 192 TLM) and should increment & decrement towards the common ID's !!! -->
+
+	<!-- TC -->
+
+	<TtcIds TtcName="Pst3sNumberNavigationStars"		GetId="255" SetId="65" LogId="0" />
+	<TtcIds TtcName="Pst3sExposure"                 GetId="255" SetId="63" LogId="0" />
+	<TtcIds TtcName="Pst3sFourStarSearchThreshold"  GetId="255" SetId="66" LogId="0" />
+	<TtcIds TtcName="Pst3sSecondCalibration"		   	GetId="255" SetId="62" LogId="0" />
+	<TtcIds TtcName="Pst3sTrackingModeThreshold"		GetId="255" SetId="67" LogId="0" />
+	<TtcIds TtcName="Pst3sQuaternionFiltering"			GetId="255" SetId="61" LogId="0" />
+	<TtcIds TtcName="Pst3sSystemReset"							GetId="255" SetId="68" LogId="0" />
+	<TtcIds TtcName="Pst3sPower"                    GetId="255" SetId="60" LogId="0" />
+	<TtcIds TtcName="Pst3sImageFixedThreshold"	    GetId="255" SetId="69" LogId="0" />
+	<TtcIds TtcName="Pst3sSvcSettings"	            GetId="255" SetId="59" LogId="0" />
+	<TtcIds TtcName="NodeSvcSettings"	            	GetId="255" SetId="70" LogId="0" />
+  <TtcIds TtcName="Pst3sSaaMode"	            	  GetId="255" SetId="58" LogId="0" />
+  <TtcIds TtcName="Pst3sSaaThreshold"	            GetId="255" SetId="71" LogId="0" />
+  <TtcIds TtcName="Pst3sDynamicMode"	            GetId="255" SetId="57" LogId="0" />
+  <TtcIds TtcName="Pst3sEdacOff"	            	  GetId="255" SetId="72" LogId="0" />
+
+  <!-- TLM -->
+  <TtcIds TtcName="Pst3sSvcStatus"                GetId="192" SetId="255" LogId="0" />
+  <TtcIds TtcName="Pst3sTlm0"                     GetId="193" SetId="255" LogId="0" />
+  <TtcIds TtcName="Pst3sAttitude0"                GetId="191" SetId="255" LogId="0" />
+  <TtcIds TtcName="Pst3sHousekeeping0"            GetId="194" SetId="255" LogId="0" />
+  <TtcIds TtcName="Pst3sConfig0"                  GetId="190" SetId="255" LogId="0" />
+  <TtcIds TtcName="Pst3sSvcSettings"              GetId="195" SetId="255" LogId="0" />
+  <TtcIds TtcName="NodeSvcStatus"			            GetId="189" SetId="255" LogId="0" />
+  <TtcIds TtcName="NodeSvcSettings"               GetId="196" SetId="255" LogId="0" />
+
+
+   <!-- ****************** MODULES ****************** -->
+
+   <!-- ****************** GLOBAL ENUMS ****************** -->
+  <GlobalEnums>
+    <string>common-framework/common-framework-enums-1.xml</string>
+    <string>cube-node-1/control-program-pst3s-common-enums-1.xml</string>
+  </GlobalEnums>
+
+</NodeDefinition>

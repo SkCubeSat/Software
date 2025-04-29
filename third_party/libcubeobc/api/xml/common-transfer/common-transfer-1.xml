@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NodeDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <IsModule>true</IsModule>
+  <Name>common-transfer</Name>
+  <CodeName>CommonTransfer</CodeName>
+  <InterfaceVersion>1</InterfaceVersion>
+  <CanLog>false</CanLog>
+
+  <Ttcs CanSet="true" CanGet="false" CodeName="TransferFrame" DisplayName="Transfer Frame" Description="Image frame to or from buffer" Len="2" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="NextFrame" DisplayName="Next Frame Number" Description="Number of next frame to be transferred" BitOffset="0" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="FrameInfo" DisplayName="Image Frame Information" Description="Information about the current frame in memory" Len="4" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="FrameNumber"  DisplayName="Image frame number"  Description="number of current frame loaded into download buffer"                             BitOffset="0"   BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="CheckSum"     DisplayName="checksum"            Description="XOR checksum of frame loaded into download buffer"                               BitOffset="16"  BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FrameLast"    DisplayName="Last frame"          Description="Set if this is the last frame in the transfer"                                   BitOffset="24"  BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FrameError"   DisplayName="Frame error"         Description="Set if an error was encountered while processing the frame"                      BitOffset="25"  BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="true" CanGet="true" CodeName="Frame" DisplayName="Data Frame" Description="A single frame of arbitrary data" Len="258" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="FrameSize"  DisplayName="Frame size"  Description="The effective frame size - number of bytes in FrameBytes populated with data"    BitOffset="0"  BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FrameBytes" DisplayName="Frame bytes" Description="frame bytes" BitOffset="16" BitLength="2048" ValueType="ByteArray" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <!-- ****************** ENUMERATIONS ****************** -->
+
+	<!-- !!! common-component ID's should start from the high-end (127 TC & 254 TLM) and decrement !!! -->
+
+  <!-- Specific TC -->
+  <TtcIds TtcName="TransferFrame"							GetId="255" SetId="79" LogId="0" />
+	<TtcIds TtcName="Frame"										  GetId="255" SetId="78" LogId="0" />
+
+  <!-- Specific TLM -->
+  <TtcIds TtcName="FrameInfo"									GetId="220" SetId="255" LogId="0" />
+  <TtcIds TtcName="Frame"								      GetId="219" SetId="255" LogId="0" />
+
+  <!-- ****************** GLOBAL ENUMS ****************** -->
+
+</NodeDefinition>

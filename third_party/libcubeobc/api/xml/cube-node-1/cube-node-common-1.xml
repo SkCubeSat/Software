@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NodeDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <IsModule>true</IsModule>
+  <Name>cube-node-common</Name>
+  <CodeName>CubeNodeCommon</CodeName>
+  <InterfaceVersion>1</InterfaceVersion>
+  <CanLog>false</CanLog>
+
+  <!-- ****************** HOUSEKEEPING ****************** -->
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="HealthTlm" DisplayName="Health Telemetry" Description="HealthTelemetry for CubeNode" Len="22" PartOfStartItem="0" PartOfNumItems="0" Group="HousekeepingTelemetry">
+    <Item CodeName="McuCurrent"         DisplayName="MCU Current"             Description="MCU current"                                                     BitOffset="0"   BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="0" />
+    <Item CodeName="McuTemp"            DisplayName="MCU Temperature"         Description="MCU temperature in deg C"                                        BitOffset="16"  BitLength="16" ValueType="SignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="deg C" RangeMin="0" RangeMax="0" />
+    <Item CodeName="McuVoltage"         DisplayName="MCU Voltage"             Description="MCU supply voltage"                                              BitOffset="32"  BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mV" RangeMin="0" RangeMax="5000" />
+    <Item CodeName="vBattCurrent1"      DisplayName="VBatt 5V current 1"      Description="VBatt 5V Current Monitor current port 1"                         BitOffset="48"  BitLength="16"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="0" />
+    <Item CodeName="vBattCurrent2"      DisplayName="VBatt 5V current 2"      Description="VBatt 5V Current Monitor current port 2"                         BitOffset="64"  BitLength="16"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="0" />
+    <Item CodeName="vBattCurrent3"      DisplayName="VBatt 5V current 3"      Description="VBatt 5V Current Monitor current port 3"                         BitOffset="80"  BitLength="16"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="0" />
+    <Item CodeName="vBattCurrent4"      DisplayName="VBatt 5V current 4"      Description="VBatt 5V Current Monitor current port 4"                         BitOffset="96"  BitLength="16"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="0" />
+    <Item CodeName="vBattOvercurrent1"  DisplayName="VBatt 5V overcurrent 1"  Description="VBatt 5V Overcurrent flag (max 500mA) port 1"                    BitOffset="112"  BitLength="1"  ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="0" />
+    <Item CodeName="vBattOvercurrent2"  DisplayName="VBatt 5V overcurrent 2"  Description="VBatt 5V Overcurrent flag (max 500mA) port 2"                    BitOffset="113"  BitLength="1"  ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="0" />
+    <Item CodeName="vBattOvercurrent3"  DisplayName="VBatt 5V overcurrent 3"  Description="VBatt 5V Overcurrent flag (max 500mA) port 3"                    BitOffset="114"  BitLength="1"  ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="0" />
+    <Item CodeName="vBattOvercurrent4"  DisplayName="VBatt 5V overcurrent 4"  Description="VBatt 5V Overcurrent flag (max 500mA) port 4"                    BitOffset="115"  BitLength="1"  ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="0" />
+    <Item CodeName="PowerGood"          DisplayName="Power Good"              Description="PowerGood signal (from PMU for CQ / Always true for CNo)"        BitOffset="116"  BitLength="1"  ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Reserved"           DisplayName=""                        Description=""                                                                BitOffset="117"  BitLength="2"  ValueType="Reserved" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="PmuCurrentValid"    DisplayName="PMU Current Valid"       Description="Flag indicating that the PMU current measurement is valid"       BitOffset="119"  BitLength="1"  ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="PmuCurrent"         DisplayName="PMU Current"             Description="Current measurement from PMU (if applicable)"                    BitOffset="120"  BitLength="16"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="0" />
+    <Item CodeName="WatchdogCount"      DisplayName="Watchdog Counters"       Description="Bitmask representing virtual watchdog region warning counters."  BitOffset="136"  BitLength="40" ValueType="ByteArray"   EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="true" CanGet="true" CodeName="PowerSwitchState" DisplayName="5V Power Switch State" Description="Enable/Disable 5V Power Switch Downstream" Len="1" PartOfStartItem="0" PartOfNumItems="0" Group="CubeNode">
+    <Item CodeName="ActiveState1" DisplayName="Active State 1" Description="5V Power Output State port1" BitOffset="0" BitLength="1" ValueType="Enumeration" EnumerationName="SwitchState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ActiveState2" DisplayName="Active State 2" Description="5V Power Output State port2" BitOffset="1" BitLength="1" ValueType="Enumeration" EnumerationName="SwitchState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ActiveState3" DisplayName="Active State 3" Description="5V Power Output State port3" BitOffset="2" BitLength="1" ValueType="Enumeration" EnumerationName="SwitchState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ActiveState4" DisplayName="Active State 4" Description="5V Power Output State port4" BitOffset="3" BitLength="1" ValueType="Enumeration" EnumerationName="SwitchState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Enum>
+    <CodeName>SwitchState</CodeName>
+    <EnumValue NumericalValue="0" CodeName="Off"  DisplayName="Off" Description="Switch is disabled" />
+    <EnumValue NumericalValue="1" CodeName="On"   DisplayName="On"  Description="Switch is enabled" />
+  </Enum>
+
+	<!-- !!! common-component ID's should start from the high-end (127 TC & 254 TLM) and decrement !!! -->
+
+	<!-- TC -->
+	<TtcIds TtcName="PowerSwitchState"  GetId="255" SetId="127" LogId="0" />
+
+  <!-- TLM -->
+  <TtcIds TtcName="HealthTlm"         GetId="254" SetId="255" LogId="0" />
+  <TtcIds TtcName="PowerSwitchState"  GetId="253" SetId="255" LogId="0" />
+
+</NodeDefinition>

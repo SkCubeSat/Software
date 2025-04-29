@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NodeDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <IsModule>false</IsModule>
+  <IsGlobalEnums>true</IsGlobalEnums>
+  <Name>cube-node-1-control-program-nssrwl-common-enums-1</Name>
+  <CodeName>CubeNodeControlProgramNssrwlCommonEnums</CodeName>
+  <InterfaceVersion>1</InterfaceVersion>
+  <CanLog>false</CanLog>
+
+  <Enum>
+    <CodeName>NssRwlHandle</CodeName>
+    <EnumValue NumericalValue="0" CodeName="Rwl0"          DisplayName="RWL0"     Description="RWL0 handle" />
+    <EnumValue NumericalValue="1" CodeName="Rwl1"          DisplayName="RWL1"     Description="RWL1 handle" />
+    <EnumValue NumericalValue="2" CodeName="Rwl2"          DisplayName="RWL2"     Description="RWL2 handle" />
+    <EnumValue NumericalValue="3" CodeName="Rwl3"          DisplayName="RWL3"     Description="RWL3 handle" />
+    <EnumValue NumericalValue="4" CodeName="RwlInvalid"    DisplayName="Invalid"  Description="Used to signal not-in-use" />
+  </Enum>
+
+</NodeDefinition>

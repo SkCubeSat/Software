@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NodeDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <IsModule>false</IsModule>
+  <Name>cube-mag-4-control-program-compact-1</Name>
+  <CodeName>CubeMagControlProgramCompact</CodeName>
+  <InterfaceVersion>1</InterfaceVersion>
+  <NodeTypeId>22</NodeTypeId> <!-- NodeTypeCubeMagCompact & ProgramTypeControl ~ See NodeType/ProgramType Enums in common-framework.xml -->
+  <NodeTypeIdMask>255</NodeTypeIdMask> <!-- Match NodeType(0x0F) & ProgramType(0xF0) -->
+  <NodeTypeId2>262</NodeTypeId2> <!-- NodeTypeCubeMagCompact & ProgramTypeControl ~ See NodeType/ProgramType Enums in common-framework.xml -->
+  <NodeTypeIdMask2>65535</NodeTypeIdMask2> <!-- Match NodeType(0x00FF) & ProgramType(0xFF00) -->
+  <CanLog>false</CanLog>
+
+	<!-- ****************** TCTLM IDS ****************** -->
+
+	<!-- !!! app-specific ID's should start from the mid-point (64 TC & 192 TLM) and should increment & decrement towards the common ID's !!! -->
+
+	<!-- TC -->
+
+	<!-- TLM -->
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="HealthTlm" DisplayName="Health Telemetry" Description="Health Telemetry for CubeMagCompact" Len="15" PartOfStartItem="0" PartOfNumItems="0" Group="HousekeepingTelemetry">
+    <Item CodeName="McuCurrent"   DisplayName="MCU Current"           Description="MCU current"                     BitOffset="0"   BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="0" />
+    <Item CodeName="McuTemp"      DisplayName="MCU Temperature"       Description="MCU temperature in deg C"        BitOffset="16"  BitLength="16" ValueType="SignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="deg C" RangeMin="0" RangeMax="0" />
+    <Item CodeName="McuVoltage"   DisplayName="MCU Voltage"           Description="MCU supply voltage"              BitOffset="32"  BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mV" RangeMin="0" RangeMax="5000" />
+    <Item CodeName="MagTemp"      DisplayName="Mag Temperature"       Description="Magnetometer Temperature"        BitOffset="48"  BitLength="32" ValueType = "FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-75" RangeMax="150" />
+    <Item CodeName="WatchdogCount" DisplayName="Watchdog Counters"    Description="Bitmask representing virtual watchdog region warning counters." BitOffset="80"  BitLength="40" ValueType="ByteArray"   EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <!-- TLM -->
+
+  <TtcIds TtcName="HealthTlm"          GetId="254" SetId="255" LogId="0" />
+
+  <!-- ****************** MODULES ****************** -->
+  <Modules>
+	<string>common-framework/common-framework-1.xml</string>
+    <string>cube-mag-4/control-program-common-1.xml</string>
+    <string>cube-mag-4/cube-mag-common-1.xml</string>
+  </Modules>
+
+  <!-- ****************** GLOBAL ENUMS ****************** -->
+  <GlobalEnums>
+    <string>common-framework/common-framework-enums-1.xml</string>
+    <string>cube-mag-4/control-program-common-enums-1.xml</string>
+  </GlobalEnums>
+  
+  <!-- ****************** END ****************** -->
+
+</NodeDefinition>

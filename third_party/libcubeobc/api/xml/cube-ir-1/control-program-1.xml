@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NodeDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <IsModule>false</IsModule>
+  <Name>cube-ir-1-control-program-1</Name>
+  <CodeName>CubeIrControlProgram</CodeName>
+  <InterfaceVersion>1</InterfaceVersion>
+  <NodeTypeId>20</NodeTypeId> <!-- NodeTypeCubeIr & ProgramTypeControl ~ See NodeType/ProgramType Enums in common-framework.xml -->
+  <NodeTypeIdMask>255</NodeTypeIdMask> <!-- Match NodeType(0x0F) & ProgramType(0xF0) -->
+  <NodeTypeId2>260</NodeTypeId2> <!-- NodeTypeCubeIr & ProgramTypeControl ~ See NodeType/ProgramType Enums in common-framework.xml -->
+  <NodeTypeIdMask2>65535</NodeTypeIdMask2> <!-- Match NodeType(0x00FF) & ProgramType(0xFF00) -->
+  <CanLog>false</CanLog>
+
+  <!-- ****************** Sensor operation commands & detection results tlm ****************** -->
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="Measurement" DisplayName="Sensor Measurement" Description="Sensor measurement result" Len="6" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="Elevation" DisplayName="Elevation Angle" Description="Measured elevation angle" BitOffset="0" BitLength="16" ValueType="SignedInteger" EnumerationName="" CalibrationUserToRaw="USERVAL*100.0f" CalibrationRawToUser="RAWVAL*0.01f" MeasurementUnit="deg" RangeMin="-9000" RangeMax="9000" />
+    <Item CodeName="Rotation" DisplayName="Rotation Angle" Description="Measured rotation angle" BitOffset="16" BitLength="16" ValueType="SignedInteger" EnumerationName="" CalibrationUserToRaw="USERVAL*100.0f" CalibrationRawToUser="RAWVAL*0.01f" MeasurementUnit="deg" RangeMin="-18000" RangeMax="18000" />
+    <Item CodeName="CaptureResult" DisplayName="Capture Result" Description="Result of image capture operation" BitOffset="32" BitLength="8" ValueType="Enumeration" EnumerationName="CaptureResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="DetectionResult" DisplayName="Detection Result" Description="Result of horizon detection operation" BitOffset="40" BitLength="8" ValueType="Enumeration" EnumerationName="DetectResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="MeasurementAndTrigger" DisplayName="Sensor Measurement Trigger" Description="Sensor measurement result (and initiate next measurement)" Len="6" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="Elevation" DisplayName="Elevation Angle" Description="Measured elevation angle" BitOffset="0" BitLength="16" ValueType="SignedInteger" EnumerationName="" CalibrationUserToRaw="USERVAL*100.0f" CalibrationRawToUser="RAWVAL*0.01f" MeasurementUnit="deg" RangeMin="-9000" RangeMax="9000" />
+    <Item CodeName="Rotation" DisplayName="Rotation Angle" Description="Measured rotation angle" BitOffset="16" BitLength="16" ValueType="SignedInteger" EnumerationName="" CalibrationUserToRaw="USERVAL*100.0f" CalibrationRawToUser="RAWVAL*0.01f" MeasurementUnit="deg" RangeMin="-18000" RangeMax="18000" />
+    <Item CodeName="CaptureResult" DisplayName="Capture Result" Description="Result of image capture operation" BitOffset="32" BitLength="8" ValueType="Enumeration" EnumerationName="CaptureResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="DetectionResult" DisplayName="Detection Result" Description="Result of horizon detection operation" BitOffset="40" BitLength="8" ValueType="Enumeration" EnumerationName="DetectResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <!-- ****************** Raw and intermediate detection meta-data TLM ****************** -->
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="MeasurementMetadata" DisplayName="Measurement Meta-data" Description="Sensor measurement meta-data" Len="26" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="MinPix" DisplayName="Minimum pixel value" Description="Minimum pixel value" BitOffset="0" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" />
+    <Item CodeName="MaxPix" DisplayName="Maximum pixel value" Description="Maximum pixel value" BitOffset="16" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" />
+    <Item CodeName="AvgPix" DisplayName="Average pixel value" Description="Average pixel value" BitOffset="32" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" />
+    <Item CodeName="NumEdgesRaw" DisplayName="Number of Raw Edges" Description="Number of detected edges" BitOffset="48" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="NumEdgesCalib" DisplayName="Number of Edges" Description="Number of detected good edges after outlier rejection" BitOffset="64" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="NumWarmPix" DisplayName="Number Warm Pixels" Description="Number of pixels found within the circular mask that is considered as earth/sun" BitOffset="80" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" />
+    <Item CodeName="NumColdPix" DisplayName="Number Cold Pixels" Description="Number of pixels found within the circular mask that is considered as space" BitOffset="96" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" />
+    <Item CodeName="CircleCenterX" DisplayName="Circle Center X-Coordinate" Description="Centre of fitted circle X-coordinate" BitOffset="112" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="pixels" RangeMin="-100000" RangeMax="100000" />
+    <Item CodeName="CircleCenterY" DisplayName="Circle Center Y-Coordinate" Description="Centre of fitted circle Y-coordinate" BitOffset="144" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="pixels" RangeMin="-100000" RangeMax="100000" />
+    <Item CodeName="CircleRadius" DisplayName="Circle Radius" Description="Radius of fitted circle" BitOffset="176" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="pixels" RangeMin="0" RangeMax="100000" />
+  </Ttcs>
+
+  <!-- ****************** Images ****************** -->
+
+  <Ttcs CanSet="true" CanGet="false" CodeName="ImageTransferSetup" DisplayName="Setup Image Transfer" Description="Setup image transfer details" Len="2" PartOfStartItem="0" PartOfNumItems="0" Group="">
+	<Item CodeName="DataSelect" DisplayName="Data selection" Description="Dsta selection" BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="DataSelection" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+	<Item CodeName="Direction" DisplayName="Download or Upload" Description="Download or upload image" BitOffset="8" BitLength="8" ValueType="Enumeration" EnumerationName="DirSelection" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <!-- ****************** Health tlm ****************** -->
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="HealthTlm" DisplayName="Health Telemetry" Description="Housekeeping telemetry and error flags" Len="15" PartOfStartItem="0" PartOfNumItems="0" Group="">
+	<Item CodeName="McuTemp"		 DisplayName="MCU Temperature"		 Description="MCU Temperature"          BitOffset="0"  BitLength="16" ValueType="SignedInteger"   EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="°C" RangeMin="-100" RangeMax="200" />
+    <Item CodeName="DetectorTemp" 	 DisplayName="Detector Temperature"  Description="Detector ambient temperature"	BitOffset="16" BitLength="16" ValueType="UnsignedInteger"   EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="dK" RangeMin="0" RangeMax="5000" />
+    <Item CodeName="McuCurrent" 	 DisplayName="MCU Current" 			 Description="MCU current"				BitOffset="32" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="1000" />
+    <Item CodeName="DetectorCurrent" DisplayName="Detector Current" 	 Description="Detector current"			BitOffset="48" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="1000" />
+    <Item CodeName="McuVoltage" 	 DisplayName="MCU Voltage" 			 Description="MCU supply voltage" 		BitOffset="64" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" 			  CalibrationRawToUser="" 			 MeasurementUnit="mV" RangeMin="0" RangeMax="5000" />
+    <Item CodeName="WatchdogCount" DisplayName="Watchdog Counters"    Description="Bitmask representing virtual watchdog region warning counters." BitOffset="80"  BitLength="40" ValueType="ByteArray"   EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <!-- ****************** Configuration ****************** -->
+
+  <Ttcs CanSet="true" CanGet="true" CodeName="Configuration" DisplayName="Configuration" Description="Detector and sensor configuration settings" Len="87" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="CalibrateImageFull" DisplayName="Detector image calibration" Description="Set to true to perform full Vdd and temperature compensation. Otherwise only electrical offsets" BitOffset="0" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+    <Item CodeName="UseCalibrationRig" DisplayName="Device installed on calibration rig" Description="Set to true to if doing calibration/verification on the rig" BitOffset="1" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+    <Item CodeName="Reserved" DisplayName="" Description="" BitOffset="2" BitLength="6" ValueType="Reserved" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+    <Item CodeName="CircularMaskRadius" DisplayName="Circular Mask Radius" Description="Circular mask within which to attempt detection" BitOffset="8" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+    <Item CodeName="MinimumTempDiff" DisplayName="Minimum Temperature Difference" Description="Minimum temperature difference in dK to be considered a horizon" BitOffset="16" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+    <Item CodeName="ExpectedEarthRadius" DisplayName="Expected Earth Radius" Description="The expected radius of earth at the current altitude" BitOffset="32" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="300"/>
+    <Item CodeName="AllowedRadiusDeviation" DisplayName="Allowed Radius Deviation" Description="The maximum allowable deviation from the expected Earth radius, used to reject invalid measurements." BitOffset="64" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="50"/>
+    <Item CodeName="MaxSpaceTemp" DisplayName="Max Space Temperature" Description="Temperature used to calculate histogram scan boundaries for determining temperature thresholds" BitOffset="96" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+    <Item CodeName="MaxEarthTempOffset" DisplayName="Maximum Earth Temperature Offset" Description="Offset from 'maxSpaceTemp' to determine 'maxEarthTemp'" BitOffset="112" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+    <Item CodeName="MinSpaceTempOffset" DisplayName="Minimum Space Temperature Offset" Description="Offset from 'maxSpaceTemp' to determine 'minSpaceTemp'" BitOffset="128" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+    <Item CodeName="MaxEarthTempThresholdOffset" DisplayName="Max Earth Temp Threshold Offset" Description="Offset from detected average Earth temp to determine 'maxEarthTempThreshold'" BitOffset="144" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+    <Item CodeName="HorizonCrossOverOffset" DisplayName="Horizon Cross-over Offset" Description="Offset from detected Space temperature to determine 'minEarthTempThreshold'" BitOffset="160" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+    <Item CodeName="GradientOutlierThreshold" DisplayName="Gradient Outlier Threshold" Description="Used to filter out sun pixels and lens flares" BitOffset="168" BitLength="32" ValueType="SignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+    <Item CodeName="ValidBinPeak" DisplayName="Valid Bin Peak" Description="The threshold for a valid bin peak" BitOffset="200" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+    <Item CodeName="BinWidth" DisplayName="Bin Width" Description="Used to calculate the number of bins in the histogram" BitOffset="216" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+    <Item CodeName="MinimumGradient" DisplayName="Minimum Gradient" Description="Minimum gradient to be considered a horizon" BitOffset="232" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+    <Item CodeName="MinimumEdgePointsRequired" DisplayName="Minimum Edge Points Required" Description="The minimum amount of edge points required to do a polynomial fitting" BitOffset="248" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+    <Item CodeName="CircRadiusMin" DisplayName="Circular Radius Minimum" Description="Minimum allowable radius for fitted circle." BitOffset="256" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+    <Item CodeName="CircRadiusMax" DisplayName="Circular Radius Maximum" Description="Maximum allowable radius for fitted circle." BitOffset="272" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+    <Item CodeName="HorElevBias" DisplayName="Horizontal Elevation Bias" Description="A constant bias to add to the measured elevation [Radians]" BitOffset="288" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+    <Item CodeName="OutlierRejMaxSeg" DisplayName="Outlier Rejection Maximum Segment" Description="Maximum allowable segment to delete in outlier rejection (zero to disable)." BitOffset="320" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+    <Item CodeName="OutlierRejTol" DisplayName="Outlier Rejection Tolerance" Description="Maximum allowable distance between points for outlier rejection " BitOffset="336" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0"/>
+    <Item CodeName="BoresightX" DisplayName="Bore-sight X" Description="Lens distortion model bore-sight X coordinate" BitOffset="344" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="80"/>
+    <Item CodeName="BoresightY" DisplayName="Bore-sight Y" Description="Lens distortion model bore-sight Y coordinate" BitOffset="376" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="64"/>
+    <Item CodeName="FocalLength" DisplayName="Focal Length" Description="Lens distortion model focal length" BitOffset="408" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="100"/>
+    <Item CodeName="DistK1" DisplayName="Distortion Coefficient K1" Description="Lens distortion model coefficient K1" BitOffset="440" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100" RangeMax="100"/>
+    <Item CodeName="DistK2" DisplayName="Distortion Coefficient K2" Description="Lens distortion model coefficient K2" BitOffset="472" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100" RangeMax="100"/>
+    <Item CodeName="DistK3" DisplayName="Distortion Coefficient K3" Description="Lens distortion model coefficient K3" BitOffset="504" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100" RangeMax="100"/>
+    <Item CodeName="DistK4" DisplayName="Distortion Coefficient K4" Description="Lens distortion model coefficient K4" BitOffset="536" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100" RangeMax="100"/>
+    <Item CodeName="DistK5" DisplayName="Distortion Coefficient K5" Description="Lens distortion model coefficient K5" BitOffset="568" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100" RangeMax="100"/>
+    <Item CodeName="DistK6" DisplayName="Distortion Coefficient K6" Description="Lens distortion model coefficient K6" BitOffset="600" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100" RangeMax="100"/>
+    <Item CodeName="DistP1" DisplayName="Distortion Coefficient P1" Description="Lens distortion model coefficient P1" BitOffset="632" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100" RangeMax="100"/>
+    <Item CodeName="DistP2" DisplayName="Distortion Coefficient P2" Description="Lens distortion model coefficient P2" BitOffset="664" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-100" RangeMax="100"/>
+  </Ttcs>
+
+  <Ttcs CanSet="true" CanGet="false" CodeName="DeadPixels" DisplayName="DeadPixels" Description="Pixels that are dead in the camera" Len="4" PartOfStartItem="0" PartOfNumItems="0" Group="">
+	<Item CodeName="DeadPixelIndex"	DisplayName="DeadPixelIndex"	Description="Index of dead pixel" 			BitOffset="0"	BitLength="8"	ValueType="UnsignedInteger"	EnumerationName=""	CalibrationUserToRaw=""	CalibrationRawToUser=""	MeasurementUnit=""	RangeMin="0"	RangeMax="0" />
+	<Item CodeName="PixelX" 		DisplayName="PixelX" 			Description="X Coordinate of dead pixel" 	BitOffset="8"	BitLength="8"	ValueType="UnsignedInteger"	EnumerationName=""	CalibrationUserToRaw=""	CalibrationRawToUser=""	MeasurementUnit=""	RangeMin="0"	RangeMax="0" />
+	<Item CodeName="PixelY" 		DisplayName="PixelY" 			Description="Y Coordinate of dead pixel" 	BitOffset="16"	BitLength="8"	ValueType="UnsignedInteger"	EnumerationName=""	CalibrationUserToRaw=""	CalibrationRawToUser=""	MeasurementUnit=""	RangeMin="0"	RangeMax="0" />
+	<Item CodeName="PixelMask" 		DisplayName="PixelMask" 		Description="Mask of dead pixel" 			BitOffset="24"	BitLength="8"	ValueType="UnsignedInteger"	EnumerationName=""	CalibrationUserToRaw=""	CalibrationRawToUser=""	MeasurementUnit=""	RangeMin="0"	RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="true" CanGet="false" CodeName="RequestDeadPixel" DisplayName="RequestDeadPixel" Description="Pixels that are dead in the camera" Len="1" PartOfStartItem="0" PartOfNumItems="0" Group="">
+	<Item CodeName="DeadPixelIndex"	DisplayName="DeadPixelIndex"	Description="Index of dead pixel" 			BitOffset="0"	BitLength="8"	ValueType="UnsignedInteger"	EnumerationName=""	CalibrationUserToRaw=""	CalibrationRawToUser=""	MeasurementUnit=""	RangeMin="0"	RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="RequestedDeadPixel" DisplayName="RequestedDeadPixel" Description="Pixels that are dead in the camera" Len="4" PartOfStartItem="0" PartOfNumItems="0" Group="">
+	<Item CodeName="DeadPixelIndex"	DisplayName="DeadPixelIndex"	Description="Index of dead pixel" 			BitOffset="0"	BitLength="8"	ValueType="UnsignedInteger"	EnumerationName=""	CalibrationUserToRaw=""	CalibrationRawToUser=""	MeasurementUnit=""	RangeMin="0"	RangeMax="0" />
+	<Item CodeName="PixelX" 		DisplayName="PixelX" 			Description="X Coordinate of dead pixel" 	BitOffset="8"	BitLength="8"	ValueType="UnsignedInteger"	EnumerationName=""	CalibrationUserToRaw=""	CalibrationRawToUser=""	MeasurementUnit=""	RangeMin="0"	RangeMax="0" />
+	<Item CodeName="PixelY" 		DisplayName="PixelY" 			Description="Y Coordinate of dead pixel" 	BitOffset="16"	BitLength="8"	ValueType="UnsignedInteger"	EnumerationName=""	CalibrationUserToRaw=""	CalibrationRawToUser=""	MeasurementUnit=""	RangeMin="0"	RangeMax="0" />
+	<Item CodeName="PixelMask" 		DisplayName="PixelMask" 		Description="Mask of dead pixel" 			BitOffset="24"	BitLength="8"	ValueType="UnsignedInteger"	EnumerationName=""	CalibrationUserToRaw=""	CalibrationRawToUser=""	MeasurementUnit=""	RangeMin="0"	RangeMax="0" />
+  </Ttcs>
+
+  <!-- ****************** TODO: HTPA state & health flags ****************** -->
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="ProfileTiming" DisplayName="Profile Timing" Description="Measured exection time for capture and detect operations" Len="6" PartOfStartItem="0" PartOfNumItems="0" Group="">
+    <Item CodeName="TimeCapture" DisplayName="Time Capture" Description="Time to complete capture" BitOffset="0" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="ms" RangeMin="0" RangeMax="2000" />
+    <Item CodeName="TimeCalibrate" DisplayName="Time Calibrate" Description="Time to calibrate image" BitOffset="16" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="ms" RangeMin="0" RangeMax="2000" />
+    <Item CodeName="TimeDetect" DisplayName="Time Detect" Description="Time to detect horizon" BitOffset="32" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="ms" RangeMin="0" RangeMax="2000" />
+  </Ttcs>
+
+  <!-- ****************** Enums ****************** -->
+
+  <Enum>
+    <CodeName>DetectResult</CodeName>
+    <EnumValue NumericalValue="0" CodeName="DetStartup" DisplayName="Start-up" Description="Initialised" />
+    <EnumValue NumericalValue="1" CodeName="DetPending" DisplayName="Pending" Description="Detection in progress" />
+    <EnumValue NumericalValue="2" CodeName="NoHorizon" DisplayName="No Horizon" Description="No horizon detected in field of view" />
+    <EnumValue NumericalValue="3" CodeName="TooFewEdges" DisplayName="Too Few Edges" Description="Not enough edge points detected" />
+    <EnumValue NumericalValue="4" CodeName="BadFit" DisplayName="Bad Fit" Description="Failed to fit shape on horizon" />
+    <EnumValue NumericalValue="5" CodeName="Success" DisplayName="Success" Description="Horizon detected" />
+  </Enum>
+  <Enum>
+	<CodeName>CaptureResult</CodeName>
+	<EnumValue NumericalValue="0" CodeName="CapStartup" DisplayName="Start-up" Description="Initialised" />
+	<EnumValue NumericalValue="1" CodeName="CapPending" DisplayName="Pending" Description="Capture in progress" />
+	<EnumValue NumericalValue="2" CodeName="CapSuccess" DisplayName="Success" Description="Successful capture" />
+	<EnumValue NumericalValue="3" CodeName="CapTimeout" DisplayName="Camera Timeout" Description="Timeout waiting for capture to complete" />
+	<EnumValue NumericalValue="4" CodeName="CapError"   DisplayName="Camera Error" Description="Camera driver error" />
+  </Enum>
+  <Enum>
+    <CodeName>DirSelection</CodeName>
+    <EnumValue NumericalValue="0" CodeName="Download" DisplayName="Download" Description="Download from node" />
+    <EnumValue NumericalValue="1" CodeName="Upload" DisplayName="Upload" Description="Upload to node" />
+  </Enum>
+  <Enum>
+    <CodeName>DataSelection</CodeName>
+    <EnumValue NumericalValue="0" CodeName="ImageCalibrated" DisplayName="Calibrated image" Description="Calibrated image" />
+    <EnumValue NumericalValue="1" CodeName="ImageFiltered" DisplayName="Filtered image" Description="Filtered (smoothed) image" />
+    <EnumValue NumericalValue="2" CodeName="HorizonEdges" DisplayName="Horizon Edges" Description="Horizon Edges" />
+    <EnumValue NumericalValue="3" CodeName="EEPROMData" DisplayName="EEPROM data" Description="EEPROM data" />
+    <EnumValue NumericalValue="4" CodeName="ImageElecOffsets" DisplayName="Raw image electrical offsets" Description="Raw image electrical offsets" />
+  </Enum>
+
+  <!-- !!! app-specific ID's should start from the mid-point (64 TC & 192 TLM) and should increment & decrement towards the common ID's !!! -->
+
+  <TtcIds TtcName="Configuration"          GetId="255" SetId="64"  LogId="0" />
+  <TtcIds TtcName="ImageTransferSetup"     GetId="255" SetId="63"  LogId="0" />
+  <TtcIds TtcName="DeadPixels"     		   GetId="255" SetId="65"  LogId="0" />
+  <TtcIds TtcName="RequestDeadPixel"	   GetId="255" SetId="62"  LogId="0" />
+
+  <!-- Specific TLM -->
+
+  <TtcIds TtcName="MeasurementAndTrigger"  GetId="192" SetId="255" LogId="0" />
+  <TtcIds TtcName="Measurement"  		   GetId="193" SetId="255" LogId="0" />
+  <TtcIds TtcName="MeasurementMetadata"    GetId="194" SetId="255" LogId="0" />
+  <TtcIds TtcName="HealthTlm"              GetId="190" SetId="255" LogId="0" />
+  <TtcIds TtcName="Configuration"          GetId="195" SetId="255" LogId="0" />
+  <TtcIds TtcName="ImageTransferSetup"     GetId="188" SetId="255" LogId="0" />
+  <TtcIds TtcName="ProfileTiming"  		   GetId="197" SetId="255" LogId="0" />
+  <TtcIds TtcName="RequestedDeadPixel"     GetId="187" SetId="255"  LogId="0" />
+
+  <!-- ****************** MODULES ****************** -->
+
+	<Modules>
+		<string>common-framework/common-framework-1.xml</string>
+    <string>common-transfer/common-transfer-1.xml</string>
+	</Modules>
+
+  <!-- ****************** GLOBAL ENUMS ****************** -->
+  <GlobalEnums>
+    <string>common-framework/common-framework-enums-1.xml</string>
+  </GlobalEnums>
+
+</NodeDefinition>

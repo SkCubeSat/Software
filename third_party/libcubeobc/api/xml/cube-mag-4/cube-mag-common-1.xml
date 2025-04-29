@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NodeDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <IsModule>true</IsModule>
+  <Name>cube-mag-common</Name>
+  <CodeName>CubeMagCommon</CodeName>
+  <InterfaceVersion>1</InterfaceVersion>
+  <CanLog>false</CanLog>
+
+	<!-- !!! common-component ID's should start from the high-end (127 TC & 254 TLM) and decrement !!! -->
+
+	<!-- TC -->
+
+  <!-- TLM -->
+
+</NodeDefinition>

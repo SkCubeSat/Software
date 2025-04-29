@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NodeDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <IsModule>false</IsModule>
+  <IsGlobalEnums>true</IsGlobalEnums>
+  <Name>cube-node-1-control-program-pst3s-common-enums-1</Name>
+  <CodeName>CubeNodeControlProgramPst3sCommonEnums</CodeName>
+  <InterfaceVersion>1</InterfaceVersion>
+  <CanLog>false</CanLog>
+
+  <Enum>
+    <CodeName>Pst3sHandle</CodeName>
+    <EnumValue NumericalValue="0" CodeName="Str0"          DisplayName="STR0"     Description="STR0 handle" />
+    <EnumValue NumericalValue="1" CodeName="Str1"          DisplayName="STR1"     Description="STR1 handle" />
+    <EnumValue NumericalValue="2" CodeName="Str2"          DisplayName="STR2"     Description="STR2 handle" />
+    <EnumValue NumericalValue="3" CodeName="Str3"          DisplayName="STR3"     Description="STR3 handle" />
+    <EnumValue NumericalValue="4" CodeName="StrInvalid"    DisplayName="Invalid"  Description="Used to signal not-in-use" />
+  </Enum>
+
+  <Enum>
+    <CodeName>Pst3sApiVersion</CodeName>
+    <EnumValue NumericalValue="0" CodeName="Pst3sApiVersionG2"  DisplayName="G2"        	Description="PSST3S API Version G2" />
+		<EnumValue NumericalValue="1" CodeName="Pst3sApiVersionH3"  DisplayName="H3"        	Description="PSST3S API Version H3" />
+    <EnumValue NumericalValue="2" CodeName="Pst3sApiVersionH31"  DisplayName="H3.1"      Description="PSST3S API Version H3.1" />
+  </Enum>
+
+  <Enum>
+    <CodeName>Pst3sOperatingModes</CodeName>
+    <EnumValue NumericalValue="0" CodeName="ModeInvalid" DisplayName="Invalid" Description="Invalid Mode" />
+    <EnumValue NumericalValue="1" CodeName="NormalMode" DisplayName="Normal Mode" Description="Normal Mode" />
+    <EnumValue NumericalValue="2" CodeName="FixedThreshold" DisplayName="Fixed Threshold" Description="Fixed Threshold" />
+    <EnumValue NumericalValue="3" CodeName="Test" DisplayName="Test Mode" Description="Test Mode" />
+  </Enum>
+	<Enum>
+		<CodeName>Pst3sDynamicModeEnum</CodeName>
+		<EnumValue NumericalValue="0" CodeName="DynamicModeInvalid" DisplayName="Invalid" Description="Invalid Dynamic Mode. Depends on PST3S Version" />
+		<EnumValue NumericalValue="1" CodeName="DynamicModeHigh" DisplayName="High Dynamic Mode" Description="High Dynamic Mode" />
+		<EnumValue NumericalValue="2" CodeName="DynamicModeLow" DisplayName="Low Dynamic Mode" Description="Low Dynamic Mode" />
+	</Enum>
+	<Enum>
+		<CodeName>Pst3sSaaWorkingMode</CodeName>
+		<EnumValue NumericalValue="0" CodeName="SaaInvalid" DisplayName="Invalid" Description="SAA Invalid. Depends on PST3S Version" />
+		<EnumValue NumericalValue="1" CodeName="SaaOff" DisplayName="Off" Description="SAA Off" />
+		<EnumValue NumericalValue="2" CodeName="SaaTracking" DisplayName="Tracking" Description="SAA On when Tracking" />
+		<EnumValue NumericalValue="3" CodeName="SaaCapture" DisplayName="Capture" Description="SAA on when Capture" />
+		<EnumValue NumericalValue="4" CodeName="SaaAll" DisplayName="All" Description="SAA on when Tracking and Capture" />
+	</Enum>
+  <Enum>
+    <CodeName>Pst3sQFilteringSetState</CodeName>
+    <EnumValue NumericalValue="0" CodeName="QFilteringSetOff" DisplayName="Filtering Off" Description="Filtering Off" />
+    <EnumValue NumericalValue="1" CodeName="QFilteringSetOn" DisplayName="Filtering On" Description="Filtering On" />
+  </Enum>
+  <Enum>
+    <CodeName>Pst3sQFilteringGetState</CodeName>
+		<EnumValue NumericalValue="0" CodeName="QFilteringGetInvalid" DisplayName="Invalid" Description="Filtering Invalid. Depends on PST3S Version" />
+    <EnumValue NumericalValue="1" CodeName="QFilteringGetOff" DisplayName="Filtering Off" Description="Filtering Off" />
+    <EnumValue NumericalValue="2" CodeName="QFilteringGetOn" DisplayName="Filtering On" Description="Filtering On" />
+  </Enum>
+  <Enum>
+    <CodeName>Pst3sSelfTestResult</CodeName>
+    <EnumValue NumericalValue="0" CodeName="TestInvalid" DisplayName="Invalid" Description="Invalid" />
+    <EnumValue NumericalValue="1" CodeName="Correct" DisplayName="Selt-test OK" Description="Selt-test OK" />
+    <EnumValue NumericalValue="2" CodeName="Error" DisplayName="Self-test Error" Description="Selt-test Error" />
+  </Enum>
+  <Enum>
+    <CodeName>Pst3sDataValid</CodeName>
+    <EnumValue NumericalValue="0" CodeName="GestureValid" DisplayName="Gesture Data Valid" Description="Gesture Data Valid" />
+    <EnumValue NumericalValue="1" CodeName="AttitudeValid" DisplayName="Attitude Data Valid" Description="Attitude Data Valid" />
+  </Enum>
+  <Enum>
+    <CodeName>Pst3sExtImageState</CodeName>
+    <EnumValue NumericalValue="0" CodeName="ImageInvalid" DisplayName="Invalid" Description="External Image State Invalid for API version" />
+    <EnumValue NumericalValue="1" CodeName="ImageOff" DisplayName="Closed" Description="External Image State Off" />
+    <EnumValue NumericalValue="2" CodeName="ImageOn" DisplayName="Open" Description="External Image State On" />
+  </Enum>
+  <Enum>
+    <CodeName>Pst3sRateQuality</CodeName>
+    <EnumValue NumericalValue="0" CodeName="RateInvalid" DisplayName="Invalid" Description="Invalid - no velocity information" />
+    <EnumValue NumericalValue="1" CodeName="Estimated" DisplayName="Estimated" Description="Velocity is estimated from previous calculations" />
+    <EnumValue NumericalValue="2" CodeName="Precise" DisplayName="Precise" Description="Velocity is precise and calculated from attitude data" />
+  </Enum>
+
+</NodeDefinition>

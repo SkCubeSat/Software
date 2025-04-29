@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NodeDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <IsModule>false</IsModule>
+  <IsGlobalEnums>true</IsGlobalEnums>
+  <Name>cube-mag-4-control-program-common-enums</Name>
+  <CodeName>CubeMagControlProgramCommonEnums</CodeName>
+  <InterfaceVersion>1</InterfaceVersion>
+  <CanLog>false</CanLog>
+
+  <!-- ****************** ENUMERATIONS ****************** -->
+
+	<Enum>
+		<CodeName>MagType</CodeName>
+		<EnumValue NumericalValue="0" CodeName="PNI"		DisplayName="PNI" Description="PNI RM3100 Magnetometer" />
+		<EnumValue NumericalValue="1" CodeName="MMC"		DisplayName="MMC" Description="MMC5883 Magnetometer" />
+	</Enum>
+
+	<Enum>
+		<CodeName>FilterType</CodeName>
+		<EnumValue NumericalValue="0" CodeName="Average"	DisplayName="Average" Description="Simple Averaging Filter" />
+		<EnumValue NumericalValue="1" CodeName="Butter"		DisplayName="Butter" Description="Butterworth Filter" />
+	</Enum>
+
+	<Enum>
+		<CodeName>FilterOrder</CodeName>
+		<EnumValue NumericalValue="0" CodeName="bw_order_2"		DisplayName="2nd Order" Description="Butterworth 2nd order low-pass" />
+		<EnumValue NumericalValue="1" CodeName="bw_order_4"		DisplayName="4th Order" Description="Butterworth 4th order low-pass" />
+		<EnumValue NumericalValue="2" CodeName="bw_order_6"		DisplayName="6th Order" Description="Butterworth 6th order low-pass" />
+		<EnumValue NumericalValue="3" CodeName="bw_order_8"		DisplayName="8th Order" Description="Butterworth 8th order low-pass" />
+	</Enum>
+
+	<Enum>
+		<CodeName>SampleBusy</CodeName>
+		<EnumValue NumericalValue="0" CodeName="sample_wait"		DisplayName="Wait"       Description="Wait for the current sample to complete" />
+		<EnumValue NumericalValue="1" CodeName="sample_cached"	DisplayName="Use Cached" Description="Use the last cached sample and return" />
+	</Enum>
+
+	<Enum>
+		<CodeName>SamplePeriod</CodeName>
+		<EnumValue NumericalValue="0" CodeName="t_10ms" DisplayName="10ms" Description="10ms" />
+		<EnumValue NumericalValue="1" CodeName="t_20ms" DisplayName="20ms" Description="20ms" />
+		<EnumValue NumericalValue="2" CodeName="t_30ms" DisplayName="30ms" Description="30ms" />
+		<EnumValue NumericalValue="3" CodeName="t_40ms" DisplayName="40ms" Description="40ms" />
+		<EnumValue NumericalValue="4" CodeName="t_50ms" DisplayName="50ms" Description="50ms" />
+		<EnumValue NumericalValue="5" CodeName="t_60ms" DisplayName="60ms" Description="60ms" />
+		<EnumValue NumericalValue="6" CodeName="t_70ms" DisplayName="70ms" Description="70ms" />
+		<EnumValue NumericalValue="7" CodeName="t_80ms" DisplayName="80ms" Description="80ms" />
+		<EnumValue NumericalValue="8" CodeName="t_90ms" DisplayName="90ms" Description="90ms" />
+		<EnumValue NumericalValue="9" CodeName="t_100ms" DisplayName="100ms" Description="100ms" />
+	</Enum>
+
+	<Enum>
+		<CodeName>SampleDuration</CodeName>
+		<EnumValue NumericalValue="0" CodeName="SingleMeasurement" DisplayName="Single Measurement" Description="Single Measurement" />
+		<EnumValue NumericalValue="4" CodeName="d_20ms" DisplayName="20ms" Description="20ms" />
+		<EnumValue NumericalValue="5" CodeName="d_30ms" DisplayName="30ms" Description="30ms" />
+		<EnumValue NumericalValue="6" CodeName="d_40ms" DisplayName="40ms" Description="40ms" />
+		<EnumValue NumericalValue="7" CodeName="d_50ms" DisplayName="50ms" Description="50ms" />
+		<EnumValue NumericalValue="8" CodeName="d_60ms" DisplayName="60ms" Description="60ms" />
+		<EnumValue NumericalValue="9" CodeName="d_100ms" DisplayName="100ms" Description="100ms" />
+		<EnumValue NumericalValue="10" CodeName="d_150ms" DisplayName="150ms" Description="150ms" />
+		<EnumValue NumericalValue="11" CodeName="d_200ms" DisplayName="200ms" Description="200ms" />
+		<EnumValue NumericalValue="12" CodeName="d_400ms" DisplayName="400ms" Description="400ms" />
+		<EnumValue NumericalValue="13" CodeName="d_800ms" DisplayName="800ms" Description="800ms" />
+		<EnumValue NumericalValue="14" CodeName="d_3000ms" DisplayName="3000ms" Description="3000ms" />
+		<EnumValue NumericalValue="15" CodeName="d_5000ms" DisplayName="5000ms" Description="5000ms" />
+	</Enum>
+
+	<Enum>
+		<CodeName>MagState</CodeName>
+		<EnumValue NumericalValue="0" CodeName="MagSvcDeployArm"	DisplayName="Deploy Arm"	Description="CubeMag Svc is Armed to Deploy" />
+		<EnumValue NumericalValue="1" CodeName="MagSvcDeploy"	    DisplayName="Deploy"	    Description="CubeMag Svc is Deploying" />
+		<EnumValue NumericalValue="2" CodeName="MagSvcIdle"		    DisplayName="Idle"		    Description="CubeMag Svc is Idle" />
+		<EnumValue NumericalValue="3" CodeName="MagSvcError"	    DisplayName="Error"		    Description="CubeMag Svc is in an error state" />
+	</Enum>
+
+	<Enum>
+		<CodeName>MntState</CodeName>
+		<EnumValue NumericalValue="0" CodeName="MntSvcOff"		DisplayName="Off"			Description="Mnt Svc is off" />
+		<EnumValue NumericalValue="1" CodeName="MntSvcInit"		DisplayName="Init"		Description="Mnt Svc is Initializing" />
+		<EnumValue NumericalValue="2" CodeName="MntSvcIdle"		DisplayName="Idle"		Description="Mnt Svc is Idle" />
+		<EnumValue NumericalValue="3" CodeName="MntSvcAuto"		DisplayName="Auto"		Description="Mnt Svc is Auto Sampling" />
+		<EnumValue NumericalValue="4" CodeName="MntSvcSample"	DisplayName="Sample"	Description="Mnt Svc is Sampling" />
+		<EnumValue NumericalValue="5" CodeName="MntSvcError"	DisplayName="Error"		Description="Mnt Svc is in an error state" />
+	</Enum>
+
+</NodeDefinition>

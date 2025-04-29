@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NodeDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <IsModule>true</IsModule>
+  <Name>cube-node-1-control-program-nssrwl-common-1</Name>
+  <CodeName>CubeNodeControlProgramNssrwlCommon</CodeName>
+  <InterfaceVersion>1</InterfaceVersion>
+  <CanLog>false</CanLog>
+
+  <Ttcs CanSet="true" CanGet="false" CodeName="NssRwlPower" DisplayName="NSSRWL Power State" Description="Set the NSSRWL Power State" Len="1" PartOfStartItem="0" PartOfNumItems="0" Group="NSSRWL">
+    <Item CodeName="PowerRwl0"            DisplayName="Power State RWL0"            Description="RWL0 Power State"           BitOffset="0"   BitLength="2" ValueType="Enumeration" EnumerationName="NssRwlPowerState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="PowerRwl1"            DisplayName="Power State RWL1"            Description="RWL1 Power State"           BitOffset="2"   BitLength="2" ValueType="Enumeration" EnumerationName="NssRwlPowerState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="PowerRwl2"            DisplayName="Power State RWL2"            Description="RWL2 Power State"           BitOffset="4"   BitLength="2" ValueType="Enumeration" EnumerationName="NssRwlPowerState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="PowerRwl3"            DisplayName="Power State RWL3"            Description="RWL3 Power State"           BitOffset="6"   BitLength="2" ValueType="Enumeration" EnumerationName="NssRwlPowerState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="true" CanGet="true" CodeName="NodeSvcSettings" DisplayName="Node Service Settings" Description="Set/Get the Node Service Settings" Len="1" PartOfStartItem="0" PartOfNumItems="0" Group="NSSRWL">
+    <Item CodeName="NssRwlAutoBoot"          DisplayName="NSSRWL Auto Boot"        Description="NSSRWL Auto-Boot on Startup Enable/Disable"            BitOffset="0"  BitLength="1"  ValueType="Boolean"     EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="true" CanGet="true" CodeName="NssRwlSvcSettings" DisplayName="NSSRWL Service Settings" Description="Set/Get the NSSRWL Service Settings" Len="6" PartOfStartItem="0" PartOfNumItems="0" Group="NSSRWL">
+    <Item CodeName="MaxTcTlmErrors"         DisplayName="Max TcTlm Errors"       Description="NSSRWL Maximum Number of TcTlm Errors Before Entering Error State" BitOffset="0"   BitLength="32"  ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SampleFrequency"        DisplayName="Sample Frequency"       Description="NSSRWL Sample Frequency"                                      BitOffset="32"  BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="Hz" RangeMin="1" RangeMax="50" />
+    <Item CodeName="AutoSample"             DisplayName="Auto Sample"            Description="NSSRWL Auto-Sample Enable/Disable"                            BitOffset="40"  BitLength="1" ValueType="Boolean"         EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SampleSource"           DisplayName="Sample Source"          Description="Selects which telemetry is sampled for wheel speed"           BitOffset="41"  BitLength="1" ValueType="Enumeration"     EnumerationName="NssRwlSampleSource" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="NodeSvcStatus" DisplayName="Node Service Status" Description="Node Service Status" Len="17" PartOfStartItem="0" PartOfNumItems="0" Group="NSSRWL">
+    <Item CodeName="NodeState"          DisplayName="Node State"                Description="CubeNode Node Service State"           BitOffset="0"   BitLength="8" ValueType="Enumeration" EnumerationName="NodeState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="BootErrorCodeRwl0"  DisplayName="Boot Error Code RWL0"      Description="RWL0 Boot Error Code"                  BitOffset="8"   BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="BootErrorCodeRwl1"  DisplayName="Boot Error Code RWL1"      Description="RWL1 Boot Error Code"                  BitOffset="40"  BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="BootErrorCodeRwl2"  DisplayName="Boot Error Code RWL2"      Description="RWL2 Boot Error Code"                  BitOffset="72"  BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="BootErrorCodeRwl3"  DisplayName="Boot Error Code RWL3"      Description="RWL3 Boot Error Code"                  BitOffset="104" BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="NssRwlSvcStatus" DisplayName="NSSRWL Service Status" Description="NSSRWL Service Status" Len="44" PartOfStartItem="0" PartOfNumItems="0" Group="NSSRWL">
+    <Item CodeName="StateRwl0"                    DisplayName="Service State RWL0"                    Description="RWL0 Service State"                        BitOffset="0"   BitLength="8" ValueType="Enumeration" EnumerationName="NssRwlState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailureCountRwl0"             DisplayName="TcTlm Failure Count RWL0"              Description="RWL0 TcTlm Failure Count"                  BitOffset="8"   BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailureCountLastSuccessRwl0"  DisplayName="TcTlm Last Success Failure Count RWL0" Description="RWL0 TcTlm Failure Count at Last Success"  BitOffset="40"  BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="LastTransactionRwl0"          DisplayName="Last Transaction RWL0"                 Description="RWL0 Last Transaction"                     BitOffset="72"  BitLength="8" ValueType="Enumeration" EnumerationName="NssRwlTcTlms" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="LastTransactionResultRwl0"    DisplayName="Last Transaction Result RWL0"          Description="RWL0 Last Transaction Result"              BitOffset="80"  BitLength="8" ValueType="Enumeration" EnumerationName="NssRwlTcTlmResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="StateRwl1"                    DisplayName="Service State RWL1"                    Description="RWL1 Service State"                        BitOffset="88"  BitLength="8" ValueType="Enumeration" EnumerationName="NssRwlState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailureCountRwl1"             DisplayName="TcTlm Failure Count RWL1"              Description="RWL1 TcTlm Failure Count"                  BitOffset="96"  BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailureCountLastSuccessRwl1"  DisplayName="TcTlm Last Success Failure Count RWL1" Description="RWL1 TcTlm Failure Count at Last Success"  BitOffset="128" BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="LastTransactionRwl1"          DisplayName="Last Transaction RWL1"                 Description="RWL1 Last Transaction"                     BitOffset="160" BitLength="8" ValueType="Enumeration" EnumerationName="NssRwlTcTlms" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="LastTransactionResultRwl1"    DisplayName="Last Transaction Result RWL1"          Description="RWL1 Last Transaction Result"              BitOffset="168" BitLength="8" ValueType="Enumeration" EnumerationName="NssRwlTcTlmResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="StateRwl2"                    DisplayName="Service State RWL2"                    Description="RWL2 Service State"                        BitOffset="176" BitLength="8" ValueType="Enumeration" EnumerationName="NssRwlState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailureCountRwl2"             DisplayName="TcTlm Failure Count RWL2"              Description="RWL2 TcTlm Failure Count"                  BitOffset="184" BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailureCountLastSuccessRwl2"  DisplayName="TcTlm Last Success Failure Count RWL2" Description="RWL2 TcTlm Failure Count at Last Success"  BitOffset="216" BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="LastTransactionRwl2"          DisplayName="Last Transaction RWL2"                 Description="RWL2 Last Transaction"                     BitOffset="248" BitLength="8" ValueType="Enumeration" EnumerationName="NssRwlTcTlms" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="LastTransactionResultRwl2"    DisplayName="Last Transaction Result RWL2"          Description="RWL2 Last Transaction Result"              BitOffset="256" BitLength="8" ValueType="Enumeration" EnumerationName="NssRwlTcTlmResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="StateRwl3"                    DisplayName="Service State RWL3"                    Description="RWL3 Service State"                        BitOffset="264" BitLength="8" ValueType="Enumeration" EnumerationName="NssRwlState" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailureCountRwl3"             DisplayName="TcTlm Failure Count RWL3"              Description="RWL3 TcTlm Failure Count"                  BitOffset="272" BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="FailureCountLastSuccessRwl3"  DisplayName="TcTlm Last Success Failure Count RWL3" Description="RWL3 TcTlm Failure Count at Last Success"  BitOffset="304" BitLength="32" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="LastTransactionRwl3"          DisplayName="Last Transaction RWL3"                 Description="RWL3 Last Transaction"                     BitOffset="336" BitLength="8" ValueType="Enumeration" EnumerationName="NssRwlTcTlms" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="LastTransactionResultRwl3"    DisplayName="Last Transaction Result RWL3"          Description="RWL3 Last Transaction Result"              BitOffset="344" BitLength="8" ValueType="Enumeration" EnumerationName="NssRwlTcTlmResult" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <!-- ****************** NssRwl TC ****************** -->
+
+  <Ttcs CanSet="true" CanGet="false" CodeName="NssRwlWheelSpeedRef" DisplayName="Wheel Reference Speed" Description="Set momentum wheel reference speed" Len="5" PartOfStartItem="0" PartOfNumItems="0" Group="NssRwlTC">
+    <Item CodeName="RwlHandle"  DisplayName="RWL Handle"      Description="Target RWL instance for reference speed" BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="NssRwlHandle" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SpeedRef"   DisplayName="Reference Speed" Description="Wheel reference speed"                   BitOffset="8" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="RPM" RangeMin="-10000" RangeMax="10000" />
+  </Ttcs>
+
+  <Ttcs CanSet="true" CanGet="false" CodeName="NssRwlTorque" DisplayName="Torque" Description="Set torque" Len="5" PartOfStartItem="0" PartOfNumItems="0" Group="NssRwlTC">
+    <Item CodeName="RwlHandle"  DisplayName="RWL Handle"  Description="Target RWL instance for torque"  BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="NssRwlHandle" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Torque"     DisplayName="Torque"      Description="Torque"                          BitOffset="8" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mNm" RangeMin="-25" RangeMax="25" />
+  </Ttcs>
+
+  <Ttcs CanSet="true" CanGet="false" CodeName="NssRwlMotorCurrent" DisplayName="Motor Current" Description="Set motor current" Len="5" PartOfStartItem="0" PartOfNumItems="0" Group="NssRwlTC">
+    <Item CodeName="RwlHandle"  DisplayName="RWL Handle"  Description="Target RWL instance for motor current" BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="NssRwlHandle" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Current"    DisplayName="Current"     Description="Current"                               BitOffset="8" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="-3000" RangeMax="3000" />
+  </Ttcs>
+
+  <Ttcs CanSet="true" CanGet="false" CodeName="NssRwlSoftwareReset" DisplayName="NSSRWL Software Reset" Description="Set the NSSRWL Software Reset" Len="1" PartOfStartItem="0" PartOfNumItems="0" Group="NssRwlTC">
+    <Item CodeName="RwlHandle"  DisplayName="RWL Handle"      Description="Target RWL instance for software reset" BitOffset="0" BitLength="8" ValueType="Enumeration" EnumerationName="NssRwlHandle" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <!-- ****************** NssRwl TLM ****************** -->
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="NssRwlWheelSpeedAll" DisplayName="Wheel Speed All" Description="Wheel speed measurement for all wheels (does not depend on instance selection)" Len="16" PartOfStartItem="0" PartOfNumItems="0" Group="NssRwlTLM-Speed">
+    <Item CodeName="SpeedRwl0" DisplayName="Wheel Speed RWL0" Description="Wheel speed measurement for RWL0" BitOffset="0" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="RPM" RangeMin="-10000" RangeMax="10000" />
+    <Item CodeName="SpeedRwl1" DisplayName="Wheel Speed RWL1" Description="Wheel speed measurement for RWL1" BitOffset="32" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="RPM" RangeMin="-10000" RangeMax="10000" />
+    <Item CodeName="SpeedRwl2" DisplayName="Wheel Speed RWL2" Description="Wheel speed measurement for RWL2" BitOffset="64" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="RPM" RangeMin="-10000" RangeMax="10000" />
+    <Item CodeName="SpeedRwl3" DisplayName="Wheel Speed RWL3" Description="Wheel speed measurement for RWL3" BitOffset="96" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="RPM" RangeMin="-10000" RangeMax="10000" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="NssRwlWheelSpeed0" DisplayName="Wheel Speed RWL0" Description="Wheel speed measurement from RWL0" Len="4" PartOfStartItem="0" PartOfNumItems="0" Group="NssRwlTLM-Speed">
+    <Item CodeName="wheelSpeed" DisplayName="Wheel Speed" Description="Wheel speed measurement in rpm"                BitOffset="0" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="RPM" RangeMin="-10000" RangeMax="10000" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="NssRwlTlmStandard0" DisplayName="Raw NSSRWL Standard TLM RWL0" Description="Get NSSRWL Standard TLM Packet from RWL0" Len="23" PartOfStartItem="0" PartOfNumItems="0" Group="NssRwlTLM-Standard">
+    <Item CodeName="SerialNumber"         DisplayName="Serial Number"                 Description="Serial Number"                                 BitOffset="0" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="TargetValue"          DisplayName="Target Value"                  Description="Target Value"                                  BitOffset="8" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-10000" RangeMax="10000" />
+    <Item CodeName="ActualWheelSpeed"     DisplayName="Actual Wheel Speed"            Description="Actual Wheel Speed"                            BitOffset="40" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="RPM" RangeMin="-10000" RangeMax="10000" />
+    <Item CodeName="ActualMotorCurrent"   DisplayName="Actual Motor Current"          Description="Actual Motor current"                          BitOffset="72" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="mA" RangeMin="0" RangeMax="20000" />
+    <Item CodeName="Temperature"          DisplayName="Temperature"                   Description="Temperature"                                   BitOffset="104" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="C" RangeMin="-273" RangeMax="273" />
+    <Item CodeName="ISignal"              DisplayName="I-Signal (loop)"               Description="I-Signal (loop)"                               BitOffset="136" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="-10000" RangeMax="10000" />
+    <Item CodeName="ReactionWheelMode"    DisplayName="Reaction Wheel Mode"           Description="Set if Reaction Wheel mode is On"              BitOffset="168" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="CurrentControlMode"   DisplayName="Current Control Mode"          Description="Set if Current Control mode is Active"         BitOffset="169" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SpeedControlMode"     DisplayName="Speed Control Mode"            Description="Set if Speed Control mode is Active"           BitOffset="170" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="TorqueMode"           DisplayName="Torque Mode"                   Description="Set if Torque mode is Active"                  BitOffset="171" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="WheelGyroMode"        DisplayName="Wheel Gyro Mode"               Description="Set if Wheel/Gyro mode is On"                  BitOffset="172" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="OmegaPiControlLoop"   DisplayName="Omega-PI Control Loop"         Description="Set if Omega-PI Control Loop is Active"        BitOffset="173" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="AnglePdControlLoop"   DisplayName="Angle-PD Control Loop"         Description="Set if Angle-PD Control Loop is Active"        BitOffset="174" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="BootControl"          DisplayName="Boot Control"                  Description="Set if Boot Control is Active"                 BitOffset="175" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="GyroConnected"        DisplayName="Gyro Connected"                Description="Set if Gyro Connected"                         BitOffset="176" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="GyroTelemetry"        DisplayName="Gyro Telemetry"                Description="Set if Gyro Telemetry is On"                   BitOffset="177" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="GyroFlagRegister"     DisplayName="Gyro Flag Register"            Description="Set if Gyro Flag Register is not zero"         BitOffset="178" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="CrcError"             DisplayName="CRC Error"                     Description="Set if CRC Error Protected Area"               BitOffset="179" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="WrongLlCommand"       DisplayName="Wrong Low-Level Command"       Description="Set if Wrong Low-Level Command"                BitOffset="180" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="WrongHlCommand"       DisplayName="Wrong High-Level Command"      Description="Set if Wrong High-Level Command"               BitOffset="181" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ToutSci1Main"         DisplayName="Timeout SCI1 Main Interface"   Description="Set if Timeout on SCI1 Main Interface"         BitOffset="182" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ToutSci2Gyro"         DisplayName="Timeout SCI2 Gyro Interface"   Description="Set if Timeout on SCI2 Gyro Interface"         BitOffset="183" BitLength="1" ValueType="Boolean" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="NssRwlTlmExtended0" DisplayName="Raw NSSRWL Extended TLM RWL0" Description="Get NSSRWL Extended TLM Packet from RWL0" Len="5" PartOfStartItem="0" PartOfNumItems="0" Group="NssRwlTLM-Extended">
+    <Item CodeName="SerialNumber"         DisplayName="Serial Number"                 Description="Serial Number"                                 BitOffset="0" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="ActualWheelSpeed"     DisplayName="Actual Wheel Speed"            Description="Actual Wheel Speed"                            BitOffset="8" BitLength="32" ValueType="FloatingPoint" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="RPM" RangeMin="-10000" RangeMax="10000" />
+  </Ttcs>
+
+  <Ttcs CanSet="false" CanGet="true" CodeName="NssRwlTlmSystem0" DisplayName="Raw NSSRWL System TLM RWL0" Description="Get NSSRWL System TLM Packet from RWL0" Len="23" PartOfStartItem="0" PartOfNumItems="0" Group="NssRwlTLM-System">
+    <Item CodeName="SerialNumber"         DisplayName="Serial Number"           Description="Serial Number"                                 BitOffset="0" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="DeviceType"           DisplayName="Devie Type"              Description="Device Type"                                   BitOffset="8" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="DeviceId"             DisplayName="Device ID"               Description="Device ID"                                     BitOffset="16" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Month"                DisplayName="Month"                   Description="Month"                                         BitOffset="24" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="Year"                 DisplayName="Year"                    Description="Year"                                          BitOffset="32" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="StatusRegister"       DisplayName="Status Register"         Description="Status Register"                               BitOffset="40" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="AcsRegister"          DisplayName="ACS Flag Register"       Description="ACS Flag Register"                             BitOffset="56" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="SystemRegister"       DisplayName="System Flag Register"    Description="System Flag Register"                          BitOffset="72" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="RwaRegister"          DisplayName="RWA Flag Register"       Description="RWA Flag Register"                             BitOffset="88" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="GyroRegister"         DisplayName="Gyro Flag Register"      Description="Gyro Flag Register"                            BitOffset="104" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="BootFlag"             DisplayName="Boot Flag"               Description="Boot Flag"                                     BitOffset="112" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="BootVector"           DisplayName="Boot Vector"             Description="Boot Vector"                                   BitOffset="128" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="AcsControlInterval"   DisplayName="ACS Control Interval"    Description="ACS Control Interval"                          BitOffset="144" BitLength="8" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="10.24ms" RangeMin="0" RangeMax="0" />
+    <Item CodeName="AcsStartAddr"         DisplayName="ACS Start Address"       Description="Actual start address ACS boot control"         BitOffset="152" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+    <Item CodeName="TachoStartAddr"       DisplayName="Tacho Start Address"     Description="Actual start address Tacho control"            BitOffset="168" BitLength="16" ValueType="UnsignedInteger" EnumerationName="" CalibrationUserToRaw="" CalibrationRawToUser="" MeasurementUnit="" RangeMin="0" RangeMax="0" />
+  </Ttcs>
+
+  <!-- ****************** ENUMERATIONS ****************** -->
+
+  <Enum>
+    <CodeName>NodeState</CodeName>
+    <EnumValue NumericalValue="0" CodeName="NodeOff"            DisplayName="Off" Description="Node is Off" />
+    <EnumValue NumericalValue="1" CodeName="NodeIdle"           DisplayName="Idle" Description="Node is Idle" />
+    <EnumValue NumericalValue="2" CodeName="NodeNssRwlPwr"      DisplayName="NSSRWL Power CHange"  Description="Node is powering on or off one or more NSSRWL's" />
+  </Enum>
+
+  <Enum>
+    <CodeName>NssRwlState</CodeName>
+    <EnumValue NumericalValue="0" CodeName="NssRwlOff"          DisplayName="Off"        Description="PSST3S is Off" />
+    <EnumValue NumericalValue="1" CodeName="NssRwlBoot"          DisplayName="Boot"        Description="PSST3S is Booting" />
+    <EnumValue NumericalValue="2" CodeName="NssRwlIdle"          DisplayName="Idle"        Description="PSST3S is Idle" />
+    <EnumValue NumericalValue="3" CodeName="NssRwlAuto"          DisplayName="NSSRWL Auto"  Description="NSSRWL is Auto-Sampling" />
+    <EnumValue NumericalValue="4" CodeName="NssRwlError"         DisplayName="NSSRWL Error" Description="NSSRWL is in an Error State" />
+  </Enum>
+
+  <Enum>
+    <CodeName>NssRwlPowerState</CodeName>
+    <EnumValue NumericalValue="0" CodeName="PoweredNoChange" DisplayName="No Change" Description="No change" />
+    <EnumValue NumericalValue="1" CodeName="PoweredOff" DisplayName="NssRwl Off" Description="NSSRWL Power Off" />
+    <EnumValue NumericalValue="2" CodeName="PoweredOn"  DisplayName="NssRwl On"  Description="NSSRWL Power On" />
+  </Enum>
+
+  <Enum>
+    <CodeName>NssRwlTcTlms</CodeName>
+    <EnumValue NumericalValue="0" CodeName="None" DisplayName="None Tlm" Description="No TcTlm history" />
+    <EnumValue NumericalValue="1" CodeName="SetMotorCurrent" DisplayName="Set Motor Current" Description="Set Motor Current" />
+    <EnumValue NumericalValue="2" CodeName="SetWheelSpeed" DisplayName="Set Wheel Speed" Description="Set Wheel Speed Reference" />
+    <EnumValue NumericalValue="3" CodeName="SetTorque" DisplayName="Set Torque" Description="Set Torquw" />
+    <EnumValue NumericalValue="4" CodeName="GetTlmStandard" DisplayName="Get Tlm Standard" Description="Get Standard Telemetry" />
+    <EnumValue NumericalValue="5" CodeName="GetTlmExtended" DisplayName="Get Tlm Extended" Description="Get Extended Telemetry" />
+    <EnumValue NumericalValue="6" CodeName="GetTlmSystem" DisplayName="Get Tlm System" Description="Get System Telemetry" />
+    <EnumValue NumericalValue="7" CodeName="SetSoftwareReset" DisplayName="Set Software Reset" Description="Set Software Reset" />
+    <EnumValue NumericalValue="8" CodeName="SetSoftwareExecute" DisplayName="Set Software Execute" Description="Set Software Execute" />
+  </Enum>
+
+  <Enum>
+    <CodeName>NssRwlTcTlmResult</CodeName>
+    <EnumValue NumericalValue="0" CodeName="TcTlmNone" DisplayName="TcTlm None" Description="No Transaction Yet" />
+    <EnumValue NumericalValue="1" CodeName="Ack" DisplayName="Ack" Description="Successful Ack on last transaction" />
+    <EnumValue NumericalValue="2" CodeName="ErrorEchoMatch" DisplayName="Error Echo Match" Description="Command byte not successfully echo'd" />
+    <EnumValue NumericalValue="3" CodeName="ErrorEchoLength" DisplayName="Error Echo Length" Description="Echo response length is greater than transmitted data length" />
+    <EnumValue NumericalValue="4" CodeName="ErrorTlmAck" DisplayName="Error Tlm Ack" Description="No Ack byte received in tlm data block" />
+    <EnumValue NumericalValue="5" CodeName="Timeout" DisplayName="Timeout" Description="Timeout" />
+    <EnumValue NumericalValue="6" CodeName="TxError" DisplayName="Tx Error" Description="Uart Tx Error" />
+    <EnumValue NumericalValue="7" CodeName="RxError" DisplayName="Rx Error" Description="Uart Rx Error" />
+  </Enum>
+
+  <Enum>
+    <CodeName>NssRwlSampleSource</CodeName>
+    <EnumValue NumericalValue="0" CodeName="StandardTlm" DisplayName="Standard Telemetry" Description="Standard telemetry is auto-sampled" />
+    <EnumValue NumericalValue="1" CodeName="ExtendedTlm" DisplayName="Extended Telemetry" Description="Extended telemetry is auto-sampled" />
+  </Enum>
+
+  <!-- !!! app-specific ID's should start from the mid-point (64 TC & 192 TLM) and should increment & decrement towards the common ID's !!! -->
+
+  <!-- TC -->
+
+  <TtcIds TtcName="NodeSvcSettings"               GetId="255" SetId="64" LogId="0" />
+  <TtcIds TtcName="NssRwlSvcSettings"             GetId="255" SetId="65" LogId="0" />
+  <TtcIds TtcName="NssRwlPower"                   GetId="255" SetId="63" LogId="0" />
+  <TtcIds TtcName="NssRwlWheelSpeedRef"           GetId="255" SetId="66" LogId="0" />
+  <TtcIds TtcName="NssRwlTorque"                  GetId="255" SetId="62" LogId="0" />
+  <TtcIds TtcName="NssRwlMotorCurrent"            GetId="255" SetId="67" LogId="0" />
+  <TtcIds TtcName="NssRwlSoftwareReset"           GetId="255" SetId="61" LogId="0" />
+
+  <!-- TLM -->
+  <TtcIds TtcName="NodeSvcSettings"               GetId="192" SetId="255" LogId="0" />
+  <TtcIds TtcName="NodeSvcStatus"                 GetId="193" SetId="255" LogId="0" />
+  <TtcIds TtcName="NssRwlSvcSettings"             GetId="191" SetId="255" LogId="0" />
+  <TtcIds TtcName="NssRwlSvcStatus"               GetId="194" SetId="255" LogId="0" />
+  <TtcIds TtcName="NssRwlWheelSpeed0"             GetId="190" SetId="255" LogId="0" />
+  <TtcIds TtcName="NssRwlTlmStandard0"            GetId="188" SetId="255" LogId="0" />
+  <TtcIds TtcName="NssRwlTlmExtended0"            GetId="186" SetId="255" LogId="0" />
+  <TtcIds TtcName="NssRwlTlmSystem0"              GetId="184" SetId="255" LogId="0" />
+  <TtcIds TtcName="NssRwlWheelSpeedAll"           GetId="182" SetId="255" LogId="0" />
+	
+  <!-- ****************** MODULES ****************** -->
+
+  <!-- ****************** GLOBAL ENUMS ****************** -->
+  <GlobalEnums>
+    <string>common-framework/common-framework-enums-1.xml</string>
+    <string>cube-node-1/control-program-nssrwl-common-enums-1.xml</string>
+  </GlobalEnums>
+
+</NodeDefinition>
