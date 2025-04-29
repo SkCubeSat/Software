@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  kubos-dev:
+    image: skcubesat-kubos-dev
+    container_name: kubos-dev
+    ports:
+      - "8000:8000"
+      - "8010:8010"
+      - "8020:8020"
+      - "8021:8021"
+      - "8030:8030"
+      - "8040:8040"
+      - "8050:8050"
+      - "8005:8005"
+      - "8080:8080"
+    volumes:
+      - "/Users/alvan/Desktop/Space Team/Software:/workspace"
+    stdin_open: true
+    tty: true

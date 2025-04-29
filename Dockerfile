@@ -1,39 +1,37 @@
-FROM debian:buster
+FROM ubuntu:20.04
 
-# Install necessary tools for cross-compiling
-RUN dpkg --add-architecture armhf && \
-    apt-get update && \
-    apt-get install -y wget libssl-dev && apt-get install -y pkg-config \
-    apt-get install -y crossbuild-essential-armhf && \
-    apt install -y openssh-server && \
-    apt install -y gdb-multiarch && \
-    apt install -y cmake && \
-    apt install -y git && \
-    apt-get install -y python3 python3-pip && \
-    apt-get install -y can-utils && \
-    apt-get update && apt-get install -y libsocketcan2 libsocketcan-dev && \
-    apt-get install -y libzmq3-dev && \
-    apt install -y tmux && \
-    apt-get install -y kmod && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Set the CMake version to install
-ENV CMAKE_VERSION=3.28.3
+# Install core development tools
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    python3 \
+    python3-pip \
+    python3-venv \
+    curl \
+    git \
+    unzip \
+    pkg-config \
+    libusb-1.0-0-dev \
+    libssl-dev \
+    libffi-dev \
+    gcc \
+    g++ \
+    vim \
+    wget \
+    && apt-get clean
 
-# Download and install CMake from official website
-RUN wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.sh -q -O /tmp/cmake-install.sh && \
-    chmod u+x /tmp/cmake-install.sh && \
-    /tmp/cmake-install.sh --skip-license --prefix=/usr/local && \
-    rm /tmp/cmake-install.sh
+# Install Rust (for Rust-based services)
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+ENV PATH="/root/.cargo/bin:$PATH"
 
-# Verify installation
-RUN cmake --version
+# Upgrade pip and install pip-tools (for Python dependency management)
+RUN pip3 install --upgrade pip setuptools pip-tools
 
+# Optional: Add your preferred KubOS tools or dependencies here
 
-# Set the working directory
+# Default workdir - mount your code here
 WORKDIR /workspace
 
-# Set the default command to bash
-CMD ["bash"]
-
+CMD ["/bin/bash"]
