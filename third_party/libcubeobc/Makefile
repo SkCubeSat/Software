@@ -121,10 +121,23 @@ info-$(CUBEOBCLIB):
 	@echo -e
 
 # Compile shared library
-$(CUBEOBCLIB_SH): $(CUBEOBCLIB_SRC) $(CUBEOBCLIB_ROOT)/Makefile
-	@echo -e "[SH]\t$@"
+# $(CUBEOBCLIB_SH): $(CUBEOBCLIB_SRC) $(CUBEOBCLIB_ROOT)/Makefile
+# 	@echo -e "[SH]\t$@"
+# 	$(V)mkdir -p $(CUBEOBCLIB_BDIR)
+# 	$(V)$(CC) -shared $(CUBEOBCLIB_CFLAGS) $(CUBEOBCLIB_CFLAGS_DEFS) $(CUBEOBCLIB_LD_FLAGS) $(addprefix -I,$(CUBEOBCLIB_INC)) $(addprefix -I,$(USER_INC)) -o $(CUBEOBCLIB_SH) $(CUBEOBCLIB_SRC)
+
+# Compile Static Library
+# Compile each .c file to .o
+$(CUBEOBCLIB_BDIR)/%.o: %.c
+	@echo -e "[CC]\t$<"
+	$(V)mkdir -p $(dir $@)
+	$(V)$(CC) -c $(CUBEOBCLIB_CFLAGS) $(CUBEOBCLIB_CFLAGS_DEFS) $(addprefix -I,$(CUBEOBCLIB_INC)) -o $@ $<
+
+# Static archive build rule
+$(CUBEOBCLIB_SH): $(CUBEOBCLIB_OBJ)
+	@echo -e "[AR]\t$@"
 	$(V)mkdir -p $(CUBEOBCLIB_BDIR)
-	$(V)$(CC) -shared $(CUBEOBCLIB_CFLAGS) $(CUBEOBCLIB_CFLAGS_DEFS) $(CUBEOBCLIB_LD_FLAGS) $(addprefix -I,$(CUBEOBCLIB_INC)) $(addprefix -I,$(USER_INC)) -o $(CUBEOBCLIB_SH) $(CUBEOBCLIB_SRC)
+	$(V)ar rcs $@ $^
 
 ##################
 #### EXAMPLES ####
