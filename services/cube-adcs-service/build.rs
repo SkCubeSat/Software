@@ -1,4 +1,4 @@
-use libcsp_cargo_build::{generate_autoconf_header_file, Builder};
+// use libcsp_cargo_build::{generate_autoconf_header_file, Builder};
 use std::{env, path::PathBuf};
 use std::fs;
 
@@ -7,36 +7,59 @@ fn main() {
 
     // LIBCSP
 
-    let out_dir = env::var("OUT_DIR").unwrap();
-    let lib_path = "../../third_party/libcsp";
-    let lib_cfg_dir = "../../third_party/cfg/csp";
+    // let out_dir = env::var("OUT_DIR").unwrap();
+    // let lib_path = "../../third_party/libcsp";
+    // let lib_cfg_dir = "../../third_party/cfg/csp";
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap_or_default();
     let manifest_path = PathBuf::from(&manifest_dir);
 
-    let mut csp_builder = Builder::new(PathBuf::from(lib_path), PathBuf::from(&out_dir))
-        .expect("creating libcsp builder failed");
+    // let mut csp_builder = Builder::new(PathBuf::from(lib_path), PathBuf::from(&out_dir))
+    //     .expect("creating libcsp builder failed");
 
-    csp_builder.compiler_warnings = false;
+    // csp_builder.compiler_warnings = false;
 
-    generate_autoconf_header_file(manifest_path.clone(), &csp_builder.cfg)
-        .expect("generating header file failed");
+    // generate_autoconf_header_file(manifest_path.clone(), &csp_builder.cfg)
+    //     .expect("generating header file failed");
 
-    // Copy the file to lib/csp/cfg as well for binding generation.
-    std::fs::copy(
-        manifest_path.join("autoconfig.h"),
-        PathBuf::from(&lib_cfg_dir).join("autoconfig.h"),
-    )
-    .expect("copying autoconfig.h failed");
+    // // Copy the file to lib/csp/cfg as well for binding generation.
+    // std::fs::copy(
+    //     manifest_path.join("autoconfig.h"),
+    //     PathBuf::from(&lib_cfg_dir).join("autoconfig.h"),
+    // )
+    // .expect("copying autoconfig.h failed");
 
-     // This file is required for the compile-time configuration of libcsp-rust.
-    csp_builder
-     .generate_autoconf_rust_file(manifest_path)
-     .expect("generating autoconfig.rs failed");
+    //  // This file is required for the compile-time configuration of libcsp-rust.
+    // csp_builder
+    //  .generate_autoconf_rust_file(manifest_path)
+    //  .expect("generating autoconfig.rs failed");
 
-    csp_builder.compile().expect("compiling libcsp failed");
+    // csp_builder.compile().expect("compiling libcsp failed");
 
-    // If we change the libcsp build configuration, we need to re-run the build.
-    println!("cargo::rerun-if-changed=build.rs");
+    // // If we change the libcsp build configuration, we need to re-run the build.
+    // println!("cargo::rerun-if-changed=build.rs");
+
+    let csp_bindings = bindgen::Builder::default()
+        .header("/usr/local/include/csp/csp.h") // Adjust if libcsp is installed elsewhere
+        .header("/usr/local/include/csp/interfaces/csp_if_can.h")
+        .header("/usr/local/include/csp/drivers/can_socketcan.h")
+        .header("../../third_party/c_overrides/csp_cubeobc_r.h")
+        .clang_arg("-I/usr/local/include")
+        .clang_arg("-DCSP_USE_CAN=1")
+        .clang_arg("-DCSP_USE_CAN_SOCKETCAN=1")
+        //.raw_line("unsafe extern \"C\" {")  
+        .generate()
+        .expect("Unable to generate bindings");
+
+    let csp_out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let csp_bindings_file = csp_out_path.join("csp_bindings.rs");
+
+    csp_bindings
+        .write_to_file(&csp_bindings_file)
+        .expect("Couldn't write bindings!");
+
+    add_unsafe_to_extern_blocks(&csp_bindings_file);
+
+    println!("cargo:rustc-link-lib=csp"); // Link against libcsp
 
 
     // libcubeOBC
