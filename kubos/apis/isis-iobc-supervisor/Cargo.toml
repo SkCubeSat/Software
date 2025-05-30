@@ -1,0 +1,15 @@
+[package]
+name = "isis-iobc-supervisor"
+version = "0.1.0"
+authors = ["ryan@kubos.com"]
+build = "build.rs"
+edition = "2018"
+
+[dependencies]
+libc = "0.2"
+
+[build-dependencies]
+kubos-build-helper = {path = "../../kubos-build-helper"}
+
+[package.metadata.release]
+release = false

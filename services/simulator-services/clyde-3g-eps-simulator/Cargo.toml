@@ -1,0 +1,24 @@
+[package]
+name = "clyde-3g-eps-simulator"
+authors = ["Oren Rotaru <oren.rotaru@usask.ca>"]
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clyde-3g-eps-api = { path = "../../../kubos/apis/clyde-3g-eps-api" }
+eps-api = { path = "../../../kubos/apis/eps-api" }
+thiserror = "2.0.12"
+juniper = "0.16.1"
+kubos-service = { path = "../../../kubos/services/kubos-service" }
+log = "^0.4.26"
+rust-i2c = { path = "../../../kubos/hal/rust-hal/rust-i2c" }
+tokio = { version = "1.29.1", features = ["rt-multi-thread", "macros"] }
+warp = "0.3.5"
+
+[dev-dependencies]
+serde_json = "1.0"
+
+[package.metadata.release]
+release = false

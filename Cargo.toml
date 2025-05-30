@@ -1,20 +1,122 @@
 [workspace]
-
+resolver = "2"
 # This *must* contain all crates in this workspace
 members = [
     # Pure Rust crates
-    "mission-applications/first-test-application",
+    "kubos/apis/app-api/rust",
+    "kubos/apis/adcs-api",
+    "kubos/apis/clyde-3g-eps-api",
+    "kubos/apis/eps-api",
+    "kubos/apis/mai400-api",
+    "kubos/apis/novatel-oem6-api",
+    "kubos/apps/obc-hs",
+    "kubos/apis/nsl-duplex-d2",
+    "kubos/apis/rust-radio-api",
+    "kubos/apis/system-api",
+    "kubos/apis/telemetry-db-api",
+    "kubos/clients/kubos-file-client",
+    "kubos/clients/kubos-shell-client",
+    "kubos/clients/uart-comms-client",
+    "kubos/examples/rust-mission-app",
+    "kubos/examples/rust-service",
+    "kubos/examples/serial-comms-service",
+    "kubos/examples/udp-service-client",
+    "kubos/hal/rust-hal/rust-i2c",
+    "kubos/hal/rust-hal/rust-uart",
+    "kubos/kubos-build-helper",
+    "kubos/libs/cbor-protocol",
+    "kubos/libs/channel-protocol",
+    "kubos/libs/file-protocol",
+    "kubos/libs/kubos-comms",
+    "kubos/libs/shell-protocol",
+    "kubos/services/app-service",
+    "kubos/services/gomspace-p31u-service",
+    "kubos/services/clyde-3g-eps-service",
+    "kubos/services/monitor-service",
+    "kubos/services/file-service",
+    "kubos/services/kubos-service",
+    "kubos/services/local-comms-service",
+    "kubos/services/mai400-service",
+    "kubos/services/nsl-duplex-d2-comms-service",
+    "kubos/services/novatel-oem6-service",
+    "kubos/services/scheduler-service",
+    "kubos/services/shell-service",
+    "kubos/services/telemetry-service",
+    "kubos/test/benchmark/db-test",
+    "kubos/test/integration/linux/mai400",
+    "kubos/test/integration/large_download",
+    "kubos/test/integration/large_upload",
+    "kubos/utils",
+    "services/simulator-services/clyde-3g-eps-simulator",
+    # Rust + C crates
+    "kubos/apis/isis-ants-api",
+    "kubos/apis/isis-imtq-api",
+    "kubos/apis/isis-iobc-supervisor",
+    "kubos/apis/gomspace-p31u-api",
+    "kubos/examples/rust-c-service/extern-lib",
+    "kubos/examples/rust-c-service/service",
+    "kubos/services/iobc-supervisor-service",
+    "kubos/services/isis-ants-service",
+    "kubos/test/integration/linux/isis-ants", "services/payload-services/star-risc",
 ]
+
+exclude = ["kubos/apis/nosengine-rust", "kubos/test/integration/nosengine-rust"]
 
 # This contains just pure Rust crates to allow for running
 # cargo commands without C-build dependencies
-default-members = ["mission-applications/first-test-application"]
+default-members = [
+    "kubos/apis/app-api/rust",
+    "kubos/apis/adcs-api",
+    "kubos/apis/clyde-3g-eps-api",
+    "kubos/apis/eps-api",
+    "kubos/apis/mai400-api",
+    "kubos/apis/novatel-oem6-api",
+    "kubos/apis/nsl-duplex-d2",
+    "kubos/apps/obc-hs",
+    "kubos/apis/rust-radio-api",
+    "kubos/apis/system-api",
+    "kubos/apis/telemetry-db-api",
+    "kubos/clients/kubos-file-client",
+    "kubos/clients/kubos-shell-client",
+    "kubos/clients/uart-comms-client",
+    "kubos/examples/rust-mission-app",
+    "kubos/examples/rust-service",
+    "kubos/examples/serial-comms-service",
+    "kubos/examples/udp-service-client",
+    "kubos/hal/rust-hal/rust-i2c",
+    "kubos/hal/rust-hal/rust-uart",
+    "kubos/kubos-build-helper",
+    "kubos/libs/cbor-protocol",
+    "kubos/libs/channel-protocol",
+    "kubos/libs/file-protocol",
+    "kubos/libs/kubos-comms",
+    "kubos/libs/shell-protocol",
+    "kubos/services/app-service",
+    "kubos/services/gomspace-p31u-service",
+    "kubos/services/clyde-3g-eps-service",
+    "kubos/services/monitor-service",
+    "kubos/services/file-service",
+    "kubos/services/kubos-service",
+    "kubos/services/local-comms-service",
+    "kubos/services/mai400-service",
+    "kubos/services/nsl-duplex-d2-comms-service",
+    "kubos/services/novatel-oem6-service",
+    "kubos/services/scheduler-service",
+    "kubos/services/shell-service",
+    "kubos/services/telemetry-service",
+    "kubos/test/benchmark/db-test",
+    "kubos/test/integration/linux/mai400",
+    "kubos/test/integration/large_download",
+    "kubos/test/integration/large_upload",
+    "kubos/utils",
+    "services/simulator-services/clyde-3g-eps-simulator",
+]
 
 [workspace.package]
-version = "1.23.0"
-description = "Radsat-SK2 software using KubOS: Linux-based OS and middleware for Satellites"
-documentation = "https://docs.kubos.com"
-repository = "https://github.com/kubos/kubos"
+version = "0.1.0"
+description = "Radsat OBC software, built on KubOS"
+documentation = "https:software.skcubesat.ca"
+repository = "https://github.com/SkCubeSat/Software"
 license = "Apache-2.0"
 
 [profile.release]

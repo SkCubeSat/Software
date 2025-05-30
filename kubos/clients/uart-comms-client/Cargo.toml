@@ -1,0 +1,17 @@
+[package]
+name = "uart-comms-client"
+version = "0.1.0"
+authors = ["Catherine Garabedian <catherine@kubos.co>"]
+edition = "2018"
+
+[dependencies]
+byteorder = "1.2.7"
+clap = "2.32"
+failure = "0.1.2"
+kubos-comms = { path = "../../libs/kubos-comms" }
+pnet = "0.31.0"
+serde_json = "1.0"
+serial = "0.4"
+
+[package.metadata.release]
+release = false

@@ -1,0 +1,18 @@
+[package]
+name = "kubos-telemetry-db"
+authors = [
+    "Marshall Culpepper <marshall@xplore.com>, Oren Rotaru <oren.rotaru@usask.ca>",
+]
+edition = "2018"
+version.workspace = true
+description.workspace = true
+license.workspace = true
+documentation.workspace = true
+repository.workspace = true
+
+[dependencies]
+diesel = { version = "2.2.8", features = ["sqlite"] }
+log = "^0.4.0"
+serde = "1.0"
+serde_derive = "1.0"
+time = "0.1"

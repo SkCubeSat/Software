@@ -1,0 +1,30 @@
+[package]
+name = "kubos-service"
+authors = [
+    "Marshall Culpepper <marshall@xplore.com>",
+    "Ryan Plauche <ryan@kubos.co>",
+]
+edition = "2018"
+version.workspace = true
+description.workspace = true
+license.workspace = true
+documentation.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde = "1.0"
+serde_json = "1.0"
+juniper = "0.16.1"
+juniper_warp = "0.8.0"
+radsat-system = { version = "=0.1.0", path = "../../apis/system-api" }
+log = "^0.4.0"
+warp = "0.3.5"
+# Pinning this to 0.3.15 due to kubos linux build issues with v0.3.16
+pkg-config = "= 0.3.15"
+tokio = { version = "1.29.1", features = ["rt-multi-thread", "macros"] }
+
+[dev-dependencies]
+anyhow = "1.0.98"
+thiserror = "2"
+
+
