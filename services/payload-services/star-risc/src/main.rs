@@ -1,29 +1,16 @@
-use async_graphql::{EmptyMutation, EmptySubscription, Schema, http::GraphiQLSource};
-use async_graphql_axum::GraphQL;
-use axum::{
-    Router,
-    response::{self, IntoResponse},
-    routing::get,
-};
-use tokio::net::TcpListener;
-use tokio::sync::RwLock;
-use std::time::{Duration};
+use async_graphql::{Context, EmptyMutation, Object};
+use kubos_service::{Config, Service};
+use std::time::Duration;
 use std::collections::VecDeque;
 use std::sync::Arc;
-use tokio_serial::{SerialPortBuilderExt};
-use tokio::io::{AsyncReadExt};
+use tokio::sync::RwLock;
+use tokio_serial::SerialPortBuilderExt;
+use tokio::io::AsyncReadExt;
 
 // Define our data structure for storing UART readings
 #[derive(Clone)]
 struct UartReading {
     data: Vec<u8>,
-}
-
-#[async_graphql::Object]
-impl UartReading {
-    async fn data(&self) -> Vec<u8> {
-        self.data.clone()
-    }
 }
 
 // Define our shared state
@@ -55,15 +42,25 @@ impl AppState {
     }
 }
 
-// Define our Query type
-#[derive(Default)]
-struct Query {
+// Our subsystem - this is what kubos-service will manage
+#[derive(Clone)]
+pub struct StarRiscSubsystem {
     state: Arc<RwLock<AppState>>,
 }
 
-#[async_graphql::Object]
-impl Query {
-    async fn uart_readings(&self) -> Vec<u8> {
+impl StarRiscSubsystem {
+    pub fn new() -> Self {
+        Self {
+            state: Arc::new(RwLock::new(AppState::new(1000))),
+        }
+    }
+
+    pub async fn add_reading(&self, data: Vec<u8>) {
+        let mut state = self.state.write().await;
+        state.add_reading(data);
+    }
+
+    pub async fn get_uart_readings(&self) -> Vec<u8> {
         let state = self.state.read().await;
         state.get_readings()
             .iter()
@@ -72,67 +69,98 @@ impl Query {
     }
 }
 
-async fn graphiql() -> impl IntoResponse {
-    response::Html(GraphiQLSource::build().endpoint("/").finish())
+// Define our Query type using async-graphql
+#[derive(Default)]
+pub struct QueryRoot;
+
+#[Object]
+impl QueryRoot {
+    async fn ping(&self) -> &str {
+        "pong"
+    }
+
+    async fn uart_readings(&self, ctx: &Context<'_>) -> async_graphql::Result<Vec<u8>> {
+        let subsystem_ctx = ctx.data::<kubos_service::Context<StarRiscSubsystem>>()?;
+        Ok(subsystem_ctx.subsystem().get_uart_readings().await)
+    }
 }
 
 // UART reading task
-async fn uart_reading_task(state: Arc<RwLock<AppState>>) {
+async fn uart_reading_task(subsystem: StarRiscSubsystem) {
     // For simulation, we'll use a PTY (pseudo-terminal)
     // You can create one using: socat -d -d pty,raw,echo=0 pty,raw,echo=0
     // This will give you two device paths like /dev/pts/X and /dev/pts/Y
     // Use one end to write data and the other to read
-    let mut uart = tokio_serial::new("/dev/pts/8", 115200)
+    
+    // Try to open the UART, but don't panic if it fails (for demo purposes)
+    let uart_result = tokio_serial::new("/dev/pts/11", 115200)
         .data_bits(tokio_serial::DataBits::Eight)
         .flow_control(tokio_serial::FlowControl::None)
         .parity(tokio_serial::Parity::None)
         .stop_bits(tokio_serial::StopBits::One)
         .timeout(Duration::from_millis(100))
-        .open_native_async()
-        .expect("Failed to open UART");
+        .open_native_async();
     
-    let mut buffer = [0u8; 1024];
-    loop {
-        match uart.read(&mut buffer).await {
-            Ok(bytes_read) if bytes_read > 0 => {
-                let data = buffer[..bytes_read].to_vec();
-                let mut state = state.write().await;
-                state.add_reading(data);
+    if let Ok(mut uart) = uart_result {
+        let mut buffer = [0u8; 1024];
+        loop {
+            match uart.read(&mut buffer).await {
+                Ok(bytes_read) if bytes_read > 0 => {
+                    let data = buffer[..bytes_read].to_vec();
+                    subsystem.add_reading(data).await;
+                }
+                Ok(_) => {
+                    // No data read, continue
+                }
+                Err(e) => {
+                    eprintln!("UART read error: {}", e);
+                    tokio::time::sleep(Duration::from_secs(1)).await;
+                }
             }
-            Ok(_) => {
-                // No data read, continue
-            }
-            Err(e) => {
-                eprintln!("UART read error: {}", e);
-                tokio::time::sleep(Duration::from_secs(1)).await;
-            }
+        }
+    } else {
+        println!("Could not open UART device, running in simulation mode");
+        // Generate some simulated data
+        let mut counter = 0u8;
+        loop {
+            let data = vec![counter, counter.wrapping_add(1), counter.wrapping_add(2)];
+            subsystem.add_reading(data).await;
+            counter = counter.wrapping_add(1);
+            tokio::time::sleep(Duration::from_secs(1)).await;
         }
     }
 }
 
 #[tokio::main]
 async fn main() {
-    // Create shared state with a maximum of 1000 readings
-    let state = Arc::new(RwLock::new(AppState::new(1000)));
-    
+    // Initialize the logger
+    kubos_service::Logger::init("star-risc-service").unwrap();
+
+    // Load the service configuration
+    let config = Config::new("star-risc")
+        .map_err(|err| {
+            eprintln!("Failed to load service config: {:?}", err);
+            err
+        })
+        .unwrap();
+
+    // Create our subsystem
+    let subsystem = StarRiscSubsystem::new();
+
     // Spawn the UART reading task
-    let state_clone = state.clone();
+    let subsystem_clone = subsystem.clone();
     tokio::spawn(async move {
-        uart_reading_task(state_clone).await;
+        uart_reading_task(subsystem_clone).await;
     });
 
-    // Build our GraphQL schema
-    let schema = Schema::build(Query { state }, EmptyMutation, EmptySubscription)
-        .finish();
+    // Create and start the service using kubos-service
+    let service = Service::new(
+        config,
+        subsystem,
+        QueryRoot::default(),
+        EmptyMutation,
+    );
 
-    // Create our application with routes
-    let app = Router::new()
-        .route("/", get(graphiql).post_service(GraphQL::new(schema)));
-
-    println!("GraphiQL IDE: http://localhost:8000");
-
-    // Start the server
-    axum::serve(TcpListener::bind("127.0.0.1:8000").await.unwrap(), app)
-        .await
-        .unwrap();
+    println!("Star RISC service starting...");
+    service.start_async().await;
 }

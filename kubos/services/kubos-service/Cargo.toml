@@ -14,14 +14,14 @@ repository.workspace = true
 [dependencies]
 serde = "1.0"
 serde_json = "1.0"
-juniper = "0.16.1"
-juniper_warp = "0.8.0"
+async-graphql = "7.0.16"
+async-graphql-axum = "7.0.17"
 radsat-system = { version = "=0.1.0", path = "../../apis/system-api" }
 log = "^0.4.0"
-warp = "0.3.5"
+axum = "0.8.4"
 # Pinning this to 0.3.15 due to kubos linux build issues with v0.3.16
 pkg-config = "= 0.3.15"
-tokio = { version = "1.29.1", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1.45.1", features = ["rt-multi-thread", "macros"] }
 
 [dev-dependencies]
 anyhow = "1.0.98"

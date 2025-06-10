@@ -24,7 +24,7 @@
 //!
 //! The basic use of the kubos_service crate is through the Service structure.
 //! This structure provides an interface for creating a new service instance,
-//! configuring it with a hardware subsystem and Juniper Query/Mutation objects.
+//! configuring it with a hardware subsystem and async-graphql Query/Mutation objects.
 //! It also provides a starting entry point and basic configuration file parsing.
 //!
 //! ## In Services
@@ -109,6 +109,6 @@ mod macros;
 mod service;
 
 pub use crate::service::{Context, Service};
-pub use juniper::{EmptySubscription, GraphQLType, GraphQLTypeAsync, RootNode};
+pub use async_graphql::{EmptySubscription, EmptyMutation, ObjectType, Schema, SimpleObject};
 pub use radsat_system::logger as Logger;
 pub use radsat_system::Config;
