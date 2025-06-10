@@ -20,7 +20,7 @@ use diesel::sql_types::*;
 use diesel::RunQueryDsl;
 use flate2::write::GzEncoder;
 use flate2::Compression;
-use juniper::{graphql_object, FieldError, FieldResult, GraphQLInputObject, GraphQLObject, Value};
+use async_graphql::{Context, Object, Result, InputObject, SimpleObject};
 use serde_derive::Serialize;
 use std::fs;
 use std::fs::File;
@@ -28,8 +28,6 @@ use std::io::prelude::*;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use std::thread::spawn;
-
-type Context = kubos_service::Context<Subsystem>;
 
 #[derive(Clone)]
 pub struct Subsystem {
@@ -50,40 +48,20 @@ impl Subsystem {
 }
 
 // Define our own Entry struct to be compatible with diesel 2.0
-#[derive(Debug, Serialize, Queryable, QueryableByName)]
+#[derive(Debug, Serialize, Queryable, QueryableByName, SimpleObject)]
 pub struct Entry {
     #[diesel(sql_type = Double)]
+    /// Timestamp
     pub timestamp: f64,
     #[diesel(sql_type = Text)]
+    /// Subsystem name
     pub subsystem: String,
     #[diesel(sql_type = Text)]
+    /// Telemetry parameter
     pub parameter: String,
     #[diesel(sql_type = Text)]
-    pub value: String,
-}
-
-// Updated to use the attribute-based syntax
-#[graphql_object(context = ())]
-impl Entry {
-    /// Timestamp
-    fn timestamp(&self) -> f64 {
-        self.timestamp
-    }
-
-    /// Subsystem name
-    fn subsystem(&self) -> &str {
-        &self.subsystem
-    }
-
-    /// Telemetry parameter
-    fn parameter(&self) -> &str {
-        &self.parameter
-    }
-
     /// Telemetry value
-    fn value(&self) -> &str {
-        &self.value
-    }
+    pub value: String,
 }
 
 fn query_db(
@@ -93,7 +71,7 @@ fn query_db(
     subsystem: Option<String>,
     parameters: Option<Vec<String>>,
     limit: Option<i32>,
-) -> FieldResult<Vec<Entry>> {
+) -> Result<Vec<Entry>> {
     // Build query using raw SQL to avoid Diesel version conflicts
     let mut conditions = Vec::new();
 
@@ -137,7 +115,7 @@ fn query_db(
 
     let mut db_lock = database.lock().map_err(|err| {
         log::error!("Failed to get lock on database: {:?}", err);
-        err
+        async_graphql::Error::new(format!("Database lock error: {}", err))
     })?;
 
     // Use diesel::sql_query for compatibility
@@ -145,7 +123,7 @@ fn query_db(
         .load::<Entry>(&mut db_lock.connection)
         .map_err(|err| {
             log::error!("Failed to load database entries: {:?}", err);
-            err
+            async_graphql::Error::new(format!("Database query error: {}", err))
         })?;
 
     Ok(entries)
@@ -153,34 +131,35 @@ fn query_db(
 
 pub struct QueryRoot;
 
-#[graphql_object(context = Context)]
+#[Object]
 impl QueryRoot {
     /// Test service query
-    fn ping() -> FieldResult<String> {
-        Ok(String::from("pong"))
+    async fn ping(&self) -> &str {
+        "pong"
     }
 
     /// Telemetry entries in database
-    fn telemetry(
+    async fn telemetry(
         &self,
-        context: &Context,
+        ctx: &Context<'_>,
         timestamp_ge: Option<f64>,
         timestamp_le: Option<f64>,
         subsystem: Option<String>,
         parameter: Option<String>,
         parameters: Option<Vec<String>>,
         limit: Option<i32>,
-    ) -> FieldResult<Vec<Entry>> {
+    ) -> Result<Vec<Entry>> {
         if parameter.is_some() && parameters.is_some() {
-            return Err(FieldError::new(
+            return Err(async_graphql::Error::new(
                 "The `parameter` and `parameters` input fields are mutually exclusive",
-                Value::null(),
             ));
         }
 
+        let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+
         if let Some(param) = parameter {
             query_db(
-                &context.subsystem.database,
+                &context.subsystem().database,
                 timestamp_ge,
                 timestamp_le,
                 subsystem,
@@ -189,7 +168,7 @@ impl QueryRoot {
             )
         } else {
             query_db(
-                &context.subsystem.database,
+                &context.subsystem().database,
                 timestamp_ge,
                 timestamp_le,
                 subsystem,
@@ -200,9 +179,9 @@ impl QueryRoot {
     }
 
     /// Telemetry entries in database
-    fn routed_telemetry(
+    async fn routed_telemetry(
         &self,
-        context: &Context,
+        ctx: &Context<'_>,
         timestamp_ge: Option<f64>,
         timestamp_le: Option<f64>,
         subsystem: Option<String>,
@@ -211,19 +190,20 @@ impl QueryRoot {
         limit: Option<i32>,
         output: String,
         compress: Option<bool>,
-    ) -> FieldResult<String> {
+    ) -> Result<String> {
         let compress = compress.unwrap_or(true);
 
         if parameter.is_some() && parameters.is_some() {
-            return Err(FieldError::new(
+            return Err(async_graphql::Error::new(
                 "The `parameter` and `parameters` input fields are mutually exclusive",
-                Value::null(),
             ));
         }
 
+        let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+
         let entries = if let Some(param) = parameter {
             query_db(
-                &context.subsystem.database,
+                &context.subsystem().database,
                 timestamp_ge,
                 timestamp_le,
                 subsystem,
@@ -232,7 +212,7 @@ impl QueryRoot {
             )?
         } else {
             query_db(
-                &context.subsystem.database,
+                &context.subsystem().database,
                 timestamp_ge,
                 timestamp_le,
                 subsystem,
@@ -241,36 +221,55 @@ impl QueryRoot {
             )?
         };
 
-        let entries = serde_json::to_vec(&entries)?;
+        let entries = serde_json::to_vec(&entries).map_err(|err| {
+            async_graphql::Error::new(format!("JSON serialization error: {}", err))
+        })?;
 
         let output_str = output.clone();
         let output_path = Path::new(&output_str);
 
         let file_name_raw = output_path
             .file_name()
-            .ok_or_else(|| FieldError::new("Unable to parse output file name", Value::null()))?;
+            .ok_or_else(|| async_graphql::Error::new("Unable to parse output file name"))?;
         let file_name = file_name_raw.to_str().ok_or_else(|| {
-            FieldError::new("Unable to parse output file name to string", Value::null())
+            async_graphql::Error::new("Unable to parse output file name to string")
         })?;
 
         if let Some(parent) = output_path.parent() {
-            fs::create_dir_all(parent)?;
+            fs::create_dir_all(parent).map_err(|err| {
+                async_graphql::Error::new(format!("Failed to create directory: {}", err))
+            })?;
         }
 
         {
-            let mut output_file = File::create(output_path)?;
-            output_file.write_all(&entries)?;
+            let mut output_file = File::create(output_path).map_err(|err| {
+                async_graphql::Error::new(format!("Failed to create output file: {}", err))
+            })?;
+            output_file.write_all(&entries).map_err(|err| {
+                async_graphql::Error::new(format!("Failed to write to file: {}", err))
+            })?;
         }
 
         if compress {
             let tar_path = format!("{}.tar.gz", output_str);
-            let tar_file = File::create(&tar_path)?;
+            let tar_file = File::create(&tar_path).map_err(|err| {
+                async_graphql::Error::new(format!("Failed to create tar file: {}", err))
+            })?;
             let encoder = GzEncoder::new(tar_file, Compression::default());
             let mut tar = tar::Builder::new(encoder);
-            tar.append_file(file_name, &mut File::open(output_path)?)?;
-            tar.finish()?;
+            tar.append_file(file_name, &mut File::open(output_path).map_err(|err| {
+                async_graphql::Error::new(format!("Failed to open file for tar: {}", err))
+            })?)
+            .map_err(|err| {
+                async_graphql::Error::new(format!("Failed to append to tar: {}", err))
+            })?;
+            tar.finish().map_err(|err| {
+                async_graphql::Error::new(format!("Failed to finish tar: {}", err))
+            })?;
 
-            fs::remove_file(output_path)?;
+            fs::remove_file(output_path).map_err(|err| {
+                async_graphql::Error::new(format!("Failed to remove temporary file: {}", err))
+            })?;
 
             Ok(tar_path)
         } else {
@@ -281,20 +280,20 @@ impl QueryRoot {
 
 pub struct MutationRoot;
 
-#[derive(GraphQLObject)]
+#[derive(SimpleObject)]
 struct InsertResponse {
     success: bool,
     errors: String,
 }
 
-#[derive(GraphQLObject)]
+#[derive(SimpleObject)]
 struct DeleteResponse {
     success: bool,
     errors: String,
     entries_deleted: Option<i32>,
 }
 
-#[derive(GraphQLInputObject)]
+#[derive(InputObject)]
 struct InsertEntry {
     timestamp: Option<f64>,
     subsystem: String,
@@ -302,28 +301,30 @@ struct InsertEntry {
     value: String,
 }
 
-#[graphql_object(context = Context)]
+#[Object]
 impl MutationRoot {
-    fn insert(
+    async fn insert(
         &self,
-        context: &Context,
+        ctx: &Context<'_>,
         timestamp: Option<f64>,
         subsystem: String,
         parameter: String,
         value: String,
-    ) -> FieldResult<InsertResponse> {
+    ) -> Result<InsertResponse> {
+        let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+
         let result = match timestamp {
             Some(time) => {
-                let mut db_lock = context.subsystem.database.lock().map_err(|err| {
+                let mut db_lock = context.subsystem().database.lock().map_err(|err| {
                     log::error!("insert - Failed to get lock on database: {:?}", err);
-                    err
+                    async_graphql::Error::new(format!("Database lock error: {}", err))
                 })?;
                 db_lock.insert(time, &subsystem, &parameter, &value)
             }
             None => {
-                let mut db_lock = context.subsystem.database.lock().map_err(|err| {
+                let mut db_lock = context.subsystem().database.lock().map_err(|err| {
                     log::error!("insert - Failed to get lock on database: {:?}", err);
-                    err
+                    async_graphql::Error::new(format!("Database lock error: {}", err))
                 })?;
                 db_lock.insert_systime(&subsystem, &parameter, &value)
             }
@@ -338,12 +339,12 @@ impl MutationRoot {
         })
     }
 
-    fn insert_bulk(
+    async fn insert_bulk(
         &self,
-        context: &Context,
+        ctx: &Context<'_>,
         timestamp: Option<f64>,
         entries: Vec<InsertEntry>,
-    ) -> FieldResult<InsertResponse> {
+    ) -> Result<InsertResponse> {
         let time = time::now_utc().to_timespec();
         let systime = time.sec as f64 + (f64::from(time.nsec) / 1_000_000_000.0);
 
@@ -359,9 +360,11 @@ impl MutationRoot {
             });
         }
 
-        let mut db_lock = context.subsystem.database.lock().map_err(|err| {
+        let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+
+        let mut db_lock = context.subsystem().database.lock().map_err(|err| {
             log::error!("insert_bulk - Failed to get lock on database: {:?}", err);
-            err
+            async_graphql::Error::new(format!("Database lock error: {}", err))
         })?;
 
         let result = db_lock.insert_bulk(new_entries);
@@ -375,14 +378,14 @@ impl MutationRoot {
         })
     }
 
-    fn delete(
+    async fn delete(
         &self,
-        context: &Context,
+        ctx: &Context<'_>,
         timestamp_ge: Option<f64>,
         timestamp_le: Option<f64>,
         subsystem: Option<String>,
         parameter: Option<String>,
-    ) -> FieldResult<DeleteResponse> {
+    ) -> Result<DeleteResponse> {
         // We'll use a direct SQL query for delete to avoid diesel compatibility issues
         let mut conditions = Vec::new();
 
@@ -402,9 +405,11 @@ impl MutationRoot {
             conditions.push(format!("timestamp <= {}", time_le));
         }
 
-        let mut db_lock = context.subsystem.database.lock().map_err(|err| {
+        let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+
+        let mut db_lock = context.subsystem().database.lock().map_err(|err| {
             log::error!("delete - Failed to get lock on database: {:?}", err);
-            err
+            async_graphql::Error::new(format!("Database lock error: {}", err))
         })?;
 
         let query = if conditions.is_empty() {
