@@ -29,7 +29,7 @@ mod task_list;
 
 use crate::error::SchedulerError;
 use kubos_service::{Config, Logger, Service};
-use log::{error, info};
+use log::{error};
 use scheduler::{Scheduler, DEFAULT_SCHEDULES_DIR};
 use schema::{MutationRoot, QueryRoot};
 
