@@ -163,25 +163,46 @@ impl Drop for TestService {
     }
 }
 
-pub fn service_query(query: &str, ip: &str, port: u16) -> Value {
+pub async fn service_query(query: &str, ip: &str, port: u16) -> Value {
+    // Use async client for modern tokio compatibility
     let client = reqwest::Client::builder()
-        .timeout(Duration::from_millis(100))
+        .timeout(Duration::from_millis(250))
         .build()
         .unwrap();
+    
     let mut map = ::std::collections::HashMap::new();
     map.insert("query", query);
-    for _ in 0..5 {
-        if let Ok(mut result) = client
-            .post(&format!("http://{}:{}", ip, port))
+    
+    for attempt in 0..10 {
+        match client
+            .post(&format!("http://{}:{}/graphql", ip, port))
             .json(&map)
             .send()
+            .await
         {
-            return serde_json::from_str(&result.text().unwrap()).unwrap();
+            Ok(result) => {
+                match result.text().await {
+                    Ok(text) => {
+                        if !text.is_empty() {
+                            return serde_json::from_str(&text).unwrap_or_else(|e| {
+                                panic!("Failed to parse JSON response '{}': {}", text, e);
+                            });
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("Failed to get response text: {}", e);
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("Request failed (attempt {}): {}", attempt + 1, e);
+            }
         }
-        thread::sleep(Duration::from_millis(100));
+        // Increase wait time for each retry with async sleep
+        tokio::time::sleep(Duration::from_millis(200 + attempt * 100)).await;
     }
 
-    panic!("Service query failed - {}:{}", ip, port);
+    panic!("Service query failed after 10 attempts - {}:{}/graphql", ip, port);
 }
 
 pub trait ServiceResponder {

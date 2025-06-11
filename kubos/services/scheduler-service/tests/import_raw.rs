@@ -23,11 +23,11 @@ use std::time::Duration;
 use util::{BasicAppResponder, SchedulerFixture};
 use utils::testing::ServiceListener;
 
-#[test]
-fn import_raw_tasks() {
+#[tokio::test]
+async fn import_raw_tasks() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8020);
 
-    fixture.create_mode("operational");
+    fixture.create_mode("operational").await;
 
     // Create some schedule with an init task
     let schedule: String = json!({
@@ -45,7 +45,7 @@ fn import_raw_tasks() {
     .escape_default()
     .collect();
     assert_eq!(
-        fixture.import_raw_task_list("first", "operational", &schedule),
+        fixture.import_raw_task_list("first", "operational", &schedule).await,
         json!({
             "data" : {
                 "importRawTaskList": {
@@ -57,7 +57,7 @@ fn import_raw_tasks() {
     );
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active, schedule { filename } } }"#),
+        fixture.query(r#"{ availableModes { name, active, schedule { filename } } }"#).await,
         json!({
             "data": {
                 "availableModes": [
@@ -81,12 +81,12 @@ fn import_raw_tasks() {
     );
 }
 
-#[test]
-fn import_raw_run_delay() {
+#[tokio::test]
+async fn import_raw_run_delay() {
     let listener = ServiceListener::spawn("127.0.0.1", 9021);
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8021);
 
-    fixture.create_mode("init");
+    fixture.create_mode("init").await;
 
     // Create some schedule with an init task
     let schedule: String = json!({
@@ -103,8 +103,8 @@ fn import_raw_run_delay() {
     .to_string()
     .escape_default()
     .collect();
-    fixture.import_raw_task_list("imaging", "init", &schedule);
-    fixture.activate_mode("init");
+    fixture.import_raw_task_list("imaging", "init", &schedule).await;
+    fixture.activate_mode("init").await;
 
     // Wait for the service to restart the scheduler
     thread::sleep(Duration::from_millis(100));
@@ -115,11 +115,11 @@ fn import_raw_run_delay() {
     assert_eq!(listener.get_request(), Some(query.to_owned()))
 }
 
-#[test]
-fn import_raw_run_two_tasks() {
+#[tokio::test]
+async fn import_raw_run_two_tasks() {
     let listener = ServiceListener::spawn("127.0.0.1", 9022);
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8022);
-    fixture.create_mode("init");
+    fixture.create_mode("init").await;
 
     // Create some schedule with an init task
     let schedule: String = json!({
@@ -143,8 +143,8 @@ fn import_raw_run_two_tasks() {
     .to_string()
     .escape_default()
     .collect();
-    fixture.import_raw_task_list("two", "init", &schedule);
-    fixture.activate_mode("init");
+    fixture.import_raw_task_list("two", "init", &schedule).await;
+    fixture.activate_mode("init").await;
 
     // Wait for service to restart scheduler and run tasks
     thread::sleep(Duration::from_millis(1100));
@@ -158,15 +158,15 @@ fn import_raw_run_two_tasks() {
     assert_eq!(listener.get_request(), Some(query.to_owned()));
 }
 
-#[test]
-fn import_raw_run_onetime_future() {
+#[tokio::test]
+async fn import_raw_run_onetime_future() {
     utils::init_logger();
 
     let listener = ServiceListener::spawn_with_responder("127.0.0.1", 9023, BasicAppResponder);
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8023);
 
-    fixture.create_mode("init");
-    fixture.activate_mode("init");
+    fixture.create_mode("init").await;
+    fixture.activate_mode("init").await;
 
     // Create some schedule with a task starting now
     let schedule: String = json!({
@@ -184,7 +184,7 @@ fn import_raw_run_onetime_future() {
     .escape_default()
     .collect();
 
-    let res = fixture.import_raw_task_list("imaging", "init", &schedule);
+    let res = fixture.import_raw_task_list("imaging", "init", &schedule).await;
     info!("import result: {}", res);
 
     // Check if the task actually ran
@@ -199,12 +199,12 @@ fn import_raw_run_onetime_future() {
     assert_eq!(listener.get_request(), Some(query.to_owned()))
 }
 
-#[test]
-fn import_raw_run_recurring_no_delay() {
+#[tokio::test]
+async fn import_raw_run_recurring_no_delay() {
     let listener = ServiceListener::spawn_with_responder("127.0.0.1", 9024, BasicAppResponder);
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8024);
 
-    fixture.create_mode("init");
+    fixture.create_mode("init").await;
 
     // Create some schedule with a recurring task starting now
     let schedule: String = json!({
@@ -222,8 +222,8 @@ fn import_raw_run_recurring_no_delay() {
     .to_string()
     .escape_default()
     .collect();
-    fixture.import_raw_task_list("imaging", "init", &schedule);
-    fixture.activate_mode("init");
+    fixture.import_raw_task_list("imaging", "init", &schedule).await;
+    fixture.activate_mode("init").await;
 
     // Wait for the service to restart the scheduler
     thread::sleep(Duration::from_millis(1100));
@@ -236,16 +236,16 @@ fn import_raw_run_recurring_no_delay() {
     assert_eq!(listener.get_request(), None)
 }
 
-#[test]
-fn import_raw_bad_json() {
+#[tokio::test]
+async fn import_raw_bad_json() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8025);
 
-    fixture.create_mode("operational");
+    fixture.create_mode("operational").await;
 
     // Create some schedule with an init task
     let schedule = "this is not json";
     assert_eq!(
-        fixture.import_raw_task_list("first", "operational", schedule),
+        fixture.import_raw_task_list("first", "operational", schedule).await,
         json!({
             "data" : {
                 "importRawTaskList": {
@@ -257,7 +257,7 @@ fn import_raw_bad_json() {
     );
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active, schedule { filename } } }"#),
+        fixture.query(r#"{ availableModes { name, active, schedule { filename } } }"#).await,
         json!({
             "data": {
                 "availableModes": [
@@ -277,12 +277,12 @@ fn import_raw_bad_json() {
     );
 }
 
-#[test]
-fn import_raw_run_delay_duplicate() {
+#[tokio::test]
+async fn import_raw_run_delay_duplicate() {
     let listener = ServiceListener::spawn("127.0.0.1", 9026);
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8026);
 
-    fixture.create_mode("init");
+    fixture.create_mode("init").await;
 
     // Create some schedule with an init task
     let schedule: String = json!({
@@ -299,8 +299,8 @@ fn import_raw_run_delay_duplicate() {
     .to_string()
     .escape_default()
     .collect();
-    fixture.import_raw_task_list("imaging", "init", &schedule);
-    fixture.activate_mode("init");
+    fixture.import_raw_task_list("imaging", "init", &schedule).await;
+    fixture.activate_mode("init").await;
 
     // Wait for the service to restart the scheduler
     thread::sleep(Duration::from_millis(100));
@@ -310,7 +310,7 @@ fn import_raw_run_delay_duplicate() {
     // Check if the task actually ran
     assert_eq!(listener.get_request(), Some(query.to_owned()));
 
-    fixture.import_raw_task_list("imaging", "init", &schedule);
+    fixture.import_raw_task_list("imaging", "init", &schedule).await;
 
     // Wait for the service to restart the scheduler
     thread::sleep(Duration::from_millis(100));

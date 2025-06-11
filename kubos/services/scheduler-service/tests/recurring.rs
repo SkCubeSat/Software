@@ -22,12 +22,12 @@ use std::time::Duration;
 use util::SchedulerFixture;
 use utils::testing::ServiceListener;
 
-#[test]
-fn run_recurring_no_delay() {
+#[tokio::test]
+async fn run_recurring_no_delay() {
     let listener = ServiceListener::spawn("127.0.0.1", 9021);
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8021);
 
-    fixture.create_mode("init");
+    fixture.create_mode("init").await;
 
     // Create some schedule with a recurring task starting now
     let schedule = json!({
@@ -43,8 +43,8 @@ fn run_recurring_no_delay() {
         ]
     });
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
-    fixture.import_task_list("imaging", &schedule_path, "init");
-    fixture.activate_mode("init");
+    fixture.import_task_list("imaging", &schedule_path, "init").await;
+    fixture.activate_mode("init").await;
 
     // Wait for the service to restart the scheduler
     thread::sleep(Duration::from_millis(1100));
@@ -57,12 +57,12 @@ fn run_recurring_no_delay() {
     assert_eq!(listener.get_request(), None)
 }
 
-#[test]
-fn run_recurring_delay() {
+#[tokio::test]
+async fn run_recurring_delay() {
     let listener = ServiceListener::spawn("127.0.0.1", 9022);
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8022);
 
-    fixture.create_mode("init");
+    fixture.create_mode("init").await;
 
     // Create some schedule with a recurring task starting now
     let schedule = json!({
@@ -78,8 +78,8 @@ fn run_recurring_delay() {
         ]
     });
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
-    fixture.import_task_list("imaging", &schedule_path, "init");
-    fixture.activate_mode("init");
+    fixture.import_task_list("imaging", &schedule_path, "init").await;
+    fixture.activate_mode("init").await;
 
     // Wait for the service to restart the scheduler
     thread::sleep(Duration::from_millis(2100));

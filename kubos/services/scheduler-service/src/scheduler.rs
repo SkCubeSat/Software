@@ -28,17 +28,16 @@ use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::path::Path;
-use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex};
+use tokio::task::JoinHandle;
 
 pub static DEFAULT_SCHEDULES_DIR: &str = "/home/system/etc/schedules";
 pub static SAFE_MODE: &str = "safe";
 
-// Handle to primitives controlling scheduler runtime context
-#[derive(Clone)]
+// Handle to primitives controlling scheduler runtime context  
 pub struct SchedulerHandle {
-    // Sender for stopping scheduler runtime/thread
-    pub stopper: Sender<()>,
+    // JoinHandles for the running tasks
+    pub task_handles: Vec<JoinHandle<()>>,
 }
 
 #[derive(Clone)]
@@ -187,10 +186,10 @@ impl Scheduler {
     // Stops all running tasks and clears of list of scheduler handles
     pub fn stop(&self) -> Result<(), SchedulerError> {
         let mut schedules_map = self.scheduler_map.lock().unwrap();
-        for (name, handle) in schedules_map.drain().take(1) {
+        for (name, mut handle) in schedules_map.drain() {
             info!("Stopping {}'s tasks", name);
-            if let Err(e) = handle.stopper.send(()) {
-                error!("Failed to send stop to {}'s tasks: {}", name, e);
+            for task_handle in handle.task_handles.drain(..) {
+                task_handle.abort();
             }
         }
         Ok(())
@@ -207,10 +206,10 @@ impl Scheduler {
 
         if is_mode_active(&self.scheduler_dir, &mode) {
             let mut schedules_map = self.scheduler_map.lock().unwrap();
-            if let Some(handle) = schedules_map.remove(&name) {
+            if let Some(mut handle) = schedules_map.remove(&name) {
                 info!("Stopping {}'s tasks", name);
-                if let Err(e) = handle.stopper.send(()) {
-                    error!("Failed to send stop to {}'s tasks: {}", name, e);
+                for task_handle in handle.task_handles.drain(..) {
+                    task_handle.abort();
                 }
             }
             Ok(())

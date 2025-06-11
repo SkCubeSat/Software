@@ -24,12 +24,12 @@ use std::time::Duration;
 use util::SchedulerFixture;
 use utils::testing::ServiceListener;
 
-#[test]
-fn run_onetime_future() {
+#[tokio::test]
+async fn run_onetime_future() {
     let listener = ServiceListener::spawn("127.0.0.1", 9021);
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8021);
 
-    fixture.create_mode("init");
+    fixture.create_mode("init").await;
 
     // Create some schedule with a task starting now
     let schedule = json!({
@@ -44,8 +44,8 @@ fn run_onetime_future() {
         ]
     });
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
-    fixture.import_task_list("imaging", &schedule_path, "init");
-    fixture.activate_mode("init");
+    fixture.import_task_list("imaging", &schedule_path, "init").await;
+    fixture.activate_mode("init").await;
 
     // Check if the task actually ran
     assert_eq!(listener.get_request(), None);
@@ -59,12 +59,12 @@ fn run_onetime_future() {
     assert_eq!(listener.get_request(), Some(query.to_owned()))
 }
 
-#[test]
-fn run_onetime_past() {
+#[tokio::test]
+async fn run_onetime_past() {
     let listener = ServiceListener::spawn("127.0.0.1", 9022);
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8022);
 
-    fixture.create_mode("init");
+    fixture.create_mode("init").await;
 
     let now_time: DateTime<Utc> = Utc::now()
         .checked_sub_signed(chrono::Duration::seconds(100))
@@ -84,8 +84,8 @@ fn run_onetime_past() {
         ]
     });
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
-    fixture.import_task_list("imaging", &schedule_path, "init");
-    fixture.activate_mode("init");
+    fixture.import_task_list("imaging", &schedule_path, "init").await;
+    fixture.activate_mode("init").await;
 
     // Wait for the service to restart the scheduler
     thread::sleep(Duration::from_millis(1100));

@@ -22,25 +22,23 @@ use crate::error::SchedulerError;
 use crate::scheduler::SchedulerHandle;
 use crate::task::Task;
 use chrono::{DateTime, Utc};
-use juniper::GraphQLObject;
-use log::{error, info};
+use async_graphql::SimpleObject;
+use log::info;
 use serde::{Deserialize, Serialize};
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::sync::mpsc::channel;
-use std::thread;
-use tokio::prelude::future::lazy;
-use tokio::prelude::*;
-use tokio::runtime::Runtime;
+
+// Tokio imports temporarily disabled for compatibility
 
 // Task list's contents
-#[derive(Debug, GraphQLObject, Serialize, Deserialize)]
+#[derive(Debug, SimpleObject, Serialize, Deserialize)]
 struct ListContents {
     pub tasks: Vec<Task>,
 }
 
 // Task list's metadata
-#[derive(Debug, GraphQLObject)]
+#[derive(Debug, SimpleObject)]
 pub struct TaskList {
     pub tasks: Vec<Task>,
     pub path: String,
@@ -106,37 +104,18 @@ impl TaskList {
         })
     }
 
-    // Schedules the tasks contained in this task list
+    /// Schedules the tasks contained in this task list using modern tokio
     pub fn schedule_tasks(&self, app_service_url: &str) -> Result<SchedulerHandle, SchedulerError> {
-        let (stopper, receiver) = channel::<()>();
-        let service_url = app_service_url.to_owned();
-        let tasks = self.tasks.to_vec();
-        thread::spawn(move || {
-            let mut runner = Runtime::new().unwrap_or_else(|e| {
-                error!("Failed to create timer runtime: {}", e);
-                panic!("Failed to create timer runtime: {}", e);
-            });
-
-            runner.spawn(lazy(move || {
-                for task in tasks {
-                    info!("Scheduling task '{}'", &task.app.name);
-                    tokio::spawn(task.schedule(service_url.clone()));
-                }
-                Ok(())
-            }));
-
-            // Wait on the stop message before ending the runtime
-            receiver.recv().unwrap_or_else(|e| {
-                error!("Failed to received thread stop: {:?}", e);
-                panic!("Failed to received thread stop: {:?}", e);
-            });
-            runner.shutdown_now().wait().unwrap_or_else(|e| {
-                error!("Failed to wait on runtime shutdown: {:?}", e);
-                panic!("Failed to wait on runtime shutdown: {:?}", e);
-            })
-        });
-
-        Ok(SchedulerHandle { stopper })
+        let mut task_handles = Vec::new();
+        
+        info!("Scheduling {} tasks from task list '{}'", self.tasks.len(), self.filename);
+        
+        for task in &self.tasks {
+            let handle = task.schedule(app_service_url.to_string())?;
+            task_handles.push(handle);
+        }
+        
+        Ok(SchedulerHandle { task_handles })
     }
 }
 

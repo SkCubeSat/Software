@@ -19,14 +19,14 @@ mod util;
 use serde_json::json;
 use util::SchedulerFixture;
 
-#[test]
-fn remove_existing_mode() {
+#[tokio::test]
+async fn remove_existing_mode() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8020);
 
-    fixture.create_mode("orbit");
+    fixture.create_mode("orbit").await;
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active } }"#),
+        fixture.query(r#"{ availableModes { name, active } }"#).await,
         json!({
             "data": {
                 "availableModes": [
@@ -44,7 +44,7 @@ fn remove_existing_mode() {
     );
 
     assert_eq!(
-        fixture.remove_mode("orbit"),
+        fixture.remove_mode("orbit").await,
         json!({
             "data" : {
                 "removeMode": {
@@ -56,7 +56,7 @@ fn remove_existing_mode() {
     );
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active } }"#),
+        fixture.query(r#"{ availableModes { name, active } }"#).await,
         json!({
             "data": {
                 "availableModes": [
@@ -70,15 +70,15 @@ fn remove_existing_mode() {
     );
 }
 
-#[test]
-fn remove_active_mode() {
+#[tokio::test]
+async fn remove_active_mode() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8021);
 
-    fixture.create_mode("orbit");
-    fixture.activate_mode("orbit");
+    fixture.create_mode("orbit").await;
+    fixture.activate_mode("orbit").await;
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active } }"#),
+        fixture.query(r#"{ availableModes { name, active } }"#).await,
         json!({
             "data": {
                 "availableModes": [
@@ -96,7 +96,7 @@ fn remove_active_mode() {
     );
 
     assert_eq!(
-        fixture.remove_mode("orbit"),
+        fixture.remove_mode("orbit").await,
         json!({
             "data" : {
                 "removeMode": {
@@ -108,7 +108,7 @@ fn remove_active_mode() {
     );
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active } }"#),
+        fixture.query(r#"{ availableModes { name, active } }"#).await,
         json!({
             "data": {
                 "availableModes": [
@@ -126,12 +126,12 @@ fn remove_active_mode() {
     );
 }
 
-#[test]
-fn remove_nonexistent_mode() {
+#[tokio::test]
+async fn remove_nonexistent_mode() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8022);
 
     assert_eq!(
-        fixture.remove_mode("orbit"),
+        fixture.remove_mode("orbit").await,
         json!({
             "data" : {
                 "removeMode": {
@@ -143,20 +143,20 @@ fn remove_nonexistent_mode() {
     );
 }
 
-#[test]
-fn remove_existing_schedule() {
+#[tokio::test]
+async fn remove_existing_schedule() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8023);
 
-    fixture.create_mode("operational");
+    fixture.create_mode("operational").await;
 
     let schedule = json!({ "tasks": [ ] });
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
-    fixture.import_task_list("first", &schedule_path, "operational");
+    fixture.import_task_list("first", &schedule_path, "operational").await;
 
     assert_eq!(
         fixture.query(
             r#"{ availableModes(name: "operational") { name, active, schedule { filename } } }"#
-        ),
+        ).await,
         json!({
             "data": {
                 "availableModes": [
@@ -175,7 +175,7 @@ fn remove_existing_schedule() {
     );
 
     assert_eq!(
-        fixture.remove_task_list("first", "operational"),
+        fixture.remove_task_list("first", "operational").await,
         json!({
             "data" : {
                 "removeTaskList": {
@@ -189,7 +189,7 @@ fn remove_existing_schedule() {
     assert_eq!(
         fixture.query(
             r#"{ availableModes(name: "operational") { name, active, schedule { filename } } }"#
-        ),
+        ).await,
         json!({
             "data": {
                 "availableModes": [
@@ -204,14 +204,14 @@ fn remove_existing_schedule() {
     );
 }
 
-#[test]
-fn remove_nonexistant_task_list() {
+#[tokio::test]
+async fn remove_nonexistant_task_list() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8024);
 
-    fixture.create_mode("operational");
+    fixture.create_mode("operational").await;
 
     assert_eq!(
-        fixture.remove_task_list("first", "operational"),
+        fixture.remove_task_list("first", "operational").await,
         json!({
             "data" : {
                 "removeTaskList": {
@@ -223,12 +223,12 @@ fn remove_nonexistant_task_list() {
     );
 }
 
-#[test]
-fn remove_task_list_nonexistant_mode() {
+#[tokio::test]
+async fn remove_task_list_nonexistant_mode() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8025);
 
     assert_eq!(
-        fixture.remove_task_list("first", "operational"),
+        fixture.remove_task_list("first", "operational").await,
         json!({
             "data" : {
                 "removeTaskList": {
@@ -240,12 +240,12 @@ fn remove_task_list_nonexistant_mode() {
     );
 }
 
-#[test]
-fn remove_safe_mode() {
+#[tokio::test]
+async fn remove_safe_mode() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8026);
 
     assert_eq!(
-        fixture.remove_mode("safe"),
+        fixture.remove_mode("safe").await,
         json!({
             "data" : {
                 "removeMode": {
