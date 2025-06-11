@@ -14,138 +14,217 @@
  * limitations under the License.
  */
 
-use crate::monitor::MonitorEntry;
 use crate::objects::*;
 use crate::registry::AppRegistry;
-use juniper::FieldResult;
-
-type Context = kubos_service::Context<AppRegistry>;
+use async_graphql::*;
+use kubos_service::Context as ServiceContext;
 
 /// Base GraphQL query model
 pub struct QueryRoot;
 
-// Base GraphQL query model
-graphql_object!(QueryRoot : Context as "Query" |&self| {
-    // Test query to verify service is running without
-    // attempting to execute an actual logic
-    //
-    // {
-    //    ping: "pong"
-    // }
-    field ping() -> FieldResult<String>
-        as "Test service query"
-    {
+#[Object]
+impl QueryRoot {
+    /// Test service query
+    async fn ping(&self) -> Result<String> {
         Ok(String::from("pong"))
     }
 
-    field registered_apps(&executor,
-               name: Option<String>,
-               version: Option<String>,
-               active: Option<bool>)
-        -> FieldResult<Vec<KAppRegistryEntry>> as "Kubos Apps Query"
-    {
-        let entries = executor.context().subsystem().entries.lock()?;
-        let result = entries.iter().filter(|e| {
-            if name.is_some() && &e.app.name != name.as_ref().unwrap() {
-                return false;
-            }
-            if version.is_some() && &e.app.version != version.as_ref().unwrap() {
-                return false;
-            }
-            if active.is_some() && e.active_version != active.unwrap() {
-                return false;
-            }
-            true
-        }).map(|entry| KAppRegistryEntry(entry.clone())).collect();
-
-        Ok(result)
-    }
-
-    field app_status(&executor,
+    /// Kubos Apps Query
+    async fn registered_apps(
+        &self,
+        ctx: &Context<'_>,
         name: Option<String>,
         version: Option<String>,
-        running: Option<bool>)
-        -> FieldResult<Vec<MonitorEntry>> as "App Status Query"
-    {
-        let entries = executor.context().subsystem().monitoring.lock()?;
-        let result = entries.iter().filter(|e| {
-            if name.is_some() && &e.name != name.as_ref().unwrap() {
-                return false;
-            }
-            if version.is_some() && &e.version != version.as_ref().unwrap() {
-                return false;
-            }
-            if running.is_some() && &e.running != running.as_ref().unwrap() {
-                return false;
-            }
-            true
-        }).map(|entry_ref| (*entry_ref).clone()).collect();
+        active: Option<bool>,
+    ) -> Result<Vec<KAppRegistryEntry>> {
+        let registry = ctx.data::<ServiceContext<AppRegistry>>()?;
+        let entries = registry
+            .subsystem()
+            .entries
+            .lock()
+            .map_err(|e| Error::new(format!("Failed to lock entries: {:?}", e)))?;
+
+        let result: Vec<KAppRegistryEntry> = entries
+            .iter()
+            .filter(|e| {
+                if let Some(ref n) = name {
+                    if &e.app.name != n {
+                        return false;
+                    }
+                }
+                if let Some(ref v) = version {
+                    if &e.app.version != v {
+                        return false;
+                    }
+                }
+                if let Some(a) = active {
+                    if e.active_version != a {
+                        return false;
+                    }
+                }
+                true
+            })
+            .map(|entry| KAppRegistryEntry::from(entry.clone()))
+            .collect();
 
         Ok(result)
     }
 
-});
+    /// App Status Query
+    async fn app_status(
+        &self,
+        ctx: &Context<'_>,
+        name: Option<String>,
+        version: Option<String>,
+        running: Option<bool>,
+    ) -> Result<Vec<KMonitorEntry>> {
+        let registry = ctx.data::<ServiceContext<AppRegistry>>()?;
+        let entries = registry
+            .subsystem()
+            .monitoring
+            .lock()
+            .map_err(|e| Error::new(format!("Failed to lock monitoring entries: {:?}", e)))?;
+
+        let result: Vec<KMonitorEntry> = entries
+            .iter()
+            .filter(|e| {
+                if let Some(ref n) = name {
+                    if &e.name != n {
+                        return false;
+                    }
+                }
+                if let Some(ref v) = version {
+                    if &e.version != v {
+                        return false;
+                    }
+                }
+                if let Some(r) = running {
+                    if e.running != r {
+                        return false;
+                    }
+                }
+                true
+            })
+            .map(|entry| KMonitorEntry::from(entry.clone()))
+            .collect();
+
+        Ok(result)
+    }
+}
 
 /// Base GraphQL mutation model
 pub struct MutationRoot;
 
-// Base GraphQL mutation model
-graphql_object!(MutationRoot : Context as "Mutation" |&self| {
-
-    field register(&executor, path: String) -> FieldResult<RegisterResponse>
-        as "Register App"
-    {
-        let registry = executor.context().subsystem();
-        Ok(match registry.register(&path) {
-            Ok(app) =>  RegisterResponse { success: true, errors: "".to_owned(), entry: Some(KAppRegistryEntry(app))},
-            Err(error) => RegisterResponse {
+#[Object]
+impl MutationRoot {
+    /// Register App
+    async fn register(&self, ctx: &Context<'_>, path: String) -> Result<RegisterResponse> {
+        let registry = ctx.data::<ServiceContext<AppRegistry>>()?;
+        
+        match registry.subsystem().register(&path) {
+            Ok(app) => Ok(RegisterResponse {
+                success: true,
+                errors: String::new(),
+                entry: Some(KAppRegistryEntry::from(app)),
+            }),
+            Err(error) => Ok(RegisterResponse {
                 success: false,
                 errors: error.to_string(),
-                entry: None
-            }
-        })
-    }
-
-    field uninstall(&executor, name: String, version: Option<String>) -> FieldResult<GenericResponse>
-        as "Uninstall App"
-    {
-        if let Some(val) = version {
-            Ok(match executor.context().subsystem().uninstall(&name, &val) {
-                Ok(v) => GenericResponse { success: true, errors: "".to_owned() },
-                Err(error) => GenericResponse { success: false, errors: error.to_string() },
-            })
-        } else {
-            Ok(match executor.context().subsystem().uninstall_all(&name) {
-                Ok(v) => GenericResponse { success: true, errors: "".to_owned() },
-                Err(error) => GenericResponse { success: false, errors: error.to_string() },
-            })
+                entry: None,
+            }),
         }
     }
 
-    field set_version(&executor, name: String, version: String) -> FieldResult<GenericResponse>
-        as "Set App Active Version"
-    {
-        Ok(match executor.context().subsystem().set_version(&name, &version) {
-            Ok(v) => GenericResponse { success: true, errors: "".to_owned() },
-            Err(error) => GenericResponse { success: false, errors: error.to_string() },
-        })
+    /// Uninstall App
+    async fn uninstall(
+        &self,
+        ctx: &Context<'_>,
+        name: String,
+        version: Option<String>,
+    ) -> Result<GenericResponse> {
+        let registry = ctx.data::<ServiceContext<AppRegistry>>()?;
+        
+        let result = if let Some(v) = version {
+            registry.subsystem().uninstall(&name, &v)
+        } else {
+            registry.subsystem().uninstall_all(&name)
+        };
+
+        match result {
+            Ok(_) => Ok(GenericResponse {
+                success: true,
+                errors: String::new(),
+            }),
+            Err(error) => Ok(GenericResponse {
+                success: false,
+                errors: error.to_string(),
+            }),
+        }
     }
 
-    field start_app(&executor, name: String, config: Option<String>, args: Option<Vec<String>>) -> FieldResult<StartResponse>
-        as "Start App"
-    {
-        Ok(match executor.context().subsystem().start_app(&name, config, args) {
-            Ok(pid) => StartResponse { success: true, errors: "".to_owned(), pid},
-            Err(error) => StartResponse { success: false, errors: error.to_string(), pid: None },
-        })
+    /// Set App Active Version
+    async fn set_version(
+        &self,
+        ctx: &Context<'_>,
+        name: String,
+        version: String,
+    ) -> Result<GenericResponse> {
+        let registry = ctx.data::<ServiceContext<AppRegistry>>()?;
+        
+        match registry.subsystem().set_version(&name, &version) {
+            Ok(_) => Ok(GenericResponse {
+                success: true,
+                errors: String::new(),
+            }),
+            Err(error) => Ok(GenericResponse {
+                success: false,
+                errors: error.to_string(),
+            }),
+        }
     }
 
-    field kill_app(&executor, name: String, signal: Option<i32>) -> FieldResult<GenericResponse>
-        as "Kill Running App"
-    {
-        Ok(match executor.context().subsystem().kill_app(&name, signal) {
-            Ok(pid) => GenericResponse { success: true, errors: "".to_owned() },
-            Err(error) => GenericResponse { success: false, errors: error.to_string() },
-        })
+    /// Start App
+    async fn start_app(
+        &self,
+        ctx: &Context<'_>,
+        name: String,
+        config: Option<String>,
+        args: Option<Vec<String>>,
+    ) -> Result<StartResponse> {
+        let registry = ctx.data::<ServiceContext<AppRegistry>>()?;
+        
+        match registry.subsystem().start_app(&name, config, args) {
+            Ok(pid) => Ok(StartResponse {
+                success: true,
+                errors: String::new(),
+                pid,
+            }),
+            Err(error) => Ok(StartResponse {
+                success: false,
+                errors: error.to_string(),
+                pid: None,
+            }),
+        }
     }
-});
+
+    /// Kill Running App
+    async fn kill_app(
+        &self,
+        ctx: &Context<'_>,
+        name: String,
+        signal: Option<i32>,
+    ) -> Result<GenericResponse> {
+        let registry = ctx.data::<ServiceContext<AppRegistry>>()?;
+        
+        match registry.subsystem().kill_app(&name, signal) {
+            Ok(_) => Ok(GenericResponse {
+                success: true,
+                errors: String::new(),
+            }),
+            Err(error) => Ok(GenericResponse {
+                success: false,
+                errors: error.to_string(),
+            }),
+        }
+    }
+}
