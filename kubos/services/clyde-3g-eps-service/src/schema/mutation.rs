@@ -19,116 +19,183 @@
 use crate::models::subsystem::Mutations;
 use crate::models::{MutationResponse, TestType};
 use crate::schema::Context;
-use juniper::FieldResult;
+// use juniper::FieldResult;
+use async_graphql::{Object, Result as FieldResult};
 
 /// Top-level mutation root structure
-pub struct Root;
+pub struct MutationRoot;
 
-// Base GraphQL mutation model
-graphql_object!(Root: Context as "Mutation" |&self| {
-
-    // Execute a trivial command against the system
-    //
-    //  mutation {
-    //      noop {
-    //          success: Boolean!
-    //          errors: String!
-    //      }
-    //  }
-    field noop(&executor) -> FieldResult<MutationResponse>
-        as "Run no-op command"
-    {
-        executor.context().subsystem().set_last_mutation(Mutations::Noop);
-        Ok(executor.context().subsystem().reset_watchdog()?)
+#[Object]
+impl MutationRoot {
+    /// Execute a trivial command against the system
+    async fn noop(&self, ctx: &async_graphql::Context<'_>) -> FieldResult<MutationResponse> {
+        let context = ctx.data::<Context>()?;
+        context.subsystem().set_last_mutation(Mutations::Noop);
+        Ok(context.subsystem().reset_watchdog()?)
     }
 
-    //  Manually reset the EPS
-    //
-    //  mutation {
-    //      manualReset {
-    //          success: Boolean!
-    //          errors: String!
-    //      }
-    //  }
-    field manual_reset(&executor) -> FieldResult<MutationResponse>
-        as "Perform manual reset of EPS board"
-    {
-        executor.context().subsystem().set_last_mutation(Mutations::ManualReset);
-        Ok(executor.context().subsystem().manual_reset()?)
+    /// Manually reset the EPS
+    async fn manual_reset(&self, ctx: &async_graphql::Context<'_>) -> FieldResult<MutationResponse> {
+        let context = ctx.data::<Context>()?;
+        context.subsystem().set_last_mutation(Mutations::ManualReset);
+        Ok(context.subsystem().manual_reset()?)
     }
 
-    //  Reset the communications watchdog timer
-    //
-    //  mutation {
-    //      resetWatchdog {
-    //          success: Boolean!
-    //          errors: String!
-    //      }
-    //  }
-    field reset_watchdog(&executor) -> FieldResult<MutationResponse>
-        as "Reset/kick communications watchdog"
-    {
-        executor.context().subsystem().set_last_mutation(Mutations::ResetWatchdog);
-        Ok(executor.context().subsystem().reset_watchdog()?)
+    /// Reset the communications watchdog timer
+    async fn reset_watchdog(&self, ctx: &async_graphql::Context<'_>) -> FieldResult<MutationResponse> {
+        let context = ctx.data::<Context>()?;
+        context.subsystem().set_last_mutation(Mutations::ResetWatchdog);
+        Ok(context.subsystem().reset_watchdog()?)
     }
 
-    //  Set the communications watchdog timeout period
-    //
-    //  - period: New timeout period, in minutes
-    //
-    //  mutation {
-    //      setWatchdogPeriod(period: Int!) {
-    //          success: Boolean!
-    //          errors: String!
-    //      }
-    //  }
-    field set_watchdog_period(&executor, period: i32) -> FieldResult<MutationResponse>
-        as "Set watchdog period (in minutes)"
-    {
-        executor.context().subsystem().set_last_mutation(Mutations::SetWatchdogPeriod);
-        Ok(executor.context().subsystem().set_watchdog_period(period as u8)?)
+    /// Set the communications watchdog timeout period
+    async fn set_watchdog_period(
+        &self,
+        ctx: &async_graphql::Context<'_>,
+        period: i32,
+    ) -> FieldResult<MutationResponse> {
+        let context = ctx.data::<Context>()?;
+        context.subsystem().set_last_mutation(Mutations::SetWatchdogPeriod);
+        Ok(context.subsystem().set_watchdog_period(period as u8)?)
     }
 
-    //  Pass a custom command through to the system
-    //
-    //  - command: Decimal value of the command byte to send
-    //  - data: Decimal values of the command parameters to send. Should be `[0]` if there are no additional parameters required.
-    //
-    //  mutation {
-    //      issueRawCommand(command: Int!, data: [Int!]) {
-    //          success: Boolean!
-    //          errors: String!
-    //      }
-    //  }
-    field issue_raw_command(&executor, command: i32, data: Vec<i32>) -> FieldResult<MutationResponse>
-        as "Issue raw command to EPS"
-    {
-        executor.context().subsystem().set_last_mutation(Mutations::RawCommand);
+    /// Pass a custom command through to the system
+    async fn issue_raw_command(
+        &self,
+        ctx: &async_graphql::Context<'_>,
+        command: i32,
+        data: Vec<i32>,
+    ) -> FieldResult<MutationResponse> {
+        let context = ctx.data::<Context>()?;
+        context.subsystem().set_last_mutation(Mutations::RawCommand);
         let data_u8 = data.iter().map(|x| *x as u8).collect();
-        Ok(executor.context().subsystem().raw_command(command as u8, data_u8)?)
+        Ok(context.subsystem().raw_command(command as u8, data_u8)?)
     }
 
-    // Perform a system test
-    //
-    // - test: Specific test to perform. Should be `HARDWARE`
-    //
-    //  mutation {
-    //      testHardware(test: TestType) {
-    //          success: Boolean!
-    //          errors: String!
-    //      }
-    //  }
-    field testHardware(&executor, test: TestType) -> FieldResult<MutationResponse>
-        as "Test hardware"
-    {
-        executor.context().subsystem().set_last_mutation(Mutations::TestHardware);
+    /// Perform a system test
+    async fn test_hardware(
+        &self,
+        ctx: &async_graphql::Context<'_>,
+        test: TestType,
+    ) -> FieldResult<MutationResponse> {
+        let context = ctx.data::<Context>()?;
+        context.subsystem().set_last_mutation(Mutations::TestHardware);
 
         match test {
-            TestType::Hardware => Ok(executor.context().subsystem().test_hardware()?),
+            TestType::Hardware => Ok(context.subsystem().test_hardware()?),
             TestType::Integration => Ok(MutationResponse {
-                    errors: "Not Implemented".to_owned(),
-                    success: false
-            })
+                errors: "Not Implemented".to_owned(),
+                success: false,
+            }),
         }
     }
-});
+}
+
+// Base GraphQL mutation model
+// graphql_object!(Root: Context as "Mutation" |&self| {
+
+//     // Execute a trivial command against the system
+//     //
+//     //  mutation {
+//     //      noop {
+//     //          success: Boolean!
+//     //          errors: String!
+//     //      }
+//     //  }
+//     field noop(&executor) -> FieldResult<MutationResponse>
+//         as "Run no-op command"
+//     {
+//         executor.context().subsystem().set_last_mutation(Mutations::Noop);
+//         Ok(executor.context().subsystem().reset_watchdog()?)
+//     }
+
+//     //  Manually reset the EPS
+//     //
+//     //  mutation {
+//     //      manualReset {
+//     //          success: Boolean!
+//     //          errors: String!
+//     //      }
+//     //  }
+//     field manual_reset(&executor) -> FieldResult<MutationResponse>
+//         as "Perform manual reset of EPS board"
+//     {
+//         executor.context().subsystem().set_last_mutation(Mutations::ManualReset);
+//         Ok(executor.context().subsystem().manual_reset()?)
+//     }
+
+//     //  Reset the communications watchdog timer
+//     //
+//     //  mutation {
+//     //      resetWatchdog {
+//     //          success: Boolean!
+//     //          errors: String!
+//     //      }
+//     //  }
+//     field reset_watchdog(&executor) -> FieldResult<MutationResponse>
+//         as "Reset/kick communications watchdog"
+//     {
+//         executor.context().subsystem().set_last_mutation(Mutations::ResetWatchdog);
+//         Ok(executor.context().subsystem().reset_watchdog()?)
+//     }
+
+//     //  Set the communications watchdog timeout period
+//     //
+//     //  - period: New timeout period, in minutes
+//     //
+//     //  mutation {
+//     //      setWatchdogPeriod(period: Int!) {
+//     //          success: Boolean!
+//     //          errors: String!
+//     //      }
+//     //  }
+//     field set_watchdog_period(&executor, period: i32) -> FieldResult<MutationResponse>
+//         as "Set watchdog period (in minutes)"
+//     {
+//         executor.context().subsystem().set_last_mutation(Mutations::SetWatchdogPeriod);
+//         Ok(executor.context().subsystem().set_watchdog_period(period as u8)?)
+//     }
+
+//     //  Pass a custom command through to the system
+//     //
+//     //  - command: Decimal value of the command byte to send
+//     //  - data: Decimal values of the command parameters to send. Should be `[0]` if there are no additional parameters required.
+//     //
+//     //  mutation {
+//     //      issueRawCommand(command: Int!, data: [Int!]) {
+//     //          success: Boolean!
+//     //          errors: String!
+//     //      }
+//     //  }
+//     field issue_raw_command(&executor, command: i32, data: Vec<i32>) -> FieldResult<MutationResponse>
+//         as "Issue raw command to EPS"
+//     {
+//         executor.context().subsystem().set_last_mutation(Mutations::RawCommand);
+//         let data_u8 = data.iter().map(|x| *x as u8).collect();
+//         Ok(executor.context().subsystem().raw_command(command as u8, data_u8)?)
+//     }
+
+//     // Perform a system test
+//     //
+//     // - test: Specific test to perform. Should be `HARDWARE`
+//     //
+//     //  mutation {
+//     //      testHardware(test: TestType) {
+//     //          success: Boolean!
+//     //          errors: String!
+//     //      }
+//     //  }
+//     field testHardware(&executor, test: TestType) -> FieldResult<MutationResponse>
+//         as "Test hardware"
+//     {
+//         executor.context().subsystem().set_last_mutation(Mutations::TestHardware);
+
+//         match test {
+//             TestType::Hardware => Ok(executor.context().subsystem().test_hardware()?),
+//             TestType::Integration => Ok(MutationResponse {
+//                     errors: "Not Implemented".to_owned(),
+//                     success: false
+//             })
+//         }
+//     }
+// });

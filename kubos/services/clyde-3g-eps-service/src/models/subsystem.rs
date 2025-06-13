@@ -19,14 +19,18 @@
 use crate::models::*;
 use clyde_3g_eps_api::{Checksum, Clyde3gEps, Eps};
 use eps_api::EpsResult;
-use failure::Error;
+// use failure::Error;
 use rust_i2c::*;
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::time::Duration;
+use async_graphql::Enum;
+use kubos_service::{run, process_errors, push_err};
+
+// use thiserror::Error;
 
 /// Enum for tracking the last mutation executed
-#[derive(Copy, Clone, Debug, Eq, Hash, GraphQLEnum, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, Hash, Enum, PartialEq)]
 pub enum Mutations {
     /// No mutation has been run since the service was started
     None,
@@ -295,7 +299,7 @@ impl Subsystem {
             Ok(mut master_vec) => {
                 let current = master_vec.clone();
                 master_vec.clear();
-                master_vec.shrink_to_fit();
+             
                 Ok(current)
             }
             _ => Ok(vec![

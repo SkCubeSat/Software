@@ -36,3 +36,10 @@ port = 8030
 [shell-service.addr]
 ip = "127.0.0.1"
 port = 8050
+
+[clyde-3g-eps-service]
+bus = "/dev/i2c-1"
+
+[clyde-3g-eps-service.addr]
+ip = "127.0.0.1"
+port = 8060

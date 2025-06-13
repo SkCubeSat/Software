@@ -17,9 +17,10 @@
 //! Data returned by `lastEpsError` query
 
 use clyde_3g_eps_api::{ErrorCode, LastError};
+use async_graphql::{Enum, SimpleObject};
 
 /// Error variants which can be returned by the EPS
-#[derive(Clone, Debug, GraphQLEnum)]
+#[derive(Copy, Clone, Debug, Enum, Eq, PartialEq)]
 pub enum Error {
     /// No errors were encountered
     None,
@@ -48,7 +49,7 @@ pub enum Error {
 }
 
 /// Last command status for the EPS
-#[derive(Clone, Debug, GraphQLObject)]
+#[derive(Clone, Debug, SimpleObject)]
 pub struct ErrorData {
     /// Last command status for the motherboard
     pub motherboard: Error,

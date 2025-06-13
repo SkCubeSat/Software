@@ -123,7 +123,9 @@ async fn uart_reading_task(subsystem: StarRiscSubsystem) {
         // Generate some simulated data
         let mut counter = 0u8;
         loop {
-            let data = vec![counter, counter.wrapping_add(1), counter.wrapping_add(2)];
+            unsafe {
+                let data = vec![counter, counter.wrapping_add(1), counter.wrapping_add(2)];
+            }
             subsystem.add_reading(data).await;
             counter = counter.wrapping_add(1);
             tokio::time::sleep(Duration::from_secs(1)).await;
