@@ -1,303 +1,123 @@
-use async_graphql::{Context, EmptyMutation, Object};
-use kubos_service::{Config, Service};
+use rust_i2c::{Command, Connection};
+use std::collections::HashMap;
+use std::io;
 use std::time::Duration;
-use std::collections::VecDeque;
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use chrono::{DateTime, Utc};
-use linux_embedded_hal::I2cdev;
-use embedded_hal::blocking::i2c::{Write, Read};
 
-// Constants - matching Python
-const TEMPERATURE_SCALE_SLOPE: f64 = 1.0 / -13.6;
-const TEMPERATURE_SCALE_OFFSET: f64 = 192.48;
-const DOSIMETER_I2C_SLAVE_ADDR: u8 = 0x4A;
-const DOSIMETER_I2C_DELAY: u64 = 0;
-const DOSIMETER_COMMAND_LENGTH: usize = 1;
+const I2C_BUS: &str = "/dev/i2c-1";
+const DEV_ADDR: u16 = 0x4A;
+
 const DOSIMETER_RESPONSE_LENGTH: usize = 2;
 const DOSIMETER_RESPONSE_HIGH_BYTE_MASK: u8 = 0x0F;
-const ADC_BIT_RESOLUTION: u32 = 12;
-const MAX_ADC_VALUE: f64 = 4095.0; // (1 << 12) - 1
-const TIMER_DELAY: u64 = 100; // 0.1 seconds in ms
 
-// Sensor codes - matching Python exactly
-const DOSIMETER_LIST: [u8; 7] = [
-    0x84, // channel 0 -> u1 -> None
-    0xC4, // channel 1 -> u2 -> 50 mil
-    0x94, // channel 2 -> u3 -> 100 mil
-    0xD4, // channel 3 -> u4 -> 200 mil
-    0xA4, // channel 4 -> u5 -> 20 mil
-    0xE4, // channel 5 -> radfet
-    0xB4, // channel 6 -> u7 -> 300 mil
-];
-const TEMP_SENSOR: u8 = 0xF4; // channel 7
+const DOSIMETER_I2C_DELAY_MS: u64 = 0;
+const TIMER_DELAY_MS: u64 = 100;
 
-// Helper function to map hex codes to chip names
-fn hex_to_chip(code: u8) -> &'static str {
-    match code {
-        0x84 => "u1",
-        0xC4 => "u2",
-        0x94 => "u3",
-        0xD4 => "u4",
-        0xA4 => "u5",
-        0xE4 => "radfet",
-        0xB4 => "u7",
-        0xF4 => "temp",
-        _ => "unknown",
-    }
+const RETRIES: usize = 3;
+const RETRY_BACKOFF_MS: u64 = 10;
+
+const MAX_ADC: f64 = 4095.0;
+const REF_MV: f64 = 3300.0;
+const TEMP_SLOPE: f64 = 1.0 / -13.6;
+const TEMP_OFFSET: f64 = 192.48;
+
+const DOSIMETER_LIST: [u8; 7] = [0x84, 0xC4, 0x94, 0xD4, 0xA4, 0xE4, 0xB4];
+const TEMP_SENSOR: u8 = 0xF4;
+
+fn to_mv(adc: u16) -> f64 {
+    (adc as f64 / MAX_ADC) * REF_MV
 }
 
-// Conversion functions - matching Python
-fn to_volt(input: u16) -> f64 {
-    let ref_mv = 3300.0;
-    let max_adc = 4095.0;
-    (input as f64 / max_adc) * ref_mv
+fn mv_to_temp_c(mv: f64) -> f64 {
+    (mv * TEMP_SLOPE) + TEMP_OFFSET
 }
 
-fn volt_to_temp(input: f64) -> f64 {
-    let scale_slope = 1.0 / -13.6;
-    let scale_off = 192.48;
-    (input * scale_slope) + scale_off
+fn parse_adc_12bit(msb: u8, lsb: u8) -> u16 {
+    (((msb & DOSIMETER_RESPONSE_HIGH_BYTE_MASK) as u16) << 8) | (lsb as u16)
 }
 
-// I2C functions - matching Python structure
-fn switch_sensor(i2c: &mut I2cdev, sensor_code: u8) -> Result<(), String> {
-    i2c.write(DOSIMETER_I2C_SLAVE_ADDR, &[sensor_code])
-        .map_err(|e| format!("Failed to switch sensor: {}", e))
-}
+fn read_sensor_adc(conn: &Connection, sensor_code: u8) -> io::Result<u16> {
+    let delay = Duration::from_millis(DOSIMETER_I2C_DELAY_MS);
 
-fn read_sensor_raw(i2c: &mut I2cdev) -> Result<u16, String> {
-    let mut buffer = [0u8; 2];
-    i2c.read(DOSIMETER_I2C_SLAVE_ADDR, &mut buffer)
-        .map_err(|e| format!("Failed to read sensor: {}", e))?;
-    
-    // Combine bytes: high byte << 8 | low byte
-    let value = (buffer[0] as u16) << 8 | (buffer[1] as u16);
-    Ok(value)
-}
+    let mut last_err: Option<io::Error> = None;
 
-fn read_temperature(i2c: &mut I2cdev, temp_code: u8) -> Result<(), String> {
-    switch_sensor(i2c, temp_code)?;
-    
-    let timestamp = Utc::now();
-    let chip_name = hex_to_chip(temp_code);
-    
-    let value = read_sensor_raw(i2c)?;
-    let voltage = to_volt(value);
-    let temperature = volt_to_temp(voltage);
-    
-    // Print CSV format matching Python output
-    println!(
-        "{}, 0x{:02X}, {}, {}, {:.2}, {:.2}",
-        timestamp.format("%Y-%m-%d %H:%M:%S%.3f"),
-        temp_code,
-        chip_name,
-        value,
-        voltage,
-        temperature
-    );
-    
-    Ok(())
-}
-
-fn read_dosimeter(i2c: &mut I2cdev, dos_code: u8) -> Result<(), String> {
-    switch_sensor(i2c, dos_code)?;
-    
-    let timestamp = Utc::now();
-    let chip_name = hex_to_chip(dos_code);
-    
-    let value = read_sensor_raw(i2c)?;
-    let voltage = to_volt(value);
-    
-    // Print CSV format matching Python output
-    println!(
-        "{}, 0x{:02X}, {}, {}, {:.2}",
-        timestamp.format("%Y-%m-%d %H:%M:%S%.3f"),
-        dos_code,
-        chip_name,
-        value,
-        voltage
-    );
-    
-    Ok(())
-}
-
-fn loop_sensors(i2c: &mut I2cdev) -> Result<(), String> {
-    // Read all dosimeter channels
-    for &sensor in &DOSIMETER_LIST {
-        if let Err(e) = read_dosimeter(i2c, sensor) {
-            eprintln!("Error reading dosimeter 0x{:02X}: {}", sensor, e);
-        }
-        std::thread::sleep(Duration::from_millis(TIMER_DELAY));
-    }
-    
-    // Read temperature sensor
-    if let Err(e) = read_temperature(i2c, TEMP_SENSOR) {
-        eprintln!("Error reading temperature: {}", e);
-    }
-    
-    Ok(())
-}
-
-// Storage for GraphQL queries
-#[derive(Clone, Debug)]
-struct SensorReading {
-    timestamp: DateTime<Utc>,
-    sensor_code: u8,
-    chip_name: String,
-    raw_value: u16,
-    voltage_mv: f64,
-    converted_value: Option<f64>, // Some(temp) for temp sensor, None for dosimeter
-}
-
-#[derive(Default)]
-struct AppState {
-    readings: VecDeque<SensorReading>,
-    max_readings: usize,
-}
-
-impl AppState {
-    fn new(max_readings: usize) -> Self {
-        Self {
-            readings: VecDeque::new(),
-            max_readings,
-        }
-    }
-
-    fn add_reading(&mut self, reading: SensorReading) {
-        self.readings.push_back(reading);
-        while self.readings.len() > self.max_readings {
-            self.readings.pop_front();
-        }
-    }
-
-    fn get_latest_temperature(&self) -> Option<f64> {
-        self.readings.iter().rev()
-            .find(|r| r.sensor_code == TEMP_SENSOR)
-            .and_then(|r| r.converted_value)
-    }
-
-    fn get_latest_dosimeter_readings(&self) -> Vec<String> {
-        let mut results = Vec::new();
-        for &code in &DOSIMETER_LIST {
-            if let Some(reading) = self.readings.iter().rev().find(|r| r.sensor_code == code) {
-                results.push(format!(
-                    "{}, 0x{:02X}, {}, {}, {:.2}",
-                    reading.timestamp.format("%Y-%m-%d %H:%M:%S%.3f"),
-                    reading.sensor_code,
-                    reading.chip_name,
-                    reading.raw_value,
-                    reading.voltage_mv
+    for attempt in 1..=RETRIES {
+        // closest you can get without raw ops:
+        // write cmd (sensor_code), then read 2 bytes
+        match conn.transfer(Command { cmd: sensor_code, data: vec![] }, DOSIMETER_RESPONSE_LENGTH, delay) {
+            Ok(data) if data.len() == 2 => {
+                let adc = parse_adc_12bit(data[0], data[1]);
+                return Ok(adc);
+            }
+            Ok(data) => {
+                last_err = Some(io::Error::new(
+                    io::ErrorKind::UnexpectedEof,
+                    format!("Expected 2 bytes, got {}", data.len()),
                 ));
             }
+            Err(e) => last_err = Some(e),
         }
-        results
-    }
-}
 
-
-// Subsystem
-#[derive(Clone)]
-pub struct DosimeterSubsystem {
-    state: Arc<RwLock<AppState>>,
-}
-
-impl DosimeterSubsystem {
-    pub fn new() -> Self {
-        Self {
-            state: Arc::new(RwLock::new(AppState::new(10000))),
+        if attempt < RETRIES {
+            std::thread::sleep(Duration::from_millis(RETRY_BACKOFF_MS));
         }
     }
 
-    pub async fn add_reading(&self, reading: SensorReading) {
-        let mut state = self.state.write().await;
-        state.add_reading(reading);
-    }
-
-    pub async fn get_latest_temperature(&self) -> Option<f64> {
-        let state = self.state.read().await;
-        state.get_latest_temperature()
-    }
-
-    pub async fn get_dosimeter_readings(&self) -> Vec<String> {
-        let state = self.state.read().await;
-        state.get_latest_dosimeter_readings()
-    }
+    Err(last_err.unwrap_or_else(|| io::Error::new(io::ErrorKind::Other, "Unknown I2C error")))
 }
 
-// GraphQL Query definitions
-#[derive(Default)]
-pub struct QueryRoot;
-
-#[Object]
-impl QueryRoot {
-    async fn ping(&self) -> &str {
-        "pong"
-    }
-
-    async fn current_temperature(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<f64>> {
-        let subsystem_ctx = ctx.data::<kubos_service::Context<DosimeterSubsystem>>()?;
-        Ok(subsystem_ctx.subsystem().get_latest_temperature().await)
-    }
-
-    async fn current_dosimeter_readings(&self, ctx: &Context<'_>) -> async_graphql::Result<Vec<String>> {
-        let subsystem_ctx = ctx.data::<kubos_service::Context<DosimeterSubsystem>>()?;
-        Ok(subsystem_ctx.subsystem().get_dosimeter_readings().await)
-    }
+fn chip_name_map() -> HashMap<u8, &'static str> {
+    HashMap::from([
+        (0x84, "u1"),
+        (0xC4, "u2"),
+        (0x94, "u3"),
+        (0xD4, "u4"),
+        (0xA4, "u5"),
+        (0xE4, "radfet"),
+        (0xB4, "u7"),
+        (0xF4, "temp"),
+    ])
 }
 
-// Main I2C reading task
-async fn i2c_reading_task(subsystem: DosimeterSubsystem, i2c_bus: &str) {
-    match I2cdev::new(i2c_bus) {
-        Ok(mut i2c) => {
-            println!("I2C device opened successfully on {}", i2c_bus);
-            
-            // Continuous data collection loop - matching Python's while(True)
-            loop {
-                if let Err(e) = loop_sensors(&mut i2c) {
-                    eprintln!("Error in sensor loop: {}", e);
-                }
+fn loop_sensors(conn: &Connection, map: &HashMap<u8, &'static str>) {
+    for &code in &DOSIMETER_LIST {
+        let name = map.get(&code).copied().unwrap_or("unknown");
+
+        match read_sensor_adc(conn, code) {
+            Ok(adc) => {
+                let mv = to_mv(adc);
+                println!("{}, 0x{:02X}, {}, {}, {}", "timestamp", code, name, adc, mv);
+            }
+            Err(e) => {
+                eprintln!("{}, 0x{:02X}, {}, ERROR: {}", "timestamp", code, name, e);
             }
         }
-        Err(e) => {
-            eprintln!("Could not open I2C device {}: {}", i2c_bus, e);
-            eprintln!("Service will run but I2C functionality is unavailable");
-            
-            // Keep the task alive but do nothing
-            loop {
-                tokio::time::sleep(Duration::from_secs(60)).await;
+
+        std::thread::sleep(Duration::from_millis(TIMER_DELAY_MS));
+    }
+
+    // temperature
+    {
+        let code = TEMP_SENSOR;
+        let name = map.get(&code).copied().unwrap_or("temp");
+
+        match read_sensor_adc(conn, code) {
+            Ok(adc) => {
+                let mv = to_mv(adc);
+                let temp = mv_to_temp_c(mv);
+                println!("{}, 0x{:02X}, {}, {}, {}, {}", "timestamp", code, name, adc, mv, temp);
+            }
+            Err(e) => {
+                eprintln!("{}, 0x{:02X}, {}, ERROR: {}", "timestamp", code, name, e);
             }
         }
     }
 }
 
-#[tokio::main]
-async fn main() {
-    kubos_service::Logger::init("dosimeter-service").unwrap();
-    
-    let config = Config::new("dosimeter")
-        .map_err(|err| {
-            eprintln!("Failed to load service config: {:?}", err);
-            err
-        })
-        .unwrap();
-    
-    let subsystem = DosimeterSubsystem::new();
-    
-    // Spawn the I2C reading task (matches Python's main loop)
-    let subsystem_clone = subsystem.clone();
-    tokio::spawn(async move {
-        i2c_reading_task(subsystem_clone, "/dev/i2c-1").await;
-    });
-    
-    let service = Service::new(
-        config,
-        subsystem,
-        QueryRoot::default(),
-        EmptyMutation,
-    );
-    
-    println!("Dosimeter service starting...");
-    println!("Using device: 0x{:02X}", DOSIMETER_I2C_SLAVE_ADDR);
-    service.start_async().await;
+fn main() -> io::Result<()> {
+    let conn = Connection::from_path(I2C_BUS, DEV_ADDR);
+    let map = chip_name_map();
+
+    loop {
+        loop_sensors(&conn, &map);
+    }
 }

@@ -1,6 +1,5 @@
 [package]
 name = "dosimeter"
-version = "0.1.0"
 edition = "2024"
 version.workspace = true
 description.workspace = true
@@ -9,13 +8,11 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-async-graphql = "7.0.16"
+async-graphql = "7.0.17"
 async-graphql-axum = "7.0.17"
 kubos-service = { path = "../../../kubos/services/kubos-service" }
-tokio = "1.45.1"
+rust-i2c = { path = "../../../kubos/hal/rust-hal/rust-i2c"}
+tokio = { version = "1.45.1", features = ["full"] }
 axum = "0.8.4"
 chrono = "0.4.41"
-
-# I2C communication
-linux-embedded-hal = "0.4"
-embedded-hal = "1.0.0"
+log = "^0.4.0"
