@@ -40,8 +40,8 @@ fn test_delete_ge() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8112;
-    let udp = 8122;
+    let port = 8200;
+    let udp = 9200;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), Some(SQL));
 
@@ -114,8 +114,8 @@ fn test_delete_le() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8113;
-    let udp = 8123;
+    let port = 8201;
+    let udp = 9201;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), Some(SQL));
 
@@ -176,8 +176,8 @@ fn test_delete_range() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8114;
-    let udp = 8124;
+    let port = 8202;
+    let udp = 9202;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), Some(SQL));
 
@@ -238,8 +238,8 @@ fn test_delete_subsystem() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8115;
-    let udp = 8125;
+    let port = 8203;
+    let udp = 9203;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), Some(SQL));
 
@@ -314,8 +314,8 @@ fn test_delete_parameter() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8116;
-    let udp = 8126;
+    let port = 8204;
+    let udp = 9204;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), Some(SQL));
 

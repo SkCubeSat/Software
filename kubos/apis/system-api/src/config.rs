@@ -119,7 +119,7 @@ impl Config {
     /// ### Examples
     ///
     /// ```rust,no_run
-    /// use kubos_system::Config;
+    /// use radsat_system::Config;
     ///
     /// let config = Config::new("example-service").unwrap();
     /// let raw = config.raw();

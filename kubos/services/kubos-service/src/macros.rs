@@ -15,6 +15,14 @@
 //
 //#![macro_use]
 
+/// Helper function to process an anyhow error chain into a string
+pub fn process_anyhow_chain(err: &anyhow::Error, delim: &str) -> String {
+    err.chain()
+        .map(|e| e.to_string())
+        .collect::<Vec<_>>()
+        .join(delim)
+}
+
 /// Iterate through a anyhow::Error and concatenate the error
 /// and all its causes into a single string
 ///
@@ -64,13 +72,9 @@ macro_rules! process_errors {
     };
     ($err:ident, $delim:expr) => {{
         {
-            // Just use the error's Display implementation
-            let err_string = format!("{}", $err);
-            let mut results = String::new();
-            results.push_str(&err_string);
-            
-            // Done - skip error chain processing for non-std errors
-            results
+            // Convert to anyhow::Error to use its chain() method for iterating
+            let anyhow_err: anyhow::Error = $err.into();
+            $crate::process_anyhow_chain(&anyhow_err, $delim)
         }
     }};
 }
@@ -158,10 +162,12 @@ macro_rules! push_err {
 ///     let result = run!(test_func(true, "test".to_owned()), master_err);
 ///
 ///     assert_eq!(result, Err("TopError: top, RootError: root".to_owned()));
-///     assert_eq!(
-///         vec!["test_func (src/macros.rs:40): TopError: top, RootError: root".to_owned()],
-///         *master_err.read().unwrap()
-///     );
+///     // Check that the error was recorded with function name and error message
+///     // (file path and line numbers vary by compilation context)
+///     let errors = master_err.read().unwrap();
+///     assert_eq!(errors.len(), 1);
+///     assert!(errors[0].starts_with("test_func ("));
+///     assert!(errors[0].ends_with("): TopError: top, RootError: root"));
 /// }
 /// ```
 #[macro_export]
@@ -300,7 +306,7 @@ mod tests {
 
         assert_eq!(result, Err("TopError: top, RootError: root".to_owned()));
         assert_eq!(
-            vec!["test_func (services/kubos-service/src/macros.rs:305): TopError: top, RootError: root".to_owned()],
+            vec!["test_func (kubos/services/kubos-service/src/macros.rs:305): TopError: top, RootError: root".to_owned()],
             *master_err.read().unwrap()
         );
     }

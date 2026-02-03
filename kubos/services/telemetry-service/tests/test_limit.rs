@@ -38,9 +38,11 @@ fn test() {
     let db_dir = TempDir::new().unwrap();
     let db_path = db_dir.path().join("test.db");
     let db = db_path.to_str().unwrap();
-    let _fixture = TelemetryServiceFixture::setup(db, None, None, Some(SQL));
+    let port = 8270;
+    let udp = 9270;
+    let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), Some(SQL));
     let res = do_query(
-        None,
+        Some(port),
         "{telemetry(limit: 2, timestampGe: 1008){timestamp,subsystem,parameter,value}}",
     );
 

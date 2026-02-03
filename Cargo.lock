@@ -2680,9 +2680,9 @@ dependencies = [
 name = "kubos-app"
 version = "0.1.0"
 dependencies = [
+ "async-graphql",
  "failure",
  "getopts",
- "juniper 0.16.2",
  "kubos-service",
  "log 0.4.29",
  "log4rs",

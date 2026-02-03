@@ -3,20 +3,24 @@
   // Point to root Cargo.toml - it will still see all members but we disable build scripts
   "rust-analyzer.linkedProjects": ["Cargo.toml"],
   
-  // Completely disable build script execution
-  "rust-analyzer.cargo.buildScripts.enable": false,
-  "rust-analyzer.cargo.buildScripts.rebuildOnSave": false,
+  // // Completely disable build script execution
+  // "rust-analyzer.cargo.buildScripts.enable": false,
+  // "rust-analyzer.cargo.buildScripts.rebuildOnSave": false,
   
-  // Skip proc-macro expansion (requires build scripts)
-  "rust-analyzer.procMacro.enable": false,
+  // // Skip proc-macro expansion (requires build scripts)
+  // "rust-analyzer.procMacro.enable": false,
   
-  // Only check current package, not entire workspace
-  "rust-analyzer.check.workspace": false,
+  // // Only check current package, not entire workspace
+  // "rust-analyzer.check.workspace": false,
   
-  // Set check command to only check default members
-  "rust-analyzer.check.overrideCommand": [
-    "cargo",
-    "check",
-    "--message-format=json"
-  ]
+  // // Set check command to on ly check default members
+  // "rust-analyzer.check.overrideCommand": [
+  //   "cargo",
+  //   "check",
+  //   "--message-format=json"
+  // ],
+  "rustTestExplorer.rootCargoManifestFilePath": "Cargo.toml",
+  "rust-analyzer.restartServerOnConfigChange": true,
+  "rust-analyzer.testExplorer": true,
+  "cmake.ignoreCMakeListsMissing": true,
 }
