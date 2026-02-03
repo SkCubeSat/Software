@@ -155,8 +155,6 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-.vscode/
-
 # End of https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks
 
 ### Ansible ###
@@ -199,3 +197,5 @@ __pycache__/
 **/app-registry/
 **/schedules/
 *.db
+
+**/.DS_Store
