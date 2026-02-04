@@ -58,16 +58,19 @@ fn test_udp_timestamp() {
     socket
         .send_to(&ser::to_vec(&entry1).unwrap(), &service)
         .unwrap();
+    // Add small delay between UDP packets to ensure reliable delivery on CI
+    ::std::thread::sleep(Duration::from_millis(50));
     socket
         .send_to(&ser::to_vec(&entry2).unwrap(), &service)
         .unwrap();
+    ::std::thread::sleep(Duration::from_millis(50));
     socket
         .send_to(&ser::to_vec(&entry3).unwrap(), &service)
         .unwrap();
 
     // Give the service time to process the messages, since we're not actually waiting
-    // for a response
-    ::std::thread::sleep(Duration::from_secs(1));
+    // for a response. Increased from 1s to 2s for CI reliability.
+    ::std::thread::sleep(Duration::from_secs(2));
 
     let res = do_query(
         Some(port),
@@ -127,19 +130,23 @@ fn test_udp_no_timestamp() {
     socket
         .send_to(&ser::to_vec(&entry1).unwrap(), &service)
         .unwrap();
+    // Add small delay between UDP packets to ensure reliable delivery on CI
+    ::std::thread::sleep(Duration::from_millis(50));
     socket
         .send_to(&ser::to_vec(&entry2).unwrap(), &service)
         .unwrap();
+    ::std::thread::sleep(Duration::from_millis(50));
     socket
         .send_to(&ser::to_vec(&entry3).unwrap(), &service)
         .unwrap();
+    ::std::thread::sleep(Duration::from_millis(50));
     socket
         .send_to(&ser::to_vec(&entry4).unwrap(), &service)
         .unwrap();
 
     // Give the service time to process the messages, since we're not actually waiting
-    // for a response
-    ::std::thread::sleep(Duration::from_secs(1));
+    // for a response. Increased from 1s to 2s for CI reliability.
+    ::std::thread::sleep(Duration::from_secs(2));
 
     let res = do_query(Some(port), "{telemetry{subsystem,parameter,value}}");
 

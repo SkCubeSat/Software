@@ -141,7 +141,7 @@ impl Drop for TelemetryServiceFixture {
 }
 
 pub fn do_query(service_port: Option<u16>, query: &str) -> serde_json::Value {
-    let port = service_port.unwrap_or(8111);  // Must match default in TelemetryServiceFixture::setup
+    let port = service_port.unwrap_or(8111); // Must match default in TelemetryServiceFixture::setup
 
     let client = reqwest::Client::new();
 
@@ -164,7 +164,10 @@ pub fn do_query(service_port: Option<u16>, query: &str) -> serde_json::Value {
                     thread::sleep(delay);
                     delay *= 2; // Exponential backoff
                 } else {
-                    panic!("Couldn't send request after {} attempts: {:?}", max_retries, e);
+                    panic!(
+                        "Couldn't send request after {} attempts: {:?}",
+                        max_retries, e
+                    );
                 }
             }
         }
