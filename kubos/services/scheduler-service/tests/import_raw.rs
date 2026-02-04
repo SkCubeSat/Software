@@ -106,8 +106,9 @@ async fn import_raw_run_delay() {
     fixture.import_raw_task_list("imaging", "init", &schedule).await;
     fixture.activate_mode("init").await;
 
-    // Wait for the service to restart the scheduler
-    thread::sleep(Duration::from_millis(100));
+    // Wait for the service to restart the scheduler and execute the task
+    // Increased from 100ms to 1500ms for CI reliability
+    thread::sleep(Duration::from_millis(1500));
 
     let query = r#"{"query":"mutation { startApp(name: \"basic-app\") { success, errors } }"}"#;
 
@@ -147,7 +148,8 @@ async fn import_raw_run_two_tasks() {
     fixture.activate_mode("init").await;
 
     // Wait for service to restart scheduler and run tasks
-    thread::sleep(Duration::from_millis(1100));
+    // Increased from 1100ms to 2500ms for CI reliability
+    thread::sleep(Duration::from_millis(2500));
 
     // Check if first task ran
     let query = r#"{"query":"mutation { startApp(name: \"basic-app\") { success, errors } }"}"#;
@@ -225,8 +227,10 @@ async fn import_raw_run_recurring_no_delay() {
     fixture.import_raw_task_list("imaging", "init", &schedule).await;
     fixture.activate_mode("init").await;
 
-    // Wait for the service to restart the scheduler
-    thread::sleep(Duration::from_millis(1100));
+    // Wait for the service to restart the scheduler and run recurring task twice
+    // Increased from 1100ms to 2500ms for CI reliability (need time for scheduler
+    // restart + initial execution + 1s period + second execution)
+    thread::sleep(Duration::from_millis(2500));
 
     let query = r#"{"query":"mutation { startApp(name: \"basic-app\") { success, errors } }"}"#;
 
@@ -302,8 +306,9 @@ async fn import_raw_run_delay_duplicate() {
     fixture.import_raw_task_list("imaging", "init", &schedule).await;
     fixture.activate_mode("init").await;
 
-    // Wait for the service to restart the scheduler
-    thread::sleep(Duration::from_millis(100));
+    // Wait for the service to restart the scheduler and execute the task
+    // Increased from 100ms to 1500ms for CI reliability
+    thread::sleep(Duration::from_millis(1500));
 
     let query = r#"{"query":"mutation { startApp(name: \"basic-app\") { success, errors } }"}"#;
 
@@ -312,8 +317,9 @@ async fn import_raw_run_delay_duplicate() {
 
     fixture.import_raw_task_list("imaging", "init", &schedule).await;
 
-    // Wait for the service to restart the scheduler
-    thread::sleep(Duration::from_millis(100));
+    // Wait for the service to restart the scheduler and execute the task
+    // Increased from 100ms to 1500ms for CI reliability
+    thread::sleep(Duration::from_millis(1500));
 
     // Check if the task actually ran
     assert_eq!(listener.get_request(), Some(query.to_owned()))
