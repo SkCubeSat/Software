@@ -225,6 +225,10 @@ fn kill_app_not_running() {
         }"#,
     );
 
+    // Wait for the app to exit (it exits immediately with an error since no valid args were provided)
+    // and for the service to recognize it has stopped
+    thread::sleep(Duration::from_millis(500));
+
     // Kill the app
     let result = send_query(
         config,
