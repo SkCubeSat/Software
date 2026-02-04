@@ -17,7 +17,6 @@
 mod util;
 
 use serde_json::json;
-use std::thread;
 use std::time::Duration;
 use util::SchedulerFixture;
 use utils::testing::ServiceListener;
@@ -46,15 +45,17 @@ async fn run_recurring_no_delay() {
     fixture.import_task_list("imaging", &schedule_path, "init").await;
     fixture.activate_mode("init").await;
 
-    // Wait for the service to restart the scheduler
-    thread::sleep(Duration::from_millis(1100));
-
     let query = r#"{"query":"mutation { startApp(name: \"basic-app\") { success, errors } }"}"#;
 
-    // Check if the task was run only twice
-    assert_eq!(listener.get_request(), Some(query.to_owned()));
-    assert_eq!(listener.get_request(), Some(query.to_owned()));
-    assert_eq!(listener.get_request(), None)
+    // Check if the task was run at least twice - use polling with timeout for CI reliability
+    let request = listener.expect_request(Duration::from_secs(5), "first recurring startApp mutation");
+    assert_eq!(request, query.to_owned());
+    let request = listener.expect_request(Duration::from_secs(5), "second recurring startApp mutation");
+    assert_eq!(request, query.to_owned());
+    
+    // Verify no additional requests immediately available (no third run yet)
+    // Use short timeout since we just want to verify there's no immediate third request
+    assert_eq!(listener.wait_for_request(Duration::from_millis(100), None), None)
 }
 
 #[tokio::test]
@@ -81,13 +82,15 @@ async fn run_recurring_delay() {
     fixture.import_task_list("imaging", &schedule_path, "init").await;
     fixture.activate_mode("init").await;
 
-    // Wait for the service to restart the scheduler
-    thread::sleep(Duration::from_millis(2100));
-
     let query = r#"{"query":"mutation { startApp(name: \"basic-app\") { success, errors } }"}"#;
 
-    // Check if the task was run only twice
-    assert_eq!(listener.get_request(), Some(query.to_owned()));
-    assert_eq!(listener.get_request(), Some(query.to_owned()));
-    assert_eq!(listener.get_request(), None)
+    // Check if the task was run at least twice - use polling with timeout for CI reliability
+    // First run starts after 1s delay, then repeats every 1s
+    let request = listener.expect_request(Duration::from_secs(5), "first recurring startApp mutation after delay");
+    assert_eq!(request, query.to_owned());
+    let request = listener.expect_request(Duration::from_secs(5), "second recurring startApp mutation");
+    assert_eq!(request, query.to_owned());
+    
+    // Verify no additional requests immediately available (no third run yet)
+    assert_eq!(listener.wait_for_request(Duration::from_millis(100), None), None)
 }

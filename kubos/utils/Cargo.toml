@@ -9,9 +9,10 @@ env_logger = "0.9"
 log = "^0.4.0"
 tempfile = "3"
 reqwest = { version = "0.12.20", features = ["json", "blocking"] }
-tokio = { version = "1.45.1", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1.45.1", features = ["rt-multi-thread", "macros", "sync", "net"] }
 serde_json = "1.0"
-warp = "0.1.12"
+axum = "0.8.8"
+bytes = "1"
 
 [package.metadata.release]
 release = false

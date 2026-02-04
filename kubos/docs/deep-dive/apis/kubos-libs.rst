@@ -38,7 +38,7 @@ Kubos provides the following libraries to assist with core functionality:
 
  .. |rust-system| raw:: html
 
-    <a href="../../rust-docs/kubos_system/index.html" target="_blank">Kubos System</a>
+    <a href="../../rust-docs/radsat_system/index.html" target="_blank">Kubos System</a>
 
  .. |comms-service| raw:: html
 

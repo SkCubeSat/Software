@@ -111,6 +111,14 @@ pub struct Service<Query, Mutation, S> {
     _phantom: std::marker::PhantomData<S>,
 }
 
+impl<Query, Mutation, S> Service<Query, Mutation, S> {
+    /// Returns a reference to the GraphQL schema.
+    /// Useful for testing purposes.
+    pub fn schema(&self) -> &Schema<Query, Mutation, EmptySubscription> {
+        &self.schema
+    }
+}
+
 impl<Query, Mutation, S> Service<Query, Mutation, S>
 where
     Query: ObjectType + 'static,

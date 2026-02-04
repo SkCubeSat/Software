@@ -57,10 +57,6 @@
 #![deny(missing_docs)]
 #![deny(warnings)]
 
-#[cfg(test)]
-#[macro_use]
-extern crate juniper;
-
 mod framework;
 mod query;
 #[cfg(test)]

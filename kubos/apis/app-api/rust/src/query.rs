@@ -84,7 +84,7 @@ pub fn query(
     };
 
     let uri = format!(
-        "http://{}",
+        "http://{}/graphql",
         config
             .hosturl()
             .ok_or_else(|| format_err!("Unable to fetch addr for service"))?

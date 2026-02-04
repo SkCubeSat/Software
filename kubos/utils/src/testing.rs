@@ -16,6 +16,13 @@
 
 extern crate tempfile;
 
+use axum::{
+    body::Bytes,
+    extract::State,
+    http::StatusCode,
+    routing::post,
+    Router,
+};
 use log::debug;
 use serde_json::Value;
 use std::cell::RefCell;
@@ -24,6 +31,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::SeekFrom;
 use std::io::Write;
+use std::net::SocketAddr;
 use std::process;
 use std::process::{Command, Stdio};
 use std::str;
@@ -31,7 +39,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 use tempfile::tempdir;
-use warp::{self, Buf, Filter};
+use tokio::sync::oneshot;
 
 pub struct TestCommand {
     command: String,
@@ -205,7 +213,7 @@ pub async fn service_query(query: &str, ip: &str, port: u16) -> Value {
     panic!("Service query failed after 10 attempts - {}:{}/graphql", ip, port);
 }
 
-pub trait ServiceResponder {
+pub trait ServiceResponder: Send + Sync + 'static {
     fn respond(&self, body: &str) -> String;
 }
 
@@ -218,8 +226,28 @@ impl ServiceResponder for DefaultServiceResponder {
     }
 }
 
+/// Shared state for axum handlers
+struct AppState<R: ServiceResponder> {
+    requests: Arc<Mutex<VecDeque<String>>>,
+    responder: R,
+}
+
+/// Handler for POST requests
+async fn handle_post<R: ServiceResponder>(
+    State(state): State<Arc<AppState<R>>>,
+    body: Bytes,
+) -> (StatusCode, String) {
+    let body_str = String::from_utf8_lossy(&body).to_string();
+    debug!("service_listener, body: {}", body_str);
+    let response = state.responder.respond(&body_str);
+    state.requests.lock().unwrap().push_back(body_str);
+    (StatusCode::OK, response)
+}
+
 pub struct ServiceListener {
     requests: Arc<Mutex<VecDeque<String>>>,
+    shutdown_tx: Option<oneshot::Sender<()>>,
+    server_thread: Option<thread::JoinHandle<()>>,
 }
 
 impl ServiceListener {
@@ -232,34 +260,112 @@ impl ServiceListener {
 
     pub fn spawn_with_responder<R>(_ip: &str, port: u16, responder: R) -> ServiceListener
     where
-        R: ServiceResponder + Send + Sync + Clone + 'static,
+        R: ServiceResponder + Clone,
     {
         let requests = Arc::new(Mutex::new(VecDeque::<String>::new()));
-
         let req_handle = requests.clone();
 
-        let listener = warp::post2()
-            .and(warp::any())
-            .and(warp::body::concat().and_then(|body: warp::body::FullBody| {
-                std::str::from_utf8(body.bytes())
-                    .map(String::from)
-                    .map_err(warp::reject::custom)
-            }))
-            .map(move |body: String| {
-                debug!("service_listener, body: {}", body);
-                let response = responder.respond(&body);
-                req_handle.lock().unwrap().push_back(body);
-                response
+        let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
+
+        let server_thread = thread::spawn(move || {
+            let rt = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .expect("Failed to create tokio runtime");
+
+            rt.block_on(async move {
+                let state = Arc::new(AppState {
+                    requests: req_handle,
+                    responder,
+                });
+
+                let app = Router::new()
+                    .route("/", post(handle_post::<R>))
+                    .fallback(post(handle_post::<R>))
+                    .with_state(state);
+
+                let addr = SocketAddr::from(([127, 0, 0, 1], port));
+                let listener = tokio::net::TcpListener::bind(addr)
+                    .await
+                    .expect("Failed to bind");
+
+                axum::serve(listener, app)
+                    .with_graceful_shutdown(async {
+                        let _ = shutdown_rx.await;
+                    })
+                    .await
+                    .expect("Server error");
             });
+        });
 
-        thread::spawn(move || warp::serve(listener).run(([127, 0, 0, 1], port)));
+        // Give the server a moment to start
+        thread::sleep(Duration::from_millis(10));
 
-        ServiceListener { requests }
+        ServiceListener {
+            requests,
+            shutdown_tx: Some(shutdown_tx),
+            server_thread: Some(server_thread),
+        }
     }
 
     /// Pops a request body from the collected queue
     /// These are popped off in FIFO fashion
     pub fn get_request(&self) -> Option<String> {
         self.requests.lock().unwrap().pop_front()
+    }
+
+    /// Waits for a request to arrive with polling and timeout.
+    /// Returns the request body if one arrives within the timeout, or None if it times out.
+    /// This is more robust than using sleep + get_request for CI environments
+    /// where timing can be unpredictable.
+    ///
+    /// # Arguments
+    /// * `timeout` - Maximum time to wait for a request
+    /// * `poll_interval` - How often to check for new requests (default: 50ms if None)
+    pub fn wait_for_request(
+        &self,
+        timeout: Duration,
+        poll_interval: Option<Duration>,
+    ) -> Option<String> {
+        let interval = poll_interval.unwrap_or(Duration::from_millis(50));
+        let start = std::time::Instant::now();
+
+        while start.elapsed() < timeout {
+            if let Some(request) = self.get_request() {
+                return Some(request);
+            }
+            thread::sleep(interval);
+        }
+
+        // One final check after timeout
+        self.get_request()
+    }
+
+    /// Waits for a request to arrive, panicking with a helpful message if it doesn't.
+    /// Use this when you expect a request to definitely arrive.
+    ///
+    /// # Arguments
+    /// * `timeout` - Maximum time to wait for a request
+    /// * `expected_desc` - Description of expected request for error message
+    pub fn expect_request(&self, timeout: Duration, expected_desc: &str) -> String {
+        self.wait_for_request(timeout, None).unwrap_or_else(|| {
+            panic!(
+                "Timed out after {:?} waiting for request: {}",
+                timeout, expected_desc
+            )
+        })
+    }
+}
+
+impl Drop for ServiceListener {
+    fn drop(&mut self) {
+        // Send shutdown signal
+        if let Some(tx) = self.shutdown_tx.take() {
+            let _ = tx.send(());
+        }
+        // Wait for server thread to finish
+        if let Some(handle) = self.server_thread.take() {
+            let _ = handle.join();
+        }
     }
 }

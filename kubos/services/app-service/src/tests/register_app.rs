@@ -47,7 +47,7 @@ fn register_good() {
 
     let register_query = format!(
         r#"mutation {{
-        register(path: \"{}\") {{
+        register(path: "{}") {{
             entry {{
                 active, 
                 app {{
@@ -107,7 +107,7 @@ fn register_good_exec() {
 
     let register_query = format!(
         r#"mutation {{
-        register(path: \"{}\") {{
+        register(path: "{}") {{
             entry {{
                 active, 
                 app {{
@@ -126,11 +126,7 @@ fn register_good_exec() {
 
     // We have to manually check the results, rather than using the test! macro, because the
     // path contains a dynamically created directory
-    let result: Vec<u8> = request!(service, register_query)
-        .body()
-        .iter()
-        .copied()
-        .collect();
+    let result: Vec<u8> = request!(service, register_query);
     let result: serde_json::Value =
         serde_json::from_str(::std::str::from_utf8(&result).unwrap()).unwrap();
 
@@ -179,7 +175,7 @@ fn register_good_config() {
 
     let register_query = format!(
         r#"mutation {{
-        register(path: \"{}\") {{
+        register(path: "{}") {{
             entry {{
                 active, 
                 app {{
@@ -199,11 +195,7 @@ fn register_good_config() {
 
     // We have to manually check the results, rather than using the test! macro, because the
     // path contains a dynamically created directory
-    let result: Vec<u8> = request!(service, register_query)
-        .body()
-        .iter()
-        .copied()
-        .collect();
+    let result: Vec<u8> = request!(service, register_query);
     let result: serde_json::Value =
         serde_json::from_str(::std::str::from_utf8(&result).unwrap()).unwrap();
 
@@ -244,7 +236,7 @@ fn register_no_manifest() {
 
     let register_query = format!(
         r#"mutation {{
-        register(path: \"{}\") {{
+        register(path: "{}") {{
             entry {{
                 active, 
                 app {{
@@ -293,7 +285,7 @@ fn register_no_name() {
 
     let register_query = format!(
         r#"mutation {{
-        register(path: \"{}\") {{
+        register(path: "{}") {{
             entry {{
                 active, 
                 app {{
@@ -343,7 +335,7 @@ fn register_bad_name() {
 
     let register_query = format!(
         r#"mutation {{
-        register(path: \"{}\") {{
+        register(path: "{}") {{
             entry {{
                 active, 
                 app {{
@@ -392,7 +384,7 @@ fn register_no_version() {
 
     let register_query = format!(
         r#"mutation {{
-        register(path: \"{}\") {{
+        register(path: "{}") {{
             entry {{
                 active, 
                 app {{
@@ -441,7 +433,7 @@ fn register_no_author() {
 
     let register_query = format!(
         r#"mutation {{
-        register(path: \"{}\") {{
+        register(path: "{}") {{
             entry {{
                 active, 
                 app {{
@@ -474,7 +466,7 @@ fn register_bad_path() {
     let service = mock_service!(registry_dir);
 
     let register_query = r#"mutation {
-        register(path: \"fake/files\") {
+        register(path: "fake/files") {
             entry {
                 active, 
                 app {
@@ -522,7 +514,7 @@ fn register_duplicate() {
 
     let register_query = format!(
         r#"mutation {{
-        register(path: \"{}\") {{
+        register(path: "{}") {{
             entry {{
                 active, 
                 app {{
@@ -593,7 +585,7 @@ fn register_no_active() {
 
     let register_query = format!(
         r#"mutation {{
-        register(path: \"{}\") {{
+        register(path: "{}") {{
             entry {{
                 active, 
                 app {{
@@ -668,7 +660,7 @@ fn register_good_archive() {
 
     let register_query = format!(
         r#"mutation {{
-        register(path: \"{}\") {{
+        register(path: "{}") {{
             entry {{
                 active,
                 app {{
@@ -745,7 +737,7 @@ fn register_archive_bad_structure() {
 
     let register_query = format!(
         r#"mutation {{
-        register(path: \"{}\") {{
+        register(path: "{}") {{
             entry {{
                 active,
                 app {{
@@ -784,7 +776,7 @@ fn register_archive_no_extension() {
 
     let register_query = format!(
         r#"mutation {{
-        register(path: \"{}\") {{
+        register(path: "{}") {{
             entry {{
                 active,
                 app {{
@@ -823,7 +815,7 @@ fn register_archive_wrong_extension() {
 
     let register_query = format!(
         r#"mutation {{
-        register(path: \"{}\") {{
+        register(path: "{}") {{
             entry {{
                 active,
                 app {{

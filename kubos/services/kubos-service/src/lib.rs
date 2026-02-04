@@ -108,6 +108,8 @@
 mod macros;
 mod service;
 
+pub use crate::macros::process_anyhow_chain;
+
 pub use crate::service::{Context, Service};
 pub use async_graphql::{EmptySubscription, EmptyMutation, ObjectType, Schema, SimpleObject};
 pub use radsat_system::logger as Logger;
