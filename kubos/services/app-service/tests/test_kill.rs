@@ -226,8 +226,9 @@ fn kill_app_not_running() {
     );
 
     // Wait for the app to exit (it exits immediately with an error since no valid args were provided)
-    // and for the service to recognize it has stopped
-    thread::sleep(Duration::from_millis(500));
+    // and for the service's monitor thread to detect it has stopped and update the registry.
+    // This needs to be long enough for the monitor thread to call wait() and process the exit.
+    thread::sleep(Duration::from_secs(2));
 
     // Kill the app
     let result = send_query(
