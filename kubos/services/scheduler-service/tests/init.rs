@@ -27,10 +27,8 @@ fn run_init_no_tasks() {
     let listener = ServiceListener::spawn("127.0.0.1", 9020);
     let _fixture = SchedulerFixture::spawn("127.0.0.1", 8020);
 
-    thread::sleep(Duration::from_millis(100));
-
-    // Check if the task actually ran
-    assert_eq!(listener.get_request(), None);
+    // With no tasks registered, no requests should be received
+    assert_eq!(listener.wait_for_request(Duration::from_millis(500), None), None);
 }
 
 #[tokio::test]
@@ -56,13 +54,11 @@ async fn run_init_single_no_delay() {
     fixture.import_task_list("imaging", &schedule_path, "init").await;
     fixture.activate_mode("init").await;
 
-    // Wait for the service to restart the scheduler
-    thread::sleep(Duration::from_millis(100));
-
     let query = r#"{"query":"mutation { startApp(name: \"basic-app\") { success, errors } }"}"#;
 
-    // Check if the task actually ran
-    assert_eq!(listener.get_request(), Some(query.to_owned()))
+    // Check if the task actually ran - use polling with timeout for CI reliability
+    let request = listener.expect_request(Duration::from_secs(5), "startApp mutation (basic-app)");
+    assert_eq!(request, query.to_owned())
 }
 
 #[tokio::test]
@@ -87,17 +83,14 @@ async fn run_init_single_with_delay() {
     fixture.import_task_list("imaging", &schedule_path, "init").await;
     fixture.activate_mode("init").await;
 
-    // This task should not have run immediately
-    thread::sleep(Duration::from_millis(100));
-    assert_eq!(listener.get_request(), None);
-
-    // Wait for service to run the task
-    thread::sleep(Duration::from_millis(1000));
+    // This task should not have run immediately - wait a short time and verify no request
+    assert_eq!(listener.wait_for_request(Duration::from_millis(500), None), None);
 
     let query = r#"{"query":"mutation { startApp(name: \"basic-app\") { success, errors } }"}"#;
 
-    // Check if the task actually ran
-    assert_eq!(listener.get_request(), Some(query.to_owned()))
+    // Check if the task actually ran after the delay - use polling with timeout for CI reliability
+    let request = listener.expect_request(Duration::from_secs(5), "startApp mutation (basic-app) after delay");
+    assert_eq!(request, query.to_owned())
 }
 
 #[tokio::test]
@@ -129,16 +122,15 @@ async fn run_init_two_tasks() {
     fixture.import_task_list("two", &schedule_path, "init").await;
     fixture.activate_mode("init").await;
 
-    // Wait for service to restart scheduler and run tasks
-    thread::sleep(Duration::from_millis(1100));
-
-    // Check if first task ran
+    // Check if first task ran - use polling with timeout for CI reliability
     let query = r#"{"query":"mutation { startApp(name: \"basic-app\") { success, errors } }"}"#;
-    assert_eq!(listener.get_request(), Some(query.to_owned()));
+    let request = listener.expect_request(Duration::from_secs(5), "first startApp mutation (basic-app)");
+    assert_eq!(request, query.to_owned());
 
-    // Check if second app ran in order
+    // Check if second app ran in order - it has a 1s delay, so allow extra time
     let query = r#"{"query":"mutation { startApp(name: \"other-app\") { success, errors } }"}"#;
-    assert_eq!(listener.get_request(), Some(query.to_owned()));
+    let request = listener.expect_request(Duration::from_secs(5), "second startApp mutation (other-app)");
+    assert_eq!(request, query.to_owned());
 }
 
 #[tokio::test]
@@ -164,13 +156,11 @@ async fn run_init_single_args() {
     fixture.import_task_list("imaging", &schedule_path, "init").await;
     fixture.activate_mode("init").await;
 
-    // Wait for service to restart scheduler and run task
-    thread::sleep(Duration::from_millis(100));
-
     let query = r#"{"query":"mutation { startApp(name: \"basic-app\", args: [\"-l\",\"-h\"]) { success, errors } }"}"#;
 
-    // Check if the task actually ran
-    assert_eq!(listener.get_request(), Some(query.to_owned()))
+    // Check if the task actually ran - use polling with timeout for CI reliability
+    let request = listener.expect_request(Duration::from_secs(5), "startApp mutation with args");
+    assert_eq!(request, query.to_owned())
 }
 
 #[tokio::test]
@@ -196,13 +186,11 @@ async fn run_init_single_custom_task_list() {
     fixture.import_task_list("imaging", &schedule_path, "init").await;
     fixture.activate_mode("init").await;
 
-    // Wait for service to restart scheduler and run task
-    thread::sleep(Duration::from_millis(100));
-
     let query = r#"{"query":"mutation { startApp(name: \"basic-app\", config: \"path/to/custom.toml\") { success, errors } }"}"#;
 
-    // Check if the task actually ran
-    assert_eq!(listener.get_request(), Some(query.to_owned()))
+    // Check if the task actually ran - use polling with timeout for CI reliability
+    let request = listener.expect_request(Duration::from_secs(5), "startApp mutation with custom config");
+    assert_eq!(request, query.to_owned())
 }
 
 #[tokio::test]
@@ -241,17 +229,18 @@ async fn run_init_two_schedules_one_mode() {
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
     fixture.import_task_list("second", &schedule_path, "init").await;
 
-    // Activate first schedule, wait for task to run
+    // Activate first schedule
     fixture.activate_mode("init").await;
-    thread::sleep(Duration::from_millis(1100));
 
-    // Check if the task ran
+    // Check if the first task ran - use polling with timeout for CI reliability
     let query = r#"{"query":"mutation { startApp(name: \"first-app\") { success, errors } }"}"#;
-    assert_eq!(listener.get_request(), Some(query.to_owned()));
+    let request = listener.expect_request(Duration::from_secs(5), "startApp mutation (first-app)");
+    assert_eq!(request, query.to_owned());
 
-    // Check if the task ran
+    // Check if the second task ran - it has 1s delay, so allow extra time
     let query = r#"{"query":"mutation { startApp(name: \"second-app\") { success, errors } }"}"#;
-    assert_eq!(listener.get_request(), Some(query.to_owned()))
+    let request = listener.expect_request(Duration::from_secs(5), "startApp mutation (second-app)");
+    assert_eq!(request, query.to_owned())
 }
 
 #[tokio::test]
@@ -291,21 +280,21 @@ async fn run_init_two_modes() {
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
     fixture.import_task_list("second", &schedule_path, "secondary").await;
 
-    // Activate first schedule, wait for task to run
+    // Activate first schedule
     fixture.activate_mode("init").await;
-    thread::sleep(Duration::from_millis(100));
 
-    // Check if the task ran
+    // Check if the task ran - use polling with timeout for CI reliability
     let query = r#"{"query":"mutation { startApp(name: \"first-app\") { success, errors } }"}"#;
-    assert_eq!(listener.get_request(), Some(query.to_owned()));
+    let request = listener.expect_request(Duration::from_secs(5), "startApp mutation (first-app)");
+    assert_eq!(request, query.to_owned());
 
-    // Activate second schedule, wait for task to run
+    // Activate second schedule
     fixture.activate_mode("secondary").await;
-    thread::sleep(Duration::from_millis(100));
 
-    // Check if the task ran
+    // Check if the task ran - use polling with timeout for CI reliability
     let query = r#"{"query":"mutation { startApp(name: \"second-app\") { success, errors } }"}"#;
-    assert_eq!(listener.get_request(), Some(query.to_owned()))
+    let request = listener.expect_request(Duration::from_secs(5), "startApp mutation (second-app)");
+    assert_eq!(request, query.to_owned())
 }
 
 #[tokio::test]
@@ -345,23 +334,22 @@ async fn run_init_two_modes_check_stop() {
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
     fixture.import_task_list("second", &schedule_path, "secondary").await;
 
-    // Activate first schedule, wait for task to run
+    // Activate first schedule (with delayed task)
     fixture.activate_mode("init").await;
-    thread::sleep(Duration::from_millis(100));
 
-    // Activate second schedule, wait for task to run
+    // Quickly activate second schedule before the first task runs
+    // (first task has 1s delay, so we need to switch modes before that)
+    thread::sleep(Duration::from_millis(100));
     fixture.activate_mode("secondary").await;
-    thread::sleep(Duration::from_millis(100));
 
-    // Check if the task ran
+    // Check if the second task ran - use polling with timeout for CI reliability
     let query = r#"{"query":"mutation { startApp(name: \"second-app\") { success, errors } }"}"#;
-    assert_eq!(listener.get_request(), Some(query.to_owned()));
+    let request = listener.expect_request(Duration::from_secs(5), "startApp mutation (second-app)");
+    assert_eq!(request, query.to_owned());
 
     // Give the scheduler time to run (or not) delayed task from first schedule
-    thread::sleep(Duration::from_millis(1100));
-
-    // Check if the task ran
-    assert_eq!(listener.get_request(), None)
+    // The first schedule's task should NOT run because we switched modes
+    assert_eq!(listener.wait_for_request(Duration::from_secs(2), None), None)
 }
 
 #[tokio::test]
@@ -386,18 +374,17 @@ async fn run_init_after_import() {
 
     // Activate mode
     fixture.activate_mode("init").await;
-    thread::sleep(Duration::from_millis(100));
 
     // Mode is empty, so no task should have run
-    assert_eq!(listener.get_request(), None);
+    assert_eq!(listener.wait_for_request(Duration::from_millis(500), None), None);
 
     // Import task_list then confirm task is run afterwards
     fixture.import_task_list("first", &schedule_path, "init").await;
-    thread::sleep(Duration::from_millis(1000));
 
-    // Check if the task ran
+    // Check if the task ran - use polling with timeout for CI reliability
     let query = r#"{"query":"mutation { startApp(name: \"first-app\") { success, errors } }"}"#;
-    assert_eq!(listener.get_request(), Some(query.to_owned()));
+    let request = listener.expect_request(Duration::from_secs(5), "startApp mutation (first-app) after import");
+    assert_eq!(request, query.to_owned());
 }
 
 #[tokio::test]
@@ -423,17 +410,15 @@ async fn run_init_check_remove() {
 
     // Activate mode
     fixture.activate_mode("init").await;
-    thread::sleep(Duration::from_millis(100));
 
-    // Task is delayed so it shouldn't have run
-    assert_eq!(listener.get_request(), None);
+    // Task is delayed so it shouldn't have run yet
+    assert_eq!(listener.wait_for_request(Duration::from_millis(500), None), None);
 
-    // Remove the task_list
+    // Remove the task_list before the delayed task runs
     fixture.remove_task_list("first", "init").await;
-    thread::sleep(Duration::from_millis(3100));
 
-    // Verify task did not run
-    assert_eq!(listener.get_request(), None);
+    // Verify task did not run even after the delay would have passed
+    assert_eq!(listener.wait_for_request(Duration::from_secs(4), None), None);
 }
 
 #[tokio::test]
@@ -459,20 +444,16 @@ async fn run_init_import_twice() {
     fixture.import_task_list("imaging", &schedule_path, "init").await;
     fixture.activate_mode("init").await;
 
-    // Wait for the service to restart the scheduler
-    thread::sleep(Duration::from_millis(100));
-
     let query = r#"{"query":"mutation { startApp(name: \"basic-app\") { success, errors } }"}"#;
 
-    // Check if the task actually ran
-    assert_eq!(listener.get_request(), Some(query.to_owned()));
+    // Check if the task actually ran - use polling with timeout for CI reliability
+    let request = listener.expect_request(Duration::from_secs(5), "first startApp mutation (basic-app)");
+    assert_eq!(request, query.to_owned());
 
     // Import task list again and verify task ran again
     fixture.import_task_list("imaging", &schedule_path, "init").await;
 
-    // Wait for the service to restart the scheduler
-    thread::sleep(Duration::from_millis(100));
-
-    // Check if the task actually ran
-    assert_eq!(listener.get_request(), Some(query.to_owned()))
+    // Check if the task actually ran again - use polling with timeout for CI reliability
+    let request = listener.expect_request(Duration::from_secs(5), "second startApp mutation (basic-app) after re-import");
+    assert_eq!(request, query.to_owned())
 }

@@ -6237,13 +6237,14 @@ checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 name = "utils"
 version = "0.1.0"
 dependencies = [
+ "axum",
+ "bytes 1.11.0",
  "env_logger 0.9.3",
  "log 0.4.29",
  "reqwest 0.12.28",
  "serde_json",
  "tempfile",
  "tokio 1.49.0",
- "warp 0.1.23",
 ]
 
 [[package]]
