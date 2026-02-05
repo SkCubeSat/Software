@@ -20,6 +20,7 @@ use kubos_app::ServiceConfig;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
+use std::{thread, time::Duration};
 
 mod utils;
 pub use crate::utils::*;
@@ -93,7 +94,7 @@ fn app_no_args() {
     fixture.start_service();
 
     let result = send_query(
-        config,
+        config.clone(),
         r#"mutation {
             startApp(name: "rust-proj") {
                 errors,
@@ -103,11 +104,42 @@ fn app_no_args() {
     );
 
     // The test app is setup to verify arguments, so for this case we want to make sure it failed
-    // as expected
-    assert_eq!(
-        result["startApp"]["errors"].as_str().unwrap(),
-        "Failed to start app: App returned exit status: 1"
-    );
+    // as expected.
+    // Sometimes the app executes slower than the app service can detect it (e.g., on slower CI
+    // runners), so we need to poll appStatus to check the result.
+    if result["startApp"]["success"] == serde_json::json!(true) {
+        let mut running = true;
+        while running {
+            let status_result = send_query(
+                config.clone(),
+                r#"query {
+                    appStatus(name: "rust-proj") {
+                        running,
+                        lastRc
+                    }
+                }"#,
+            );
+            if status_result["appStatus"][0]["running"].is_boolean() {
+                running = status_result["appStatus"][0]["running"].as_bool().unwrap();
+            }
+            if !running {
+                // App finished - verify it exited with code 1
+                assert_eq!(
+                    status_result["appStatus"][0]["lastRc"].as_i64().unwrap(),
+                    1,
+                    "Expected app to exit with code 1 (no valid arguments)"
+                );
+            } else {
+                thread::sleep(Duration::from_millis(100));
+            }
+        }
+    } else {
+        // App exited quickly enough for the error to be captured
+        assert_eq!(
+            result["startApp"]["errors"].as_str().unwrap(),
+            "Failed to start app: App returned exit status: 1"
+        );
+    }
 }
 
 #[test]

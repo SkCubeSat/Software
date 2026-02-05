@@ -33,8 +33,8 @@ fn test_parameter() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8111;
-    let udp = 8121;
+    let port = 8220;
+    let udp = 9220;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), Some(SQL));
 
@@ -62,8 +62,8 @@ fn test_parameters_multiple() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8112;
-    let udp = 8122;
+    let port = 8221;
+    let udp = 9221;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), Some(SQL));
 
@@ -98,8 +98,8 @@ fn test_parameters_single() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8113;
-    let udp = 8123;
+    let port = 8222;
+    let udp = 9222;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), Some(SQL));
 
@@ -132,8 +132,8 @@ fn test_conflict() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8114;
-    let udp = 8124;
+    let port = 8223;
+    let udp = 9223;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), Some(SQL));
 

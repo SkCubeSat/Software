@@ -19,7 +19,6 @@ mod util;
 use chrono::prelude::*;
 use chrono::Utc;
 use serde_json::json;
-use std::thread;
 use std::time::Duration;
 use util::SchedulerFixture;
 use utils::testing::ServiceListener;
@@ -47,16 +46,14 @@ async fn run_onetime_future() {
     fixture.import_task_list("imaging", &schedule_path, "init").await;
     fixture.activate_mode("init").await;
 
-    // Check if the task actually ran
-    assert_eq!(listener.get_request(), None);
-
-    // Wait for the service to restart the scheduler
-    thread::sleep(Duration::from_millis(1100));
+    // Task has 1s delay, shouldn't run immediately
+    assert_eq!(listener.wait_for_request(Duration::from_millis(500), None), None);
 
     let query = r#"{"query":"mutation { startApp(name: \"basic-app\") { success, errors } }"}"#;
 
-    // Check if the task actually ran
-    assert_eq!(listener.get_request(), Some(query.to_owned()))
+    // Check if the task actually ran after delay - use polling with timeout for CI reliability
+    let request = listener.expect_request(Duration::from_secs(5), "startApp mutation (basic-app) after delay");
+    assert_eq!(request, query.to_owned())
 }
 
 #[tokio::test]
@@ -87,9 +84,6 @@ async fn run_onetime_past() {
     fixture.import_task_list("imaging", &schedule_path, "init").await;
     fixture.activate_mode("init").await;
 
-    // Wait for the service to restart the scheduler
-    thread::sleep(Duration::from_millis(1100));
-
-    // Verify the task did not run
-    assert_eq!(listener.get_request(), None);
+    // Task is in the past, so it should not run - wait and verify no request
+    assert_eq!(listener.wait_for_request(Duration::from_secs(2), None), None);
 }

@@ -370,7 +370,7 @@ After setting up logging, we'll want to fetch our service's configuration settin
         Logger::init("radio-service").unwrap();
 
         // Get the main service configuration from the system's config.toml file
-        let service_config = kubos_system::Config::new("radio-service")?;
+        let service_config = radsat_system::Config::new("radio-service")?;
 
         // Pull out our communication settings
         let config = CommsConfig::new(service_config)?;
@@ -407,7 +407,7 @@ The initialization should look like this:
         Logger::init("radio-service").unwrap();
 
         // Get the main service configuration from the system's config.toml file
-        let service_config = kubos_system::Config::new("radio-service")?;
+        let service_config = radsat_system::Config::new("radio-service")?;
 
         // Pull out our communication settings
         let config = CommsConfig::new(service_config)?;
@@ -446,7 +446,7 @@ For the moment, we'll put a loop at the end of our program to keep from exiting.
         Logger::init("radio-service").unwrap();
 
         // Get the main service configuration from the system's config.toml file
-        let service_config = kubos_system::Config::new("radio-service")?;
+        let service_config = radsat_system::Config::new("radio-service")?;
 
         // Pull out our communication settings
         let config = CommsConfig::new(service_config)?;
@@ -608,7 +608,7 @@ All together, our code so far should look like this:
         Logger::init("radio-service").unwrap();
 
         // Get the main service configuration from the system's config.toml file
-        let service_config = kubos_system::Config::new("test-comms")?;
+        let service_config = radsat_system::Config::new("test-comms")?;
     
         // Pull out our communication settings
         let config = CommsConfig::new(service_config)?;
@@ -914,7 +914,7 @@ We can now define and start our GraphQL front-end in the main code:
         Logger::init("radio-service").unwrap();
 
         // Get the main service configuration from the system's config.toml file
-        let service_config = kubos_system::Config::new("radio-service")?;
+        let service_config = radsat_system::Config::new("radio-service")?;
 
         // Pull out our communication settings
         let config = CommsConfig::new(service_config.clone())?;

@@ -22,7 +22,7 @@ use std::fs;
 use tempfile::TempDir;
 
 // Add two versions of the app to the requested app service
-fn test_setup(service: &Service) {
+fn test_setup(service: &Service<schema::QueryRoot, schema::MutationRoot, AppRegistry>) {
     let app_dir = TempDir::new().unwrap();
     let app_bin = app_dir.path().join("dummy-app");
 
@@ -39,7 +39,7 @@ fn test_setup(service: &Service) {
 
     let query = format!(
         r#"mutation {{
-        register(path: \"{}\") {{
+        register(path: "{}") {{
             success,
         }}
     }}"#,
@@ -81,7 +81,7 @@ fn set_version_good() {
     test_setup(&service);
 
     let query = r#"mutation {
-        setVersion(name: \"dummy\", version: \"0.0.1\") {
+        setVersion(name: "dummy", version: "0.0.1") {
             errors,
             success
         }
@@ -97,7 +97,7 @@ fn set_version_good() {
     test!(service, query, expected);
 
     let app_query = r#"{ 
-        registeredApps(name: \"dummy\") {
+        registeredApps(name: "dummy") {
             active,
             app {
                 name,
@@ -136,7 +136,7 @@ fn set_version_same() {
     test_setup(&service);
 
     let query = r#"mutation {
-        setVersion(name: \"dummy\", version: \"0.0.2\") {
+        setVersion(name: "dummy", version: "0.0.2") {
             errors,
             success
         }
@@ -152,7 +152,7 @@ fn set_version_same() {
     test!(service, query, expected);
 
     let app_query = r#"{ 
-        registeredApps(name: \"dummy\") {
+        registeredApps(name: "dummy") {
             active,
             app {
                 name,
@@ -191,7 +191,7 @@ fn set_version_bad() {
     test_setup(&service);
 
     let query = r#"mutation {
-        setVersion(name: \"dummy\", version: \"0.0.3\") {
+        setVersion(name: "dummy", version: "0.0.3") {
             errors,
             success
         }

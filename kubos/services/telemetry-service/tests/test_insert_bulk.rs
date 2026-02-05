@@ -25,8 +25,8 @@ macro_rules! test_mutation_query_results {
         let db_path = db_dir.path().join("test.db");
 
         let db = db_path.to_str().unwrap();
-        let port: u16 = 8110 + $port_offset;
-        let udp: u16 = 8210 + $port_offset;
+        let port: u16 = 8260 + $port_offset;
+        let udp: u16 = 9260 + $port_offset;
 
         let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), None);
         let mutation_expected = json!($mutation_expected);

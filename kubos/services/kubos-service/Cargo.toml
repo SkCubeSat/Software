@@ -22,9 +22,9 @@ axum = "0.8.4"
 # Pinning this to 0.3.15 due to kubos linux build issues with v0.3.16
 pkg-config = "= 0.3.15"
 tokio = { version = "1.45.1", features = ["rt-multi-thread", "macros"] }
+anyhow = "1.0.98"
 
 [dev-dependencies]
-anyhow = "1.0.98"
 thiserror = "2"
 
 

@@ -25,9 +25,10 @@ use chrono::{DateTime, Utc};
 use async_graphql::SimpleObject;
 use log::info;
 use serde::{Deserialize, Serialize};
-use std::fs;
+use std::fs::{self, File, FileTimes};
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::time::SystemTime;
 
 // Tokio imports temporarily disabled for compatibility
 
@@ -143,6 +144,21 @@ pub fn import_task_list(
 
     fs::copy(path, &schedule_dest).map_err(|e| SchedulerError::ImportError {
         err: e.to_string(),
+        name: name.to_owned(),
+    })?;
+
+    // Update the file's modification time to now (fs::copy preserves the source's mtime)
+    // This ensures time_imported reflects when the file was actually imported
+    let file = File::options()
+        .write(true)
+        .open(&schedule_dest)
+        .map_err(|e| SchedulerError::ImportError {
+            err: format!("Failed to open file to update mtime: {}", e),
+            name: name.to_owned(),
+        })?;
+    let times = FileTimes::new().set_modified(SystemTime::now());
+    file.set_times(times).map_err(|e| SchedulerError::ImportError {
+        err: format!("Failed to update file mtime: {}", e),
         name: name.to_owned(),
     })?;
 

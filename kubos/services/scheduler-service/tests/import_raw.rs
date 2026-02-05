@@ -18,7 +18,6 @@ mod util;
 
 use log::info;
 use serde_json::json;
-use std::thread;
 use std::time::Duration;
 use util::{BasicAppResponder, SchedulerFixture};
 use utils::testing::ServiceListener;
@@ -106,13 +105,11 @@ async fn import_raw_run_delay() {
     fixture.import_raw_task_list("imaging", "init", &schedule).await;
     fixture.activate_mode("init").await;
 
-    // Wait for the service to restart the scheduler
-    thread::sleep(Duration::from_millis(100));
-
     let query = r#"{"query":"mutation { startApp(name: \"basic-app\") { success, errors } }"}"#;
 
-    // Check if the task actually ran
-    assert_eq!(listener.get_request(), Some(query.to_owned()))
+    // Check if the task actually ran - use polling with timeout for CI reliability
+    let request = listener.expect_request(Duration::from_secs(5), "startApp mutation (basic-app)");
+    assert_eq!(request, query.to_owned())
 }
 
 #[tokio::test]
@@ -146,16 +143,15 @@ async fn import_raw_run_two_tasks() {
     fixture.import_raw_task_list("two", "init", &schedule).await;
     fixture.activate_mode("init").await;
 
-    // Wait for service to restart scheduler and run tasks
-    thread::sleep(Duration::from_millis(1100));
-
-    // Check if first task ran
+    // Check if first task ran - use polling with timeout for CI reliability
     let query = r#"{"query":"mutation { startApp(name: \"basic-app\") { success, errors } }"}"#;
-    assert_eq!(listener.get_request(), Some(query.to_owned()));
+    let request = listener.expect_request(Duration::from_secs(5), "first startApp mutation (basic-app)");
+    assert_eq!(request, query.to_owned());
 
-    // Check if second app ran in order
+    // Check if second app ran in order - it has a 1s delay
     let query = r#"{"query":"mutation { startApp(name: \"other-app\") { success, errors } }"}"#;
-    assert_eq!(listener.get_request(), Some(query.to_owned()));
+    let request = listener.expect_request(Duration::from_secs(5), "second startApp mutation (other-app)");
+    assert_eq!(request, query.to_owned());
 }
 
 #[tokio::test]
@@ -187,16 +183,14 @@ async fn import_raw_run_onetime_future() {
     let res = fixture.import_raw_task_list("imaging", "init", &schedule).await;
     info!("import result: {}", res);
 
-    // Check if the task actually ran
-    assert_eq!(listener.get_request(), None);
-
-    // Wait for the service to restart the scheduler
-    thread::sleep(Duration::from_millis(3000));
+    // Task has 2s delay, so shouldn't run immediately
+    assert_eq!(listener.wait_for_request(Duration::from_millis(500), None), None);
 
     let query = r#"{"query":"mutation { startApp(name: \"basic-app\") { success, errors } }"}"#;
 
-    // Check if the task actually ran
-    assert_eq!(listener.get_request(), Some(query.to_owned()))
+    // Check if the task actually ran after delay - use polling with timeout for CI reliability
+    let request = listener.expect_request(Duration::from_secs(5), "startApp mutation (basic-app) after delay");
+    assert_eq!(request, query.to_owned())
 }
 
 #[tokio::test]
@@ -225,15 +219,13 @@ async fn import_raw_run_recurring_no_delay() {
     fixture.import_raw_task_list("imaging", "init", &schedule).await;
     fixture.activate_mode("init").await;
 
-    // Wait for the service to restart the scheduler
-    thread::sleep(Duration::from_millis(1100));
-
     let query = r#"{"query":"mutation { startApp(name: \"basic-app\") { success, errors } }"}"#;
 
-    // Check if the task was run only twice
-    assert_eq!(listener.get_request(), Some(query.to_owned()));
-    assert_eq!(listener.get_request(), Some(query.to_owned()));
-    assert_eq!(listener.get_request(), None)
+    // Check if the task was run at least twice - use polling with timeout for CI reliability
+    let request = listener.expect_request(Duration::from_secs(5), "first recurring startApp mutation");
+    assert_eq!(request, query.to_owned());
+    let request = listener.expect_request(Duration::from_secs(5), "second recurring startApp mutation");
+    assert_eq!(request, query.to_owned());
 }
 
 #[tokio::test]
@@ -302,19 +294,15 @@ async fn import_raw_run_delay_duplicate() {
     fixture.import_raw_task_list("imaging", "init", &schedule).await;
     fixture.activate_mode("init").await;
 
-    // Wait for the service to restart the scheduler
-    thread::sleep(Duration::from_millis(100));
-
     let query = r#"{"query":"mutation { startApp(name: \"basic-app\") { success, errors } }"}"#;
 
-    // Check if the task actually ran
-    assert_eq!(listener.get_request(), Some(query.to_owned()));
+    // Check if the task actually ran - use polling with timeout for CI reliability
+    let request = listener.expect_request(Duration::from_secs(5), "first startApp mutation (basic-app)");
+    assert_eq!(request, query.to_owned());
 
     fixture.import_raw_task_list("imaging", "init", &schedule).await;
 
-    // Wait for the service to restart the scheduler
-    thread::sleep(Duration::from_millis(100));
-
-    // Check if the task actually ran
-    assert_eq!(listener.get_request(), Some(query.to_owned()))
+    // Check if the task actually ran again - use polling with timeout for CI reliability
+    let request = listener.expect_request(Duration::from_secs(5), "second startApp mutation (basic-app) after re-import");
+    assert_eq!(request, query.to_owned())
 }

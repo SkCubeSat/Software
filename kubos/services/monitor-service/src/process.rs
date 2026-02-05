@@ -274,8 +274,8 @@ pub fn running_pids() -> Result<Vec<i32>, Error> {
 #[cfg(test)]
 pub fn root_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("src")
-        .join("test")
+        .join("tests")
+        .join("testroot")
 }
 
 #[cfg(test)]

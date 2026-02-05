@@ -42,8 +42,8 @@ fn test_route_file() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8111;
-    let udp = 8121;
+    let port = 8290;
+    let udp = 9290;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), Some(SQL));
 
@@ -88,8 +88,8 @@ fn test_route_response() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8112;
-    let udp = 8122;
+    let port = 8291;
+    let udp = 9291;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), Some(SQL));
 
@@ -123,8 +123,8 @@ fn test_route_filter() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8113;
-    let udp = 8123;
+    let port = 8292;
+    let udp = 9292;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), Some(SQL));
 
@@ -168,8 +168,8 @@ fn test_route_compress_file() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8114;
-    let udp = 8124;
+    let port = 8293;
+    let udp = 9293;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), Some(SQL));
 
@@ -224,8 +224,8 @@ fn test_route_compress_response() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8115;
-    let udp = 8125;
+    let port = 8294;
+    let udp = 9294;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), Some(SQL));
 
@@ -259,8 +259,8 @@ fn test_route_parameters() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8116;
-    let udp = 8126;
+    let port = 8295;
+    let udp = 9295;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), Some(SQL));
 
@@ -305,8 +305,8 @@ fn test_route_conflict() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8117;
-    let udp = 8127;
+    let port = 8296;
+    let udp = 9296;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), Some(SQL));
 

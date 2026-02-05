@@ -28,8 +28,8 @@ fn test_insert_auto_timestamp() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8111;
-    let udp = 8121;
+    let port = 8250;
+    let udp = 9250;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), None);
 
@@ -77,8 +77,8 @@ fn test_insert_custom_timestamp() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8112;
-    let udp = 8122;
+    let port = 8251;
+    let udp = 9251;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), None);
 
@@ -128,8 +128,8 @@ fn test_insert_multi_auto() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8113;
-    let udp = 8123;
+    let port = 8252;
+    let udp = 9252;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), None);
 
@@ -211,8 +211,8 @@ fn test_insert_current_timestamp() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8114;
-    let udp = 8124;
+    let port = 8253;
+    let udp = 9253;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), None);
 

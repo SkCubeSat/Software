@@ -18,7 +18,7 @@ mod common;
 
 use crate::common::*;
 use file_service::recv_loop;
-use kubos_system::Config as ServiceConfig;
+use radsat_system::Config as ServiceConfig;
 use std::fs;
 use std::thread;
 use std::time::Duration;

@@ -1,0 +1,16 @@
+[package]
+name = "comms-services"
+edition = "2024"
+version.workspace = true
+description.workspace = true
+documentation.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+async-graphql = "7.0.16"
+async-graphql-axum = "7.0.17"
+thiserror = "1.0"
+
+log = "^0.4.0"
+rust-i2c = { path = "../../kubos/hal/rust-hal/rust-i2c" }
