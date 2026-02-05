@@ -1,0 +1,18 @@
+[package]
+name = "dosimeter"
+edition = "2024"
+version.workspace = true
+description.workspace = true
+documentation.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+async-graphql = "7.0.17"
+async-graphql-axum = "7.0.17"
+kubos-service = { path = "../../../kubos/services/kubos-service" }
+rust-i2c = { path = "../../../kubos/hal/rust-hal/rust-i2c"}
+tokio = { version = "1.45.1", features = ["full"] }
+axum = "0.8.4"
+chrono = "0.4.41"
+log = "^0.4.0"
