@@ -48,6 +48,7 @@ members = [
     "kubos/test/integration/large_upload",
     "kubos/utils",
     "services/simulator-services/clyde-3g-eps-simulator",
+    "mission-applications/first-test-application",
     # Rust + C crates
     "kubos/apis/isis-ants-api",
     "kubos/apis/isis-imtq-api",

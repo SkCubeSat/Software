@@ -401,9 +401,9 @@
 #![deny(missing_docs)]
 #![deny(warnings)]
 
-#[macro_use]
-extern crate juniper;
-#[macro_use]
+// #[macro_use]
+// extern crate juniper;
+// #[macro_use]
 extern crate kubos_service;
 
 pub mod models;
@@ -412,7 +412,7 @@ pub mod schema;
 mod tests;
 
 use crate::models::subsystem::Subsystem;
-use crate::schema::mutation::Root as MutationRoot;
+use crate::schema::mutation::MutationRoot as MutationRoot;
 use crate::schema::query::Root as QueryRoot;
 use kubos_service::{Config, Logger, Service};
 use log::error;
@@ -426,6 +426,7 @@ fn main() {
             err
         })
         .unwrap();
+    println!("Loaded config: {:?}", config);
     let bus = config
         .get("bus")
         .ok_or_else(|| {

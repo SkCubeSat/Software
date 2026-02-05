@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-use failure::{bail, Error};
+use anyhow::{bail, Error};
 use kubos_app::ServiceConfig;
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
@@ -286,19 +286,15 @@ impl Drop for AppServiceFixture {
 }
 
 pub fn send_query(config: ServiceConfig, query: &str) -> serde_json::Value {
-    let client = reqwest::Client::new();
+    let uri = format!("http://{}/graphql", config.hosturl().unwrap());
 
-    let uri = format!("http://{}", config.hosturl().unwrap());
+    let body = serde_json::json!({ "query": query });
 
-    let mut map = ::std::collections::HashMap::new();
-    map.insert("query", query);
-
-    let response: serde_json::Value = client
-        .post(&uri)
-        .json(&map)
-        .send()
+    let response: serde_json::Value = ureq::post(&uri)
+        .set("Content-Type", "application/json")
+        .send_json(&body)
         .expect("Couldn't send request")
-        .json()
+        .into_json()
         .expect("Couldn't deserialize response");
 
     if let Some(data) = response.get("data") {

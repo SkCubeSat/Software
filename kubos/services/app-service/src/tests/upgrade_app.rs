@@ -42,7 +42,7 @@ fn upgrade_good() {
 
     let upgrade_query = format!(
         r#"mutation {{
-        register(path: \"{}\") {{
+        register(path: "{}") {{
             entry {{
                 active, 
                 app {{
@@ -100,7 +100,7 @@ fn upgrade_good() {
     test!(service, upgrade_query, expected);
 
     let app_query = r#"{ 
-            registeredApps(name: \"dummy\") {
+            registeredApps(name: "dummy") {
                 active,
                 app {
                     name,
@@ -156,7 +156,7 @@ fn upgrade_bad() {
 
     let upgrade_query = format!(
         r#"mutation {{
-        register(path: \"{}\") {{
+        register(path: "{}") {{
             entry {{
                 active, 
                 app {{
@@ -211,7 +211,7 @@ fn upgrade_bad() {
     test!(service, upgrade_query, expected);
 
     let app_query = r#"{ 
-            registeredApps(name: \"dummy\") {
+            registeredApps(name: "dummy") {
                 active,
                 app {
                     name,

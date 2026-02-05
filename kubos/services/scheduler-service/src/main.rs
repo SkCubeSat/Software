@@ -29,12 +29,14 @@ mod task_list;
 
 use crate::error::SchedulerError;
 use kubos_service::{Config, Logger, Service};
-use log::{error, info};
+use log::{error};
 use scheduler::{Scheduler, DEFAULT_SCHEDULES_DIR};
 use schema::{MutationRoot, QueryRoot};
 
 fn main() -> Result<(), SchedulerError> {
+    eprintln!("Starting scheduler service main()");
     Logger::init("kubos-scheduler-service").unwrap();
+    eprintln!("Logger initialized");
 
     let config = Config::new("scheduler-service").map_err(|err| {
         error!("Failed to load service config: {:?}", err);
@@ -65,8 +67,6 @@ fn main() -> Result<(), SchedulerError> {
 
     let scheduler = Scheduler::new(&scheduler_dir, &apps_service_url)?;
 
-    info!("Starting scheduler-service - {:?}", scheduler.scheduler_dir);
-
     scheduler.init()?;
 
     // For now we will only kick off scheduling when the scheduler comes up
@@ -75,6 +75,5 @@ fn main() -> Result<(), SchedulerError> {
     }
 
     Service::new(config, scheduler, QueryRoot, MutationRoot).start();
-
     Ok(())
 }

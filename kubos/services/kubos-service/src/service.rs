@@ -14,18 +14,21 @@
 // limitations under the License.
 //
 
-use juniper::{
-    Context as JuniperContext, EmptySubscription, GraphQLType, GraphQLTypeAsync, RootNode,
+use async_graphql::{EmptySubscription, ObjectType, Schema, http::GraphiQLSource};
+use async_graphql_axum::GraphQL;
+use axum::{
+    Router,
+    response::{self, IntoResponse},
+    routing::get,
 };
 use log::info;
 use radsat_system::Config;
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::{Arc, RwLock};
+use tokio::net::TcpListener;
 
-use warp::{reply::Reply, Filter};
-
-/// Context struct used by a service to provide Juniper context,
+/// Context struct used by a service to provide async-graphql context,
 /// subsystem access and persistent storage.
 #[derive(Clone)]
 pub struct Context<T> {
@@ -34,8 +37,6 @@ pub struct Context<T> {
     /// Persistent key-value storage for the service
     pub storage: Arc<RwLock<HashMap<String, String>>>,
 }
-
-impl<T> JuniperContext for Context<T> {}
 
 impl<T> Context<T> {
     /// Returns a reference to the context's subsystem instance
@@ -104,83 +105,66 @@ impl<T> Context<T> {
 ///     schema::MutationRoot,
 /// ).start();
 /// ```
-pub struct Service {
+pub struct Service<Query, Mutation, S> {
     config: Config,
-    // Using a boxed filter that returns any type implementing Reply
-    filter: warp::filters::BoxedFilter<(Box<dyn Reply>,)>,
+    schema: Schema<Query, Mutation, EmptySubscription>,
+    _phantom: std::marker::PhantomData<S>,
 }
 
-impl Service {
+impl<Query, Mutation, S> Service<Query, Mutation, S> {
+    /// Returns a reference to the GraphQL schema.
+    /// Useful for testing purposes.
+    pub fn schema(&self) -> &Schema<Query, Mutation, EmptySubscription> {
+        &self.schema
+    }
+}
+
+impl<Query, Mutation, S> Service<Query, Mutation, S>
+where
+    Query: ObjectType + 'static,
+    Mutation: ObjectType + 'static,
+    S: Send + Sync + Clone + 'static,
+{
     /// Creates a new service instance
     ///
     /// # Arguments
     ///
-    /// `name` - The name of the service. This is used to find the appropriate config information
+    /// `config` - The service configuration
     /// `subsystem` - An instance of the subsystem struct. This one instance will be used by all queries.
     /// `query` - The root query struct holding all other GraphQL queries.
     /// `mutation` - The root mutation struct holding all other GraphQL mutations.
-    pub fn new<Query, Mutation, S>(
+    pub fn new(
         config: Config,
         subsystem: S,
         query: Query,
         mutation: Mutation,
-    ) -> Self
-    where
-        Query: GraphQLType<Context = Context<S>, TypeInfo = ()>
-            + GraphQLTypeAsync<Context = Context<S>>
-            + Send
-            + Sync
-            + 'static,
-        Mutation: GraphQLType<Context = Context<S>, TypeInfo = ()>
-            + GraphQLTypeAsync<Context = Context<S>>
-            + Send
-            + Sync
-            + 'static,
-        S: Send + Sync + Clone + 'static,
-    {
-        // Create the root node with query, mutation, and empty subscription
-        let root_node = RootNode::new(query, mutation, EmptySubscription::<Context<S>>::new());
-
+    ) -> Self {
         let context = Context {
             subsystem,
             storage: Arc::new(RwLock::new(HashMap::new())),
         };
 
-        // Wrap the root node in an Arc to share it
-        let schema = Arc::new(root_node);
-
-        // Clone context for filter use
-        let ctx = context.clone();
-
-        // Create the GraphQL routes
-        // POST /graphql -> GraphQL API
-        let graphql =
-            warp::path("graphql")
-                .and(warp::post())
-                .and(juniper_warp::make_graphql_filter(
-                    schema,
-                    warp::any().map(move || ctx.clone()),
-                ));
-
-        // GET /graphiql -> GraphiQL interface
-        let graphiql = warp::path("graphiql")
-            .and(warp::get())
-            .and(juniper_warp::graphiql_filter("/graphql", None));
-
-        // Create a single filter that handles both routes and box the reply
-        let routes = graphql
-            .or(graphiql)
-            .map(|reply| Box::new(reply) as Box<dyn Reply>)
-            .boxed();
+        // Build the GraphQL schema with the context as data
+        let schema = Schema::build(query, mutation, EmptySubscription)
+            .data(context)
+            .finish();
 
         Service {
             config,
-            filter: routes,
+            schema,
+            _phantom: std::marker::PhantomData,
         }
     }
 
-    /// Starts the service's GraphQL/HTTP server. This function runs
-    /// without return.
+    /// GraphiQL endpoint handler
+    async fn graphiql() -> impl IntoResponse {
+        response::Html(GraphiQLSource::build().endpoint("/graphql").finish())
+    }
+
+
+
+    /// Starts the service's GraphQL/HTTP server using a blocking runtime.
+    /// This is the main entry point for services and maintains backward compatibility.
     ///
     /// # Panics
     ///
@@ -188,28 +172,44 @@ impl Service {
     /// cannot be bound (like if they are already in use).
     pub fn start(self) {
         let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(self.start_async());
+    }
 
-        rt.block_on(async {
-            let hosturl = self
-                .config
-                .hosturl()
-                .ok_or_else(|| {
-                    log::error!("Failed to load service URL");
-                    "Failed to load service URL"
-                })
-                .unwrap();
+    /// Starts the service's GraphQL/HTTP server asynchronously.
+    /// This method can be used in async contexts.
+    ///
+    /// # Panics
+    ///
+    /// The HTTP interface will panic if the ip address and port provided
+    /// cannot be bound (like if they are already in use).
+    pub async fn start_async(self) {
+        let hosturl = self
+            .config
+            .hosturl()
+            .ok_or_else(|| {
+                log::error!("Failed to load service URL");
+                "Failed to load service URL"
+            })
+            .unwrap();
 
-            let addr = hosturl
-                .parse::<SocketAddr>()
-                .map_err(|err| {
-                    log::error!("Failed to parse SocketAddr: {:?}", err);
-                    err
-                })
-                .unwrap();
+        let addr = hosturl
+            .parse::<SocketAddr>()
+            .map_err(|err| {
+                log::error!("Failed to parse SocketAddr: {:?}", err);
+                err
+            })
+            .unwrap();
 
-            info!("Listening on: {}", addr);
+        // Create our application with routes
+        let app = Router::new()
+            .route("/graphql", get(Self::graphiql).post_service(GraphQL::new(self.schema)))
+            .route("/graphiql", get(Self::graphiql));
 
-            warp::serve(self.filter).run(addr).await;
-        });
+        info!("Listening on: {}", addr);
+
+        // Start the server
+        axum::serve(TcpListener::bind(addr).await.unwrap(), app)
+            .await
+            .unwrap();
     }
 }

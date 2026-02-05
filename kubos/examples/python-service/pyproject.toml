@@ -1,14 +1,18 @@
-[tool.poetry]
+[project]
 name = "python-service"
 version = "0.1.0"
-description = ""
+description = "Example Python Service for KubOS"
 authors = []
-
-[tool.poetry.dependencies]
-python = "^3.7"
-kubos = { path = "../../libs/kubos/", develop = true }
-kubos-service = { path = "../../libs/kubos-service", develop = true }
+requires-python = ">=3.8"
+dependencies = [
+    "kubos",
+    "kubos-service",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.a# pi"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv.sources]
+kubos = { workspace = true }
+kubos-service = { workspace = true }

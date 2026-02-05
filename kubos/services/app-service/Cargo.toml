@@ -15,21 +15,24 @@ anyhow = "1.0.97"
 chrono = "0.4"
 thiserror = "1.0.69"
 fs_extra = "1.1.0"
-juniper = "0.11"
+async-graphql = "7.0.16"
 log = "^0.4.0"
 nix = "0.11.0"
 serde = "1.0"
-serde_json = "1.0"
+serde_json = "1.0.140"
 serde_derive = "1.0"
 toml = "0.4"
 uuid = { version = "0.6", features = ["v4"] }
 tempfile = "3"
+tokio = { version = "1.45.1", features = ["rt-multi-thread", "macros"] }
 
 [dev-dependencies]
 radsat-system = { path = "../../apis/system-api" }
-reqwest = "0.9.9"
-serde_json = "1.0"
-warp = "0.1.12"
+ureq = { version = "2.12.1", features = ["json"] }
+serde_json = "1.0.140"
+axum = "0.8.4"
+tower = "0.5"
+async-graphql-axum = "7.0.17"
 
 [package.metadata.release]
 release = false

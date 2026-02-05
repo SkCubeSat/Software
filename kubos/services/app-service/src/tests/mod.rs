@@ -39,14 +39,18 @@ macro_rules! mock_service {
 
 macro_rules! request {
     ($service:ident, $query:ident) => {{
-        // Warp doesn't like control characters (ie. new line characters)
-        // so we need to remove them before we send the request
-        let query = $query.replace("\n", "");
-        warp::test::request()
-            .header("Content-Type", "application/json")
-            .method("POST")
-            .body(format!("{{\"query\": \"{}\"}}", query))
-            .reply(&$service.filter)
+        // Execute GraphQL query directly on the schema
+        let query_str = $query.replace("\n", " ");
+        let result = tokio::runtime::Runtime::new()
+            .unwrap()
+            .block_on(async {
+                $service
+                    .schema()
+                    .execute(&query_str)
+                    .await
+            });
+        let response_json = serde_json::to_vec(&result).unwrap();
+        response_json
     }};
 }
 
@@ -59,8 +63,10 @@ macro_rules! wrap {
 macro_rules! test {
     ($service:ident, $query:ident, $expected:ident) => {{
         let res = request!($service, $query);
+        let res_str = String::from_utf8(res).unwrap();
+        let expected_str = wrap!($expected);
 
-        assert_eq!(res.body(), wrap!($expected));
+        assert_eq!(&res_str, expected_str);
     }};
 }
 
@@ -81,9 +87,7 @@ fn ping() {
     let registry_dir = TempDir::new().unwrap();
     let service = mock_service!(registry_dir);
 
-    let query = r#"{
-            ping
-        }"#;
+    let query = r#"{ ping }"#;
 
     let expected = json!({
             "ping": "pong"

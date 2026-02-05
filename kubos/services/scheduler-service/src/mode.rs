@@ -23,14 +23,14 @@ use crate::scheduler::SAFE_MODE;
 use crate::task_list::{get_mode_task_lists, TaskList};
 use chrono::offset::TimeZone;
 use chrono::{DateTime, Utc};
-use juniper::GraphQLObject;
+use async_graphql::SimpleObject;
 use log::{error, info, warn};
 use std::fs;
 use std::os::unix::fs::symlink;
 use std::path::{Path, PathBuf};
 
 // Descriptive information about a Schedule Mode
-#[derive(Debug, GraphQLObject)]
+#[derive(Debug, SimpleObject)]
 pub struct ScheduleMode {
     pub name: String,
     pub path: String,
