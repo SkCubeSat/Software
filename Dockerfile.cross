@@ -1,0 +1,22 @@
+FROM debian:buster-slim
+
+# 1. Fix sources (Point to Archive since Buster is EOL)
+RUN echo "deb http://archive.debian.org/debian buster main" > /etc/apt/sources.list && \
+    echo "deb http://archive.debian.org/debian-security buster/updates main" >> /etc/apt/sources.list
+
+# 2. Install dependencies
+# We use -o Acquire::Check-Valid-Until=false because the archive keys are technically "expired"
+RUN dpkg --add-architecture armhf && \
+    apt-get -o Acquire::Check-Valid-Until=false update && \
+    apt-get install -y --no-install-recommends \
+    ca-certificates \
+    build-essential \
+    gcc-arm-linux-gnueabihf \
+    libc6-dev-armhf-cross \
+    libudev-dev:armhf \
+    pkg-config
+
+# 3. Set Environment Variables
+ENV PKG_CONFIG_ALLOW_CROSS=1
+ENV PKG_CONFIG_PATH=/usr/lib/arm-linux-gnueabihf/pkgconfig
+ENV CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER=arm-linux-gnueabihf-gcc
