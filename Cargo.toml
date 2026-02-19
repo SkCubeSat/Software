@@ -22,6 +22,7 @@ members = [
     "kubos/examples/serial-comms-service",
     "kubos/examples/udp-service-client",
     "kubos/hal/rust-hal/rust-i2c",
+    "kubos/hal/rust-hal/rust-mram",
     "kubos/hal/rust-hal/rust-uart",
     "kubos/kubos-build-helper",
     "kubos/libs/cbor-protocol",
@@ -58,7 +59,9 @@ members = [
     "kubos/examples/rust-c-service/service",
     "kubos/services/iobc-supervisor-service",
     "kubos/services/isis-ants-service",
-    "kubos/test/integration/linux/isis-ants", "services/payload-services/star-risc",
+    "kubos/test/integration/linux/isis-ants",
+    "services/payload-services/star-risc",
+    "services/payload-services/mram-service",
 ]
 
 exclude = ["kubos/apis/nosengine-rust", "kubos/test/integration/nosengine-rust"]
@@ -85,6 +88,7 @@ default-members = [
     "kubos/examples/serial-comms-service",
     "kubos/examples/udp-service-client",
     "kubos/hal/rust-hal/rust-i2c",
+    "kubos/hal/rust-hal/rust-mram",
     "kubos/hal/rust-hal/rust-uart",
     "kubos/kubos-build-helper",
     "kubos/libs/cbor-protocol",
@@ -111,6 +115,7 @@ default-members = [
     "kubos/test/integration/large_upload",
     "kubos/utils",
     "services/simulator-services/clyde-3g-eps-simulator",
+    "services/payload-services/mram-service",
 ]
 
 [workspace.package]

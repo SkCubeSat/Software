@@ -1,0 +1,31 @@
+[package]
+name = "mram-service"
+edition = "2024"
+version.workspace = true
+description.workspace = true
+documentation.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[features]
+default = []
+spidev = ["dep:linux-embedded-hal", "dep:futures"]
+
+[dependencies]
+async-graphql = "7.0.16"
+async-graphql-axum = "7.0.17"
+base64 = "0.22.1"
+thiserror = "2.0"
+log = "^0.4.0"
+
+kubos-service = { path = "../../../kubos/services/kubos-service" }
+rust-mram = { path = "../../../kubos/hal/rust-hal/rust-mram" }
+littlefs2 = "0.6.1"
+
+linux-embedded-hal = { version = "0.4", optional = true }
+futures = { version = "0.3", optional = true }
+
+[dev-dependencies]
+futures = "0.3"
+serde_json = "1.0"
+tempfile = "3"
