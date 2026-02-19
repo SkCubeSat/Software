@@ -34,6 +34,8 @@ pub enum FsError {
     InvalidRange,
     #[error("storage capacity mismatch: got {actual}, expected {expected}")]
     CapacityMismatch { actual: u32, expected: u32 },
+    #[error("filesystem initialization failed: {0}")]
+    Initialization(String),
 }
 
 impl From<LfsError> for FsError {
@@ -437,11 +439,27 @@ impl TinyMramFs {
             return Ok(());
         }
 
-        Filesystem::<LittleFsStorage>::format(&mut self.storage)?;
-        self.with_fs(|fs| {
+        let mount_err = mount_result
+            .err()
+            .map(|e| e.to_string())
+            .unwrap_or_else(|| "unknown error".to_string());
+
+        if let Err(err) = Filesystem::<LittleFsStorage>::format(&mut self.storage) {
+            return Err(FsError::Initialization(format!(
+                "initial mount failed: {mount_err}; format failed: {err:?}"
+            )));
+        }
+
+        if let Err(err) = self.with_fs(|fs| {
             fs.create_dir_all(path!("/files"))?;
             Ok(())
-        })
+        }) {
+            return Err(FsError::Initialization(format!(
+                "initial mount failed: {mount_err}; remount after format failed: {err}"
+            )));
+        }
+
+        Ok(())
     }
 
     fn with_fs<R>(
