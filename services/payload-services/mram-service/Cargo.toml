@@ -9,7 +9,7 @@ license.workspace = true
 
 [features]
 default = []
-spidev = ["dep:linux-embedded-hal", "dep:futures"]
+spidev = ["dep:linux-embedded-hal"]
 
 [dependencies]
 async-graphql = "7.0.16"
@@ -23,7 +23,6 @@ rust-mram = { path = "../../../kubos/hal/rust-hal/rust-mram" }
 littlefs2 = "0.6.1"
 
 linux-embedded-hal = { version = "0.4", optional = true }
-futures = { version = "0.3", optional = true }
 
 [dev-dependencies]
 futures = "0.3"

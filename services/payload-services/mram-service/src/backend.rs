@@ -104,7 +104,7 @@ impl ByteStorage for FileImageBackend {
 
 #[cfg(feature = "spidev")]
 pub struct SpidevBackend {
-    mram: rust_mram::Mr2xH40<rust_mram::BlockingToAsync<linux_embedded_hal::SpidevDevice>>,
+    spi: linux_embedded_hal::SpidevDevice,
     capacity: u32,
 }
 
@@ -136,9 +136,34 @@ impl SpidevBackend {
             .map_err(|err| BackendError::Driver(err.to_string()))?;
 
         Ok(Self {
-            mram: rust_mram::Mr2xH40::new(rust_mram::BlockingToAsync::new(spi)),
+            spi,
             capacity: rust_mram::CAPACITY_BYTES,
         })
+    }
+
+    fn ensure_in_bounds(&self, offset: u32, len: usize) -> Result<(), BackendError> {
+        let len_u32 = u32::try_from(len).map_err(|_| BackendError::OutOfBounds {
+            offset,
+            len,
+            capacity: self.capacity,
+        })?;
+        let end = offset
+            .checked_add(len_u32)
+            .ok_or(BackendError::OutOfBounds {
+                offset,
+                len,
+                capacity: self.capacity,
+            })?;
+
+        if end > self.capacity {
+            return Err(BackendError::OutOfBounds {
+                offset,
+                len,
+                capacity: self.capacity,
+            });
+        }
+
+        Ok(())
     }
 }
 
@@ -149,12 +174,51 @@ impl ByteStorage for SpidevBackend {
     }
 
     fn read(&mut self, offset: u32, out: &mut [u8]) -> Result<(), BackendError> {
-        futures::executor::block_on(self.mram.read(offset, out))
-            .map_err(|err| BackendError::Driver(err.to_string()))
+        use linux_embedded_hal::spidev::SpidevTransfer;
+
+        self.ensure_in_bounds(offset, out.len())?;
+        if out.is_empty() {
+            return Ok(());
+        }
+
+        let mut frame = vec![0u8; 4 + out.len()];
+        frame[0] = 0x03; // READ
+        frame[1] = ((offset >> 16) & 0xFF) as u8;
+        frame[2] = ((offset >> 8) & 0xFF) as u8;
+        frame[3] = (offset & 0xFF) as u8;
+
+        self.spi
+            .transfer(&mut SpidevTransfer::read_write_in_place(&mut frame))
+            .map_err(|err| BackendError::Driver(err.to_string()))?;
+
+        out.copy_from_slice(&frame[4..]);
+        Ok(())
     }
 
     fn write(&mut self, offset: u32, data: &[u8]) -> Result<(), BackendError> {
-        futures::executor::block_on(self.mram.write(offset, data))
-            .map_err(|err| BackendError::Driver(err.to_string()))
+        use linux_embedded_hal::spidev::SpidevTransfer;
+
+        self.ensure_in_bounds(offset, data.len())?;
+        if data.is_empty() {
+            return Ok(());
+        }
+
+        let wren = [0x06u8]; // WREN
+        self.spi
+            .transfer(&mut SpidevTransfer::write(&wren))
+            .map_err(|err| BackendError::Driver(err.to_string()))?;
+
+        let mut frame = Vec::with_capacity(4 + data.len());
+        frame.push(0x02); // WRITE
+        frame.push(((offset >> 16) & 0xFF) as u8);
+        frame.push(((offset >> 8) & 0xFF) as u8);
+        frame.push((offset & 0xFF) as u8);
+        frame.extend_from_slice(data);
+
+        self.spi
+            .transfer(&mut SpidevTransfer::write(&frame))
+            .map_err(|err| BackendError::Driver(err.to_string()))?;
+
+        Ok(())
     }
 }

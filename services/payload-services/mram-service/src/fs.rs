@@ -22,8 +22,8 @@ const BLOCK_COUNT: usize = rust_mram::CAPACITY_BYTES as usize / BLOCK_SIZE;
 pub enum FsError {
     #[error(transparent)]
     Backend(#[from] BackendError),
-    #[error("littlefs error code: {0:?}")]
-    LittleFs(LfsError),
+    #[error("littlefs error: {err:?} (code={code})")]
+    LittleFs { err: LfsError, code: i32 },
     #[error("invalid file name length: {0} (max 64)")]
     InvalidName(usize),
     #[error("invalid mime type length: {0} (max 32)")]
@@ -40,7 +40,10 @@ pub enum FsError {
 
 impl From<LfsError> for FsError {
     fn from(value: LfsError) -> Self {
-        Self::LittleFs(value)
+        Self::LittleFs {
+            code: value.code(),
+            err: value,
+        }
     }
 }
 
@@ -369,10 +372,12 @@ impl TinyMramFs {
         });
 
         match result {
-            Err(FsError::LittleFs(err)) if err == LfsError::NO_SUCH_ENTRY => {
+            Err(FsError::LittleFs { err, .. }) if err == LfsError::NO_SUCH_ENTRY => {
                 Err(FsError::FileNotFound(name.to_string()))
             }
-            Err(FsError::LittleFs(err)) if err == LfsError::INVALID => Err(FsError::InvalidRange),
+            Err(FsError::LittleFs { err, .. }) if err == LfsError::INVALID => {
+                Err(FsError::InvalidRange)
+            }
             other => other,
         }
     }
@@ -482,6 +487,7 @@ fn file_path(name: &str) -> Result<littlefs2::path::PathBuf, FsError> {
 }
 
 fn map_backend_to_lfs(err: BackendError) -> LfsError {
+    eprintln!("mram-service backend I/O error: {err}");
     match err {
         BackendError::OutOfBounds { .. } => LfsError::NO_SPACE,
         BackendError::Io(_) | BackendError::InvalidConfig(_) => LfsError::IO,
