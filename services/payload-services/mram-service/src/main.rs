@@ -13,6 +13,7 @@ fn main() {
         Ok(config) => config,
         Err(err) => {
             log::error!("Failed to load service config: {:?}", err);
+            eprintln!("Failed to load service config: {err}");
             std::process::exit(2);
         }
     };
@@ -21,6 +22,7 @@ fn main() {
         Ok(subsystem) => subsystem,
         Err(err) => {
             log::error!("Failed to initialize MRAM subsystem: {}", err);
+            eprintln!("Failed to initialize MRAM subsystem: {err}");
             std::process::exit(3);
         }
     };
