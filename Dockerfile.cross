@@ -11,12 +11,19 @@ RUN dpkg --add-architecture armhf && \
     apt-get install -y --no-install-recommends \
     ca-certificates \
     build-essential \
+    clang \
+    libclang-dev \
+    llvm-dev \
     gcc-arm-linux-gnueabihf \
     libc6-dev-armhf-cross \
     libudev-dev:armhf \
     pkg-config
 
+# bindgen (used by littlefs2-sys) needs a host libclang at build time.
+RUN ln -s "$(llvm-config --libdir)" /usr/lib/llvm-libclang
+
 # 3. Set Environment Variables
 ENV PKG_CONFIG_ALLOW_CROSS=1
 ENV PKG_CONFIG_PATH=/usr/lib/arm-linux-gnueabihf/pkgconfig
 ENV CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER=arm-linux-gnueabihf-gcc
+ENV LIBCLANG_PATH=/usr/lib/llvm-libclang
