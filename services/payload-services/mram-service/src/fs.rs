@@ -426,10 +426,18 @@ impl TinyMramFs {
     }
 
     fn ensure_filesystem(&mut self) -> Result<(), FsError> {
-        if !Filesystem::<LittleFsStorage>::is_mountable(&mut self.storage) {
-            Filesystem::<LittleFsStorage>::format(&mut self.storage)?;
+        // Try mounting first. If mount/setup fails (fresh chip, stale/corrupt fs),
+        // format and retry once.
+        let mount_result = self.with_fs(|fs| {
+            fs.create_dir_all(path!("/files"))?;
+            Ok(())
+        });
+
+        if mount_result.is_ok() {
+            return Ok(());
         }
 
+        Filesystem::<LittleFsStorage>::format(&mut self.storage)?;
         self.with_fs(|fs| {
             fs.create_dir_all(path!("/files"))?;
             Ok(())

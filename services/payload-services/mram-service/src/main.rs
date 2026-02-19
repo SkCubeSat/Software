@@ -4,21 +4,26 @@ use mram_service::schema::{MutationRoot, QueryRoot};
 use mram_service::subsystem::Subsystem;
 
 fn main() {
-    Logger::init("mram-service").unwrap();
+    if let Err(err) = Logger::init("mram-service") {
+        eprintln!("failed to initialize logger: {err:?}");
+        std::process::exit(1);
+    }
 
-    let config = Config::new("mram-service")
-        .map_err(|err| {
+    let config = match Config::new("mram-service") {
+        Ok(config) => config,
+        Err(err) => {
             log::error!("Failed to load service config: {:?}", err);
-            err
-        })
-        .unwrap();
+            std::process::exit(2);
+        }
+    };
 
-    let subsystem = Subsystem::from_config(&config)
-        .map_err(|err| {
+    let subsystem = match Subsystem::from_config(&config) {
+        Ok(subsystem) => subsystem,
+        Err(err) => {
             log::error!("Failed to initialize MRAM subsystem: {}", err);
-            err
-        })
-        .unwrap();
+            std::process::exit(3);
+        }
+    };
 
     Service::new(config, subsystem, QueryRoot, MutationRoot).start();
 }
