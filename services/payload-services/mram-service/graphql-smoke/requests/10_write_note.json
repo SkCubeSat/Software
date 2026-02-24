@@ -1,0 +1,1 @@
+{"query":"mutation { writeFile(input: { name: \"note.txt\", mimeType: \"text/plain\", compressed: false, dataBase64: \"aGVsbG8=\" }) { success errors file { name size mimeType compressed } } }"}

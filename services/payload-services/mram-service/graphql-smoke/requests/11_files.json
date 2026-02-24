@@ -1,0 +1,1 @@
+{"query":"{ files { name size mimeType compressed createdAt updatedAt } }"}

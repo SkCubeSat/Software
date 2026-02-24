@@ -1,0 +1,1 @@
+{"query":"{ storage { backend capacityBytes allocatedBytes liveBytes reclaimableBytes freeBytes fileCount } }"}
