@@ -1,81 +1,3 @@
-#![deny(missing_docs)]
-#![deny(warnings)]
-
-//! Dosimeter I2C Service with GraphQL API
-//!
-//! # Configuration
-//!
-//! The service can be configured in the `/etc/kubos-config.toml` with the following fields:
-//!
-//! ```
-//! [dosimeter-service]
-//! i2c_bus = "/dev/i2c-1"
-//! device_addr = 0x4A
-//!
-//! [dosimeter-service.addr]
-//! ip = "127.0.0.1"
-//! port = 8080
-//! ```
-//!
-//! # GraphQL Schema
-//!
-//! ```graphql
-//! type SensorReading {
-//!   address: String!
-//!   name: String!
-//!   adc: Int!
-//!   success: Boolean!
-//!   error: String
-//! }
-//!
-//! query ping: "pong"
-//! query read: [SensorReading!]!
-//! query readSensor(address: String!): SensorReading!
-//! query voltageConvert(adc: Int!): Float!
-//! query tempConvert(voltage_mv: Float!): Float!
-//! ```
-//!
-//! # Example Queries
-//!
-//! ## Read all sensors
-//! ```graphql
-//! {
-//!   read {
-//!     address
-//!     name
-//!     adc
-//!     success
-//!     error
-//!   }
-//! }
-//! ```
-//!
-//! ## Read a specific sensor
-//! ```graphql
-//! {
-//!   readSensor(address: "0x84") {
-//!     address
-//!     name
-//!     adc
-//!     success
-//!   }
-//! }
-//! ```
-//!
-//! ## Convert ADC to voltage
-//! ```graphql
-//! {
-//!   voltageConvert(adc: 2048)
-//! }
-//! ```
-//!
-//! ## Convert voltage to temperature
-//! ```graphql
-//! {
-//!   tempConvert(voltage_mv: 1650.0)
-//! }
-//! ```
-
 use env_logger;
 use kubos_service::Config;
 use kubos_service::Service;
@@ -92,7 +14,7 @@ fn main() {
     env_logger::init();
 
     // Get configuration
-    let config = Config::new("dosimeter-service").unwrap_or_else(|err| {
+    let config = Config::new("dosimeter").unwrap_or_else(|err| {
         log::error!("Failed to load service config: {:?}", err);
         log::warn!("Using default configuration");
         
