@@ -10,7 +10,7 @@ export default function HomePage() {
           </p>
 
           <h1 className="text-5xl font-semibold tracking-tight sm:text-7xl">
-            <span className="vp-title-gradient">Just Lock IN</span>
+            <span className="vp-title-gradient">Todo: Lock In</span>
           </h1>
 
           <p className="max-w-2xl text-base leading-7 text-fd-muted-foreground sm:text-lg">
