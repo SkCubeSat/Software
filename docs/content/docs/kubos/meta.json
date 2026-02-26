@@ -16,7 +16,6 @@
     "sdk-docs",
     "contributing",
     "changelog",
-    "faq-troubleshooting",
-    "legacy-sphinx-home"
+    "faq-troubleshooting"
   ]
 }

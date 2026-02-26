@@ -13,8 +13,8 @@ SRC_ROOT = REPO_ROOT / "kubos" / "docs"
 DST_ROOT = REPO_ROOT / "docs" / "content" / "docs" / "kubos"
 
 SPECIAL_DEST_NAMES = {
-    # Preserve the hand-authored Kubos section landing page at kubos/index.mdx.
-    Path("index.rst"): "legacy-sphinx-home.mdx",
+    # Map the legacy Sphinx home page directly to the KubOS section landing page.
+    Path("index.rst"): "index.mdx",
 }
 
 ANCHOR_MAP: dict[str, str] = {}

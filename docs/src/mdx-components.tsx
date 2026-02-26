@@ -17,10 +17,14 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
       const hasHeight = props.height !== undefined && props.height !== null;
       const isPlantumlLightSvg =
         src.startsWith('/kubos/diagrams/light/') && src.endsWith('.svg');
+      const isDrawioLightSvg =
+        src.startsWith('/kubos/diagrams/drawio/light/') && src.endsWith('.svg');
 
-      if (isPlantumlLightSvg) {
+      if (isPlantumlLightSvg || isDrawioLightSvg) {
         const darkSrc = withBasePath(
-          src.replace('/kubos/diagrams/light/', '/kubos/diagrams/dark/'),
+          isPlantumlLightSvg
+            ? src.replace('/kubos/diagrams/light/', '/kubos/diagrams/dark/')
+            : src.replace('/kubos/diagrams/drawio/light/', '/kubos/diagrams/drawio/dark/'),
         );
         const sharedClassName = typeof props.className === 'string' ? props.className : undefined;
         const alt = typeof props.alt === 'string' ? props.alt : '';
@@ -44,7 +48,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
         );
       }
 
-      // Migrated KubOS docs and generated PlantUML SVGs often don't include explicit dimensions.
+      // Migrated KubOS docs and generated diagram SVGs often don't include explicit dimensions.
       // Fallback to a plain img tag in that case to avoid Next Image runtime errors.
       if (!hasWidth || !hasHeight) {
         return <img {...props} src={resolvedSrc} alt={props.alt ?? ''} />;
