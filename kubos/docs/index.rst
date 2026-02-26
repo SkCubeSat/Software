@@ -6,7 +6,7 @@ Overview
 --------
 
 +----------------------------------------+------------------------------------------------+------------------+-------------------------------------------------+
-| `Stable Docs <http://docs.kubos.co>`__ | `Nightly Docs <http://docs.kubos.co/master>`__ | :doc:`changelog` | `Kubos Repo <https://github.com/kubos/kubos>`__ |
+| `Stable Docs <https://skcubesat.github.io/Software/docs>`__ | `Nightly Docs <https://kubos-preservation-group.github.io/kubos/master>`__ | :doc:`changelog` | `Kubos Repo <https://github.com/kubos/kubos>`__ |
 +----------------------------------------+------------------------------------------------+------------------+-------------------------------------------------+
 
 
