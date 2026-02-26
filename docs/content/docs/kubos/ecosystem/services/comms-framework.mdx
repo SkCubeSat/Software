@@ -195,7 +195,7 @@ The service's [config.toml](../services/service-config) file should contain the 
 - `timeout` - (Default: 1500) Length of time a message handler should wait for a reply, in milliseconds
 - `ip` - (Required) IP address of the communications service
 
-The service which implements the framework should create a <a href="../../rust-docs/comms_service/struct.CommsControlBlock.html" target="_blank">CommsControlBlock</a>, which provides the final configuration to the main communication logic. It contains the following members:
+The service which implements the framework should create a <a href="https://kubos-preservation-group.github.io/kubos/rust-docs/comms_service/struct.CommsControlBlock.html" target="_blank">CommsControlBlock</a>, which provides the final configuration to the main communication logic. It contains the following members:
 
 - `read_conn` - This is the connection structure which is used for reading from the communications device, for example a UART port or UDP socket
 - `write_conn` - This is the connection structure which is used for reading from the communications device, for example a UART port or UDP socket
@@ -220,8 +220,8 @@ The service should contain the following components:
 - A function capable of reading messages from the communications device (note: this may be omitted in the case where the communications device will only be used for transmitting data)
 - At least one function capable of writing messages to the communications device
 - Initialized connection structure/s which will be used by the previous read and/or write functions
-- A <a href="../../rust-docs/comms_service/struct.CommsControlBlock.html" target="_blank">CommsControlBlock</a> structure containing all of the communications configuration information
-- A <a href="../../rust-docs/comms_service/struct.CommsTelemetry.html" target="_blank">CommsTelemetry</a> structure which will be used to gather communication statistics
+- A <a href="https://kubos-preservation-group.github.io/kubos/rust-docs/comms_service/struct.CommsControlBlock.html" target="_blank">CommsControlBlock</a> structure containing all of the communications configuration information
+- A <a href="https://kubos-preservation-group.github.io/kubos/rust-docs/comms_service/struct.CommsTelemetry.html" target="_blank">CommsTelemetry</a> structure which will be used to gather communication statistics
 
 It is recommended that the service also follow the guidelines for [normal hardware services](hardware-services).
 
@@ -229,5 +229,5 @@ Some support for communicating with specific hardware devices has been provided 
 
 For more information about how to implement a communications service, please refer to the following resources:
 
-- <a href="../../rust-docs/comms_service/index.html" target="_blank">Framework Rust documentation</a>
+- <a href="https://kubos-preservation-group.github.io/kubos/rust-docs/comms_service/index.html" target="_blank">Framework Rust documentation</a>
 - [Comms service tutorial](../../tutorials/comms-service)
