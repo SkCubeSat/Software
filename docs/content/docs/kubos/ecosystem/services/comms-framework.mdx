@@ -12,18 +12,28 @@ The hardware used to establish communication between a satellite and the ground 
 ```text
 @startuml
 
-skinparam linetype polyline skinparam linetype ortho left to right direction rectangle "Telemetry Service" as Telemetry rectangle "Mission Application" as App rectangle "Radio" as Radio
+skinparam linetype polyline
+skinparam linetype ortho
+left to right direction
+rectangle "Telemetry Service" as Telemetry
+rectangle "Mission Application" as App
+rectangle "Radio" as Radio
 
-package "Communications Service" {  
-rectangle "Read Thread" as Read rectangle "Message Handler" as Message rectangle "Downlink Endpoint" as Downlink
-
+package "Communications Service" {
+    rectangle "Read Thread" as Read
+    rectangle "Message Handler" as Message
+    rectangle "Downlink Endpoint" as Downlink
 }
 
-Radio -right-> Read Downlink -up-> Radio Message -left-> Radio
+Radio -right-> Read
+Downlink -up-> Radio
+Message -left-> Radio
 
-Telemetry .left.> Message Message .right.> Telemetry
+Telemetry .left.> Message
+Message .right.> Telemetry
 
-Telemetry .> App App .> Telemetry
+Telemetry .> App
+App .> Telemetry
 
 App .> Downlink
 
@@ -35,9 +45,17 @@ App .> Downlink
 
 hide footbox
 
-actor "Ground Control" as ground_control participant "Radio" as radio participant "Communications Services" as comms_service participant "Flight Software" as software
+actor "Ground Control" as ground_control
+participant "Radio" as radio
+participant "Communications Services" as comms_service
+participant "Flight Software" as software
 
-ground_control -> radio: 1. Send command to satellite radio -> comms_service: 2. Read data packets from radio comms_service -> software: 3. Send packet payload to appropriate service software -> comms_service: 4. Send response back comms_service -> radio: 5. Send data packet to radio with response radio -> ground_control: 6. Send response to ground control
+ground_control -> radio: 1. Send command to satellite
+radio -> comms_service: 2. Read data packets from radio
+comms_service -> software: 3. Send packet payload to appropriate service
+software -> comms_service: 4. Send response back
+comms_service -> radio: 5. Send data packet to radio with response
+radio -> ground_control: 6. Send response to ground control
 
 @enduml
 ```
@@ -49,12 +67,10 @@ All packets sent to/from the communication device, over the wire (or air), will 
 ```text
 @startuml
 
-package "Radio Protocol" {  
-package "Space Packet" {  
-rectangle "Payload"
-
-}
-
+package "Radio Protocol" {
+    package "Space Packet" {
+        rectangle "Payload"
+    }
 }
 
 @enduml
@@ -84,18 +100,25 @@ hide footbox
 
 actor Radio
 
-box "Communications Service" \#LightBlue  
-participant "Read Thread" as read
+box "Communications Service" #LightBlue
+    participant "Read Thread" as read
 
-Radio -> read : 1. Read data packets from radio read -> read : 2. Deframe data packets read -> read : 3. Reassemble data packet
+    Radio -> read : 1. Read data packets from radio
+    read -> read : 2. Deframe data packets
+    read -> read : 3. Reassemble data packet
 
-create "Message Handler" as handler read -> handler : 4. Spawn new message handler activate handler
-
+    create "Message Handler" as handler
+    read -> handler : 4. Spawn new message handler
+    activate handler
 end box
 
 participant "Kubos Service" as service
 
-handler -> service : 5. Posts GraphQL query/mutation to service service -> handler : 6. Return result of query/mutation handler -> handler : 7. Wrap result in Space Packet handler -> Radio : 8. Send response packet to radio destroy handler
+handler -> service : 5. Posts GraphQL query/mutation to service
+service -> handler : 6. Return result of query/mutation
+handler -> handler : 7. Wrap result in Space Packet
+handler -> Radio : 8. Send response packet to radio
+destroy handler
 
 @enduml
 ```
@@ -111,18 +134,22 @@ hide footbox
 
 actor Radio
 
-box "Communications Service" \#LightBlue  
-participant "Read Thread" as read
+box "Communications Service" #LightBlue
+    participant "Read Thread" as read
 
-Radio -> read : 1. Read data packets from radio read -> read : 2. Deframe data packets read -> read : 3. Reassemble data packet
+    Radio -> read : 1. Read data packets from radio
+    read -> read : 2. Deframe data packets
+    read -> read : 3. Reassemble data packet
 
-create "Message Handler" as handler read -> handler : 4. Spawn new message handler activate handler
-
+    create "Message Handler" as handler
+    read -> handler : 4. Spawn new message handler
+    activate handler
 end box
 
 participant "Kubos Service" as service
 
-handler -> service : 5. Pass UDP packet to service destroy handler
+handler -> service : 5. Pass UDP packet to service
+destroy handler
 
 @enduml
 ```
@@ -142,9 +169,15 @@ When the endpoint's read thread receives a message, it wraps it up in a Space Pa
 
 hide footbox
 
-actor "Mission application" as app participant "Communications ServicenDownlink Endpoint" as downlink participant Radio actor "Ground Station" as ground
+actor "Mission application" as app
+participant "Communications Service\nDownlink Endpoint" as downlink
+participant Radio
+actor "Ground Station" as ground
 
-app -> downlink : 1. Send data to downlink endpoint downlink -> downlink : 2. Wrap data in Space Packet downlink -> Radio : 3. Send Space Packet to radio Radio -> ground : 4. Send Space Packet to ground
+app -> downlink : 1. Send data to downlink endpoint
+downlink -> downlink : 2. Wrap data in Space Packet
+downlink -> Radio : 3. Send Space Packet to radio
+Radio -> ground : 4. Send Space Packet to ground
 
 @enduml
 ```

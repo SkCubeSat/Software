@@ -19,16 +19,14 @@ Whenever a new application is registered with the service, its manifest file and
 
 frame "App Service" {
 
-> package "Main Mission App" {  
-> rectangle \[Version: 1.0nActive: False\] rectangle \[Version: 2.0nActive: True\]
->
-> }
->
-> package "Payload App" {  
-> rectangle \[Version: 0.1nActive: False\]
->
-> }
+    package "Main Mission App" {
+        rectangle [Version: 1.0\nActive: False]
+        rectangle [Version: 2.0\nActive: True]
+    }
 
+    package "Payload App" {
+        rectangle [Version: 0.1\nActive: False]
+    }
 }
 
 @enduml

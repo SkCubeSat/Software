@@ -13,58 +13,106 @@ The service provides file transfer functionality by implementing the [file proto
 
 hide empty description
 
-state "Receive Message" as Receive state "Export Request" as Export state "Import Request" as Import
+state "Receive Message" as Receive
+state "Export Request" as Export
+state "Import Request" as Import
 
-\[\*\] --> Receive Receive : Process transaction request from client
+[*] --> Receive
+Receive : Process transaction request from client
 
-Receive -down-> Metadata Metadata : Save file metadata information Metadata --> Done
+Receive -down-> Metadata
+Metadata : Save file metadata information
+Metadata --> Done
 
-Receive -left-> Export Export : Prepare to receive file from client Export --> Receiving
+Receive -left-> Export
+Export : Prepare to receive file from client
+Export --> Receiving
 
-state Receiving {  
-state "Chunk Message" as Chunk state "Success" as Receive_Success state "Failure" as Receive_Failure state "Wait" as Receive_Wait state "ACK" as Receive_ACK state "NAK" as Receive_NAK state "Timeout" as Receive_Timeout
+state Receiving {
+    state "Chunk Message" as Chunk
+    state "Success" as Receive_Success
+    state "Failure" as Receive_Failure
+    state "Wait" as Receive_Wait
+    state "ACK" as Receive_ACK
+    state "NAK" as Receive_NAK
+    state "Timeout" as Receive_Timeout
 
-\[\*\] -down-> Verify Verify : Check file status
+    [*] -down-> Verify
+    Verify : Check file status
 
-Verify -right-> Receive_ACK : All chunks received Receive_ACK : Send ACK message to client Receive_ACK --> Finalize
+    Verify -right-> Receive_ACK : All chunks received
+    Receive_ACK : Send ACK message to client
+    Receive_ACK --> Finalize
 
-Verify -left-> Receive_NAK : Some chunks missing Receive_NAK : Send NAK message to client
+    Verify -left-> Receive_NAK : Some chunks missing
+    Receive_NAK : Send NAK message to client
 
-Receive_NAK --> Receive_Wait Receive_Wait : Wait for chunk data from client
+    Receive_NAK --> Receive_Wait
+    Receive_Wait : Wait for chunk data from client
 
-Receive_Wait -down-> Chunk Chunk : Save chunk data Chunk --> Receive_Wait
+    Receive_Wait -down-> Chunk
+    Chunk : Save chunk data
+    Chunk --> Receive_Wait
 
-Receive_Wait -right-> Receive_Timeout Receive_Timeout : Increase timeout counter Receive_Timeout -up-> Verify : Counter < limit Receive_Timeout --> Finalize : Counter >= limit
+    Receive_Wait -right-> Receive_Timeout
+    Receive_Timeout : Increase timeout counter
+    Receive_Timeout -up-> Verify : Counter < limit
+    Receive_Timeout --> Finalize : Counter >= limit
 
-Finalize : Re-assemble chunks and verify integrity
+    Finalize : Re-assemble chunks and verify integrity
 
-Finalize --> Receive_Success : Hash verification passed Receive_Success : Send success message to client Receive_Success --> \[\*\]
+    Finalize --> Receive_Success : Hash verification passed
+    Receive_Success : Send success message to client
+    Receive_Success --> [*]
 
-Finalize --> Receive_Failure : Hash verification failed Receive_Failure : Send failure message to client Receive_Failure --> \[\*\]
+    Finalize --> Receive_Failure : Hash verification failed
+    Receive_Failure : Send failure message to client
+    Receive_Failure --> [*]
+}
+Receiving --> Done
 
-} Receiving --> Done
+Receive -right-> Import
+Import : Prepare to transmit file to client
 
-Receive -right-> Import Import : Prepare to transmit file to client
+Import --> Initialize
+Initialize : Import file into temporary storage and calculate hash
 
-Import --> Initialize Initialize : Import file into temporary storage and calculate hash
+Initialize --> Transmit_Failure
+Transmit_Failure : Send failure message to client
+Transmit_Failure --> Done    
 
-Initialize --> Transmit_Failure Transmit_Failure : Send failure message to client Transmit_Failure --> Done
+Initialize --> Transmit_Success
+Transmit_Success : Send success message to client with file metadata
+Transmit_Success --> Transmitting
 
-Initialize --> Transmit_Success Transmit_Success : Send success message to client with file metadata Transmit_Success --> Transmitting
+state Transmitting {
+    state "Success" as Transmit_Success
+    state "Failure" as Transmit_Failure
+    state "Wait" as Transmit_Wait
+    state "ACK" as Transmit_ACK
+    state "NAK" as Transmit_NAK
+    state "Timeout" as Transmit_Timeout
+    state "Send Chunk" as Send
 
-state Transmitting {  
-state "Success" as Transmit_Success state "Failure" as Transmit_Failure state "Wait" as Transmit_Wait state "ACK" as Transmit_ACK state "NAK" as Transmit_NAK state "Timeout" as Transmit_Timeout state "Send Chunk" as Send
+    [*] --> Transmit_Wait
+    Transmit_Wait : Wait for file status message from client
 
-\[\*\] --> Transmit_Wait Transmit_Wait : Wait for file status message from client
+    Transmit_Wait --> Transmit_ACK
+    Transmit_ACK : Receive ACK from client
+    Transmit_ACK --> [*]
 
-Transmit_Wait --> Transmit_ACK Transmit_ACK : Receive ACK from client Transmit_ACK --> \[\*\]
+    Transmit_Wait --> Transmit_NAK
+    Transmit_NAK : Receive NAK from client
+    Transmit_NAK -up-> Send
 
-Transmit_Wait --> Transmit_NAK Transmit_NAK : Receive NAK from client Transmit_NAK -up-> Send
+    Send --> Send : For all missing chunks
+    Send : Send chunk data message to client
+    Send -left-> Transmit_Wait
 
-Send --> Send : For all missing chunks Send : Send chunk data message to client Send -left-> Transmit_Wait
-
-Transmit_Wait --> Transmit_Timeout Transmit_Timeout --> Transmit_Wait : Counter < limit Transmit_Timeout : Increase timeout counter Transmit_Timeout --> \[\*\] : Counter >= limit
-
+    Transmit_Wait --> Transmit_Timeout
+    Transmit_Timeout --> Transmit_Wait : Counter < limit
+    Transmit_Timeout : Increase timeout counter
+    Transmit_Timeout --> [*] : Counter >= limit
 }
 
 Transmitting --> Done

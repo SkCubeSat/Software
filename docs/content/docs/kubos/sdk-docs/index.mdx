@@ -18,23 +18,38 @@ Externally, the SDK is most useful for:
 - Users who want to build a [custom KubOS image](/docs/kubos/deep-dive#custom-klb)
 
 ```text
-@startuml left to right direction
+@startuml
+left to right direction
 
 actor User
 
-node "Kubos SDK" as sdk{  
-() "init" as init folder "kubos-proj" as proj { folder source { } () "build" as build \[binary\] } folder "Kubos Source" as k_source { }
-
+node "Kubos SDK" as sdk{
+    () "init" as init
+    folder "kubos-proj" as proj {
+        folder source {
+        }
+        () "build" as build
+        [binary]
+    }
+    folder "Kubos Source" as k_source {
+    }
 }
 
 () "transfer" as flash
 
-node "OBC - Kubos Linux" {  
-cloud "kubos-proj" as application cloud "App1" cloud "App2"
-
+node "OBC - Kubos Linux" {
+    cloud "kubos-proj" as application
+    cloud "App1"
+    cloud "App2"
 }
 
-User -> sdk : vagrant ssh init -> proj k_source -> build build <- source \[binary\] <- build \[binary\] -> flash flash -> application
+User -> sdk : vagrant ssh
+init -> proj
+k_source -> build
+build <- source
+[binary] <- build
+[binary] -> flash
+flash -> application
 
 @enduml
 ```

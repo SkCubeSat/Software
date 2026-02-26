@@ -10,8 +10,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DOCS_ROOT = path.resolve(__dirname, '..');
 const CONTENT_ROOT = path.join(DOCS_ROOT, 'content', 'docs', 'kubos');
-const OUTPUT_DIR = path.join(DOCS_ROOT, 'public', 'kubos', 'diagrams');
+const OUTPUT_ROOT = path.join(DOCS_ROOT, 'public', 'kubos', 'diagrams');
+const LIGHT_OUTPUT_DIR = path.join(OUTPUT_ROOT, 'light');
+const DARK_OUTPUT_DIR = path.join(OUTPUT_ROOT, 'dark');
 const CACHE_DIR = path.join(DOCS_ROOT, '.cache', 'plantuml');
+const DARK_THEME_VERSION = 'v1';
 
 const FENCE_RE = /```[^\n]*\n([\s\S]*?)```/g;
 
@@ -50,10 +53,11 @@ function resolvePumlBinary() {
   return 'puml';
 }
 
-function renderSvg({ pumlBin, source, hash }) {
-  const srcPath = path.join(CACHE_DIR, `${hash}.puml`);
-  const outPath = path.join(OUTPUT_DIR, `${hash}.svg`);
-  if (existsSync(outPath)) return outPath;
+function renderSvg({ pumlBin, source, hash, variant, force = false }) {
+  const srcPath = path.join(CACHE_DIR, `${hash}.${variant}.puml`);
+  const outDir = variant === 'dark' ? DARK_OUTPUT_DIR : LIGHT_OUTPUT_DIR;
+  const outPath = path.join(outDir, `${hash}.svg`);
+  if (!force && existsSync(outPath)) return outPath;
 
   writeFileSync(srcPath, `${source}\n`, 'utf8');
 
@@ -80,8 +84,78 @@ function renderSvg({ pumlBin, source, hash }) {
   return outPath;
 }
 
+function darkMarker(hash) {
+  return `<!-- codex-plantuml-dark:${DARK_THEME_VERSION}:${hash} -->`;
+}
+
+function isDarkVariantCurrent(hash) {
+  const darkPath = path.join(DARK_OUTPUT_DIR, `${hash}.svg`);
+  if (!existsSync(darkPath)) return false;
+  const svg = readFileSync(darkPath, 'utf8');
+  return svg.includes(darkMarker(hash));
+}
+
+function buildDarkPlantUmlSource(source) {
+  const darkSkinparams = [
+    'skinparam backgroundColor transparent',
+    'skinparam shadowing false',
+    'skinparam defaultFontColor #E5E7EB',
+    'skinparam hyperlinkColor #93C5FD',
+    'skinparam ArrowColor #93C5FD',
+    'skinparam LineColor #93C5FD',
+    'skinparam NoteBackgroundColor #111827',
+    'skinparam NoteBorderColor #93C5FD',
+    'skinparam NoteFontColor #E5E7EB',
+    'skinparam ActorBackgroundColor #0F172A',
+    'skinparam ActorBorderColor #93C5FD',
+    'skinparam ActorFontColor #E5E7EB',
+    'skinparam ParticipantBackgroundColor #111827',
+    'skinparam ParticipantBorderColor #93C5FD',
+    'skinparam ParticipantFontColor #E5E7EB',
+    'skinparam LifeLineBorderColor #64748B',
+    'skinparam LifeLineBackgroundColor #0F172A',
+    'skinparam SequenceLifeLineBorderColor #64748B',
+    'skinparam SequenceLifeLineBackgroundColor #0F172A',
+    'skinparam SequenceGroupBorderColor #93C5FD',
+    'skinparam SequenceGroupBackgroundColor #0B1220',
+    'skinparam SequenceBoxBorderColor #93C5FD',
+    'skinparam SequenceBoxBackgroundColor #0B1220',
+    'skinparam SequenceReferenceBorderColor #93C5FD',
+    'skinparam SequenceReferenceBackgroundColor #111827',
+    'skinparam PackageBackgroundColor #0B1220',
+    'skinparam PackageBorderColor #93C5FD',
+    'skinparam PackageFontColor #E5E7EB',
+    'skinparam RectangleBackgroundColor #111827',
+    'skinparam RectangleBorderColor #93C5FD',
+    'skinparam RectangleFontColor #E5E7EB',
+  ].join('\n');
+
+  let out = source;
+  out = out.replace(/^@startuml[^\n]*\n/, (match) => `${match}\n' codex dark variant ${DARK_THEME_VERSION}\n${darkSkinparams}\n\n`);
+
+  // Some KubOS diagrams force a bright sequence box explicitly.
+  out = out.replace(/\\?#LightBlue\b/g, '#1F2937');
+
+  return out;
+}
+
+function ensureDarkVariant({ pumlBin, source, hash }) {
+  const darkPath = path.join(DARK_OUTPUT_DIR, `${hash}.svg`);
+  if (isDarkVariantCurrent(hash)) return darkPath;
+
+  const darkSource = buildDarkPlantUmlSource(source);
+  renderSvg({ pumlBin, source: darkSource, hash, variant: 'dark', force: true });
+
+  // Mark the SVG so we can detect stale dark variants after theme generator changes.
+  const svg = readFileSync(darkPath, 'utf8');
+  const marked = svg.replace(/<svg([^>]*)>/, `<svg$1>\n${darkMarker(hash)}`);
+  writeFileSync(darkPath, marked, 'utf8');
+  return darkPath;
+}
+
 function main() {
-  mkdirSync(OUTPUT_DIR, { recursive: true });
+  mkdirSync(LIGHT_OUTPUT_DIR, { recursive: true });
+  mkdirSync(DARK_OUTPUT_DIR, { recursive: true });
   mkdirSync(CACHE_DIR, { recursive: true });
 
   const mdxFiles = existsSync(CONTENT_ROOT) ? walkFiles(CONTENT_ROOT) : [];
@@ -102,22 +176,47 @@ function main() {
   let skipped = 0;
 
   for (const [hash, source] of uniqueSources) {
-    const outPath = path.join(OUTPUT_DIR, `${hash}.svg`);
-    if (existsSync(outPath)) {
+    const lightOutPath = path.join(LIGHT_OUTPUT_DIR, `${hash}.svg`);
+    if (existsSync(lightOutPath) && isDarkVariantCurrent(hash)) {
       skipped += 1;
       continue;
     }
-    renderSvg({ pumlBin, source, hash });
+    if (!existsSync(lightOutPath)) {
+      renderSvg({ pumlBin, source, hash, variant: 'light' });
+    }
+    ensureDarkVariant({ pumlBin, source, hash });
     rendered += 1;
+  }
+
+  // If a light SVG already existed but the dark SVG is missing (or generator behavior changed),
+  // ensure dark variants are present.
+  for (const hash of uniqueSources.keys()) {
+    const lightOutPath = path.join(LIGHT_OUTPUT_DIR, `${hash}.svg`);
+    const darkOutPath = path.join(DARK_OUTPUT_DIR, `${hash}.svg`);
+    if (existsSync(lightOutPath) && !isDarkVariantCurrent(hash)) {
+      ensureDarkVariant({ pumlBin, source: uniqueSources.get(hash), hash });
+    }
   }
 
   // Remove stale diagram files that are no longer referenced.
   const keep = new Set([...uniqueSources.keys()].map((hash) => `${hash}.svg`));
-  if (existsSync(OUTPUT_DIR)) {
-    for (const name of readdirSync(OUTPUT_DIR)) {
+  for (const dir of [LIGHT_OUTPUT_DIR, DARK_OUTPUT_DIR]) {
+    if (!existsSync(dir)) continue;
+    for (const name of readdirSync(dir)) {
       if (!name.endsWith('.svg')) continue;
       if (!keep.has(name)) {
-        rmSync(path.join(OUTPUT_DIR, name), { force: true });
+        rmSync(path.join(dir, name), { force: true });
+      }
+    }
+  }
+
+  // Remove legacy single-set outputs from the old path scheme (/kubos/diagrams/<hash>.svg).
+  if (existsSync(OUTPUT_ROOT)) {
+    for (const name of readdirSync(OUTPUT_ROOT)) {
+      const full = path.join(OUTPUT_ROOT, name);
+      if (statSync(full).isDirectory()) continue;
+      if (name.endsWith('.svg')) {
+        rmSync(full, { force: true });
       }
     }
   }
@@ -137,4 +236,3 @@ try {
   );
   process.exit(1);
 }
-

@@ -11,18 +11,28 @@ This tutorial walks the user through the process of using the [communications se
 ```text
 @startuml
 
-skinparam linetype polyline skinparam linetype ortho left to right direction rectangle "Telemetry Service" as Telemetry rectangle "Mission Application" as App rectangle "Radio" as Radio
+skinparam linetype polyline
+skinparam linetype ortho
+left to right direction
+rectangle "Telemetry Service" as Telemetry
+rectangle "Mission Application" as App
+rectangle "Radio" as Radio
 
-package "Communications Service" {  
-rectangle "Read Thread" as Read rectangle "Message Handler" as Message rectangle "Downlink Endpoint" as Downlink
-
+package "Communications Service" {
+    rectangle "Read Thread" as Read
+    rectangle "Message Handler" as Message
+    rectangle "Downlink Endpoint" as Downlink
 }
 
-Radio -right-> Read Downlink -up-> Radio Message -left-> Radio
+Radio -right-> Read
+Downlink -up-> Radio
+Message -left-> Radio
 
-Telemetry .left.> Message Message .right.> Telemetry
+Telemetry .left.> Message
+Message .right.> Telemetry
 
-Telemetry .> App App .> Telemetry
+Telemetry .> App
+App .> Telemetry
 
 App .> Downlink
 

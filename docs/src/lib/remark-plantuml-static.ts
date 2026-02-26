@@ -21,7 +21,7 @@ function plantUmlHash(source: string): string {
 }
 
 function diagramUrl(source: string): string {
-  return `/kubos/diagrams/${plantUmlHash(source)}.svg`;
+  return `/kubos/diagrams/light/${plantUmlHash(source)}.svg`;
 }
 
 function visit(node: MdastNode) {

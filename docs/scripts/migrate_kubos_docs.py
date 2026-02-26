@@ -63,13 +63,17 @@ HTML_TAG_WHITELIST = {
 
 
 def run_pandoc(src: Path) -> str:
+    rst_text = src.read_text(encoding="utf-8")
+    rst_text, uml_blocks = preprocess_rst_uml_blocks(rst_text)
     proc = subprocess.run(
-        ["pandoc", "--wrap=none", "-f", "rst", "-t", "gfm", str(src)],
+        ["pandoc", "--wrap=none", "-f", "rst", "-t", "gfm", "-"],
         check=True,
         capture_output=True,
         text=True,
+        input=rst_text,
+        cwd=src.parent,
     )
-    return proc.stdout
+    return restore_uml_placeholders(proc.stdout, uml_blocks)
 
 
 def normalize_link(target: str) -> str:
@@ -214,6 +218,88 @@ def append_toctree_contents(body: str, entries: list[tuple[str, str]]) -> str:
     for label, target in entries:
         lines.append(f"- [{label}]({target})")
     return body.rstrip() + "\n" + "\n".join(lines) + "\n"
+
+
+def preprocess_rst_uml_blocks(rst_text: str) -> tuple[str, list[str]]:
+    lines = rst_text.splitlines()
+    out: list[str] = []
+    uml_blocks: list[str] = []
+    i = 0
+
+    while i < len(lines):
+        line = lines[i]
+        directive = re.match(r"^(\s*)\.\.\s+uml::\s*$", line)
+        if not directive:
+            out.append(line)
+            i += 1
+            continue
+
+        base_indent = len(directive.group(1))
+        j = i + 1
+        block_lines: list[str] = []
+        content_indent: int | None = None
+
+        # Consume directive content (blank lines + indented UML text) until dedent.
+        while j < len(lines):
+            nxt = lines[j]
+            if not nxt.strip():
+                block_lines.append("")
+                j += 1
+                continue
+
+            indent = len(nxt) - len(nxt.lstrip(" "))
+            if indent <= base_indent:
+                break
+
+            if content_indent is None:
+                content_indent = indent
+            if indent < content_indent:
+                # Keep at least the minimum indentation we discovered.
+                content_indent = indent
+            block_lines.append(nxt)
+            j += 1
+
+        if content_indent is None:
+            # No content found; keep original line as fallback.
+            out.append(line)
+            i += 1
+            continue
+
+        normalized: list[str] = []
+        for raw in block_lines:
+            if raw == "":
+                normalized.append("")
+                continue
+            normalized.append(raw[content_indent:])
+
+        uml = "\n".join(normalized).strip("\n")
+        placeholder = f"KUBOS_UML_PLACEHOLDER_{len(uml_blocks)}"
+        uml_blocks.append(uml)
+
+        # Surround with blank lines so pandoc preserves it as an isolated paragraph.
+        if out and out[-1] != "":
+            out.append("")
+        out.append(directive.group(1) + placeholder)
+        out.append("")
+
+        i = j
+
+    result = "\n".join(out)
+    if rst_text.endswith("\n"):
+        result += "\n"
+    return result, uml_blocks
+
+
+def restore_uml_placeholders(md: str, uml_blocks: list[str]) -> str:
+    for idx, uml in enumerate(uml_blocks):
+        placeholder = f"KUBOS_UML_PLACEHOLDER_{idx}"
+        fenced = f"```text\n{uml}\n```"
+        md = re.sub(
+            rf"(?m)^[ \t]*{re.escape(placeholder)}[ \t]*$",
+            lambda _m, fenced=fenced: fenced,
+            md,
+        )
+    return md
 
 
 def sanitize_for_mdx(text: str) -> str:
