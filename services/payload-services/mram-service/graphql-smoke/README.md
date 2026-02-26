@@ -3,9 +3,7 @@
 These request payloads are intended for running `mram-service` tests with:
 
 ```sh
-curl -sS http://127.0.0.1:8090/graphql \
-  -H 'content-type: application/json' \
-  --data @requests/00_ping.json
+curl -sS http://127.0.0.1:8090/graphql -H 'content-type: application/json' --data @requests/00_ping.json
 ```
 
 To run the full sequence:

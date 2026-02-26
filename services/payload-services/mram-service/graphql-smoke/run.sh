@@ -1,5 +1,5 @@
 #!/bin/sh
-set -eu
+set -e
 
 URL="${1:-http://127.0.0.1:8090/graphql}"
 DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
@@ -8,12 +8,12 @@ REQ="$DIR/requests"
 run_req() {
   name="$1"
   file="$REQ/$2"
-  echo "\n=== $name ==="
-  echo "POST $URL"
+  printf '\n=== %s ===\n' "$name"
+  printf 'POST %s\n' "$URL"
   curl -sS "$URL" \
     -H 'content-type: application/json' \
     --data @"$file"
-  echo
+  printf '\n'
 }
 
 run_req "Ping" 00_ping.json
