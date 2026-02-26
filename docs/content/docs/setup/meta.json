@@ -1,0 +1,8 @@
+{
+  "title": "Setup",
+  "icon": "Settings",
+  "description": "Project setup and onboarding",
+  "defaultOpen": true,
+  "collapsible": true,
+  "pages": ["getting-started"]
+}

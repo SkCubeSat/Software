@@ -1,0 +1,9 @@
+{
+  "pages": [
+    "configuring-kubos",
+    "kubos-linux-on-bbb",
+    "kubos-linux-on-iobc",
+    "kubos-linux-on-mbm2"
+  ],
+  "title": "Klb"
+}

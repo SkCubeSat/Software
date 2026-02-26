@@ -1,0 +1,15 @@
+{
+  "pages": [
+    "index",
+    "mai400",
+    "clydespace-3g-eps",
+    "isis-ants",
+    "isis-imtq",
+    "isis-trxvu",
+    "gomspace-p31u",
+    "novatel-oem6",
+    "nsl-duplex-d2",
+    "pumpkin-mcu"
+  ],
+  "title": "Kubos Device APIs"
+}
