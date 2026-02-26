@@ -5,6 +5,10 @@ const isGitHubPagesBuild = process.env.GITHUB_ACTIONS === 'true';
 const repoName = process.env.GITHUB_REPOSITORY?.split('/')[1] ?? '';
 const basePath = isGitHubPagesBuild && repoName ? `/${repoName}` : undefined;
 
+// Make the base path available during build-time MDX rendering (server/export),
+// not just as an injected client env.
+process.env.NEXT_PUBLIC_BASE_PATH = basePath ?? '';
+
 /** @type {import('next').NextConfig} */
 const config = {
   output: 'export',
