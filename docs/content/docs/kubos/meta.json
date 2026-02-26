@@ -1,0 +1,22 @@
+{
+  "title": "Kubos Docs",
+  "icon": "Rocket",
+  "description": "Migrated KubOS documentation from the legacy Sphinx docs",
+  "defaultOpen": false,
+  "collapsible": true,
+  "pages": [
+    "index",
+    "kubos-design",
+    "getting-started",
+    "tutorials",
+    "obc-docs",
+    "mission-dev",
+    "ecosystem",
+    "deep-dive",
+    "sdk-docs",
+    "contributing",
+    "changelog",
+    "faq-troubleshooting",
+    "legacy-sphinx-home"
+  ]
+}

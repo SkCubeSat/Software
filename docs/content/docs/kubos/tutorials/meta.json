@@ -1,0 +1,17 @@
+{
+  "title": "Tutorials",
+  "description": "KubOS mission development and system interaction tutorials",
+  "defaultOpen": true,
+  "collapsible": true,
+  "pages": [
+    "index",
+    "first-mission-app",
+    "first-obc-project",
+    "app-register",
+    "schedule-app",
+    "querying-telemetry",
+    "shell",
+    "comms-service",
+    "file-transfer"
+  ]
+}

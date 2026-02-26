@@ -1,0 +1,15 @@
+{
+  "title": "Getting Started",
+  "description": "Setup and first steps with KubOS",
+  "defaultOpen": true,
+  "collapsible": true,
+  "pages": [
+    "index",
+    "no-board",
+    "local-setup",
+    "windows-setup",
+    "using-rust",
+    "using-python",
+    "local-services"
+  ]
+}

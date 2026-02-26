@@ -1,0 +1,15 @@
+{
+  "title": "Working With an OBC",
+  "description": "KubOS docs for on-board computers and hardware integration",
+  "defaultOpen": true,
+  "collapsible": true,
+  "pages": [
+    "index",
+    "cross-compile",
+    "comms-setup",
+    "bbb",
+    "iobc",
+    "mbm2",
+    "porting-kubos"
+  ]
+}
