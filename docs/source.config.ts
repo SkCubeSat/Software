@@ -1,5 +1,6 @@
 import { defineConfig, defineDocs } from 'fumadocs-mdx/config';
 import { metaSchema, pageSchema } from 'fumadocs-core/source/schema';
+import { remarkDrawioStaticImages } from './src/lib/remark-drawio-static';
 import { remarkPlantumlStaticImages } from './src/lib/remark-plantuml-static';
 
 // You can customise Zod schemas for frontmatter and `meta.json` here
@@ -19,6 +20,6 @@ export const docs = defineDocs({
 
 export default defineConfig({
   mdxOptions: {
-    remarkPlugins: [remarkPlantumlStaticImages],
+    remarkPlugins: [remarkDrawioStaticImages, remarkPlantumlStaticImages],
   },
 });

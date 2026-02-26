@@ -55,7 +55,10 @@ jobs:
         working-directory: docs
         run: bun install --frozen-lockfile
 
-      - name: Build docs (static export + PlantUML diagrams)
+      - name: Verify Docker (Draw.io export backend)
+        run: docker --version
+
+      - name: Build docs (static export + PlantUML + Draw.io diagrams)
         working-directory: docs
         env:
           NEXT_TELEMETRY_DISABLED: '1'
