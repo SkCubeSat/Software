@@ -1,0 +1,10 @@
+{
+  "title": "RADSAT Docs",
+  "pages": [
+    "index",
+    "getting-started",
+    "testing",
+    "crosscompiling",
+    "deployment-github-pages"
+  ]
+}
