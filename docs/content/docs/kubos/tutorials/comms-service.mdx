@@ -339,9 +339,9 @@ fn main() -> ServiceResult<()> {
 
 #### Communication Initialization
 
-Now we'll be setting up our instance of the <a href="../rust-docs/kubos_comms/struct.CommsControlBlock.html" target="_blank">CommsControlBlock</a>, which is the main control structure used by the communications service framework in order to store all of the settings and communication components.
+Now we'll be setting up our instance of the <a href="https://kubos-preservation-group.github.io/kubos/rust-docs/kubos_comms/struct.CommsControlBlock.html" target="_blank">CommsControlBlock</a>, which is the main control structure used by the communications service framework in order to store all of the settings and communication components.
 
-The <a href="../rust-docs/kubos_comms/struct.CommsControlBlock.html" target="_blank">CommsControlBlock</a> contains five elements:
+The <a href="https://kubos-preservation-group.github.io/kubos/rust-docs/kubos_comms/struct.CommsControlBlock.html" target="_blank">CommsControlBlock</a> contains five elements:
 
 > - A pointer to the function used to read messages from the radio
 > - A list of pointers to functions used to write messages to the radio
@@ -389,7 +389,7 @@ fn main() -> ServiceResult<()> {
 
 #### Starting Communication
 
-Finally, we can start our communication threads. We'll use the <a href="../rust-docs/kubos_comms/struct.CommsService.html#method.start" target="_blank">CommsService::start</a> function, passing it our control block as well as a <a href="../rust-docs/kubos_comms/struct.CommsTelemetry.html" target="_blank">CommsTelemetry</a> instance to use for recording communication metrics.
+Finally, we can start our communication threads. We'll use the <a href="https://kubos-preservation-group.github.io/kubos/rust-docs/kubos_comms/struct.CommsService.html#method.start" target="_blank">CommsService::start</a> function, passing it our control block as well as a <a href="https://kubos-preservation-group.github.io/kubos/rust-docs/kubos_comms/struct.CommsTelemetry.html" target="_blank">CommsTelemetry</a> instance to use for recording communication metrics.
 
 For the moment, we'll put a loop at the end of our program to keep from exiting.
 
@@ -685,7 +685,7 @@ If the client program times out (indicated by `Error: ErrorMessage \{ msg: "Time
 
 To finish the communications service, we want to expose all telemetry data collected through a GraphQL front-end.
 
-The telemetry structure, <a href="../rust-docs/kubos_comms/struct.CommsTelemetry.html" target="_blank">CommsTelemetry</a>, has the following fields:
+The telemetry structure, <a href="https://kubos-preservation-group.github.io/kubos/rust-docs/kubos_comms/struct.CommsTelemetry.html" target="_blank">CommsTelemetry</a>, has the following fields:
 
 > - `packets_up` - Number of packets successfully uplinked (transferred from a client to the service)
 > - `packets_down` - Number of packets successfully downlinked (transferred from the service to a client)

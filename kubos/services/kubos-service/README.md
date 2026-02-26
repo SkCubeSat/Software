@@ -10,7 +10,7 @@ configuring it with a hardware subsystem and Juniper Query/Mutation objects.
 It also provides a starting entry point and basic configuration file parsing.
 
 More information about developing services can be found in our
-[service development guide](https://docs.kubos.com/latest/ecosystem/services/service-dev.html).
+[service development guide](https://skcubesat.github.io/Software/docs/kubos/ecosystem/services/service-dev).
 
 # Use
 
