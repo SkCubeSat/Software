@@ -7,26 +7,34 @@ Kubos users develop custom flight software for their OBCs using the KubOS librar
 This custom software is then used to communicate with the various [core](../ecosystem/services/core-services) and [hardware](../ecosystem/services/hardware-services) services in order to interact with the system and execute mission logic.
 
 ```text
-@startuml left to right direction
+@startuml
+left to right direction
 
 actor User
 
-folder "Host Machine" {  
-\[kubos-proj1\] as proj1 \[kubos-proj2\] as proj2
-
+folder "Host Machine" {
+    [kubos-proj1] as proj1
+    [kubos-proj2] as proj2
 }
 
-node "OBC - KubOS" {  
-frame "App Registry" {  
-cloud "kubos-proj2" as application cloud "App1" cloud "App2"
+node "OBC - KubOS" {
+    frame "App Registry" {
+        cloud "kubos-proj2" as application
+        cloud "App1"
+        cloud "App2"
+    }
 
+    rectangle "Process Monitor Service" as monitor
+    rectangle "Telemetry Database Service" as telemdb
+    rectangle "Hardware Service #1" as hw1
 }
 
-rectangle "Process Monitor Service" as monitor rectangle "Telemetry Database Service" as telemdb rectangle "Hardware Service \#1" as hw1
-
-}
-
-User -> proj1 proj2 -> application User -> proj2 application ..> monitor application ..> telemdb application ..> hw1
+User -> proj1
+proj2 -> application
+User -> proj2
+application ..> monitor
+application ..> telemdb
+application ..> hw1
 
 @enduml
 ```

@@ -16,20 +16,17 @@ The behavior of the scheduler is defined by three levels of organization: *mode*
 ```text
 @startuml
 
-frame "Scheduler Service" {  
-folder "Nominal Mode" {  
-file "Initial Task List" {  
-rectangle \[Start Applications\] rectangle \[Deploy Solar Panels\]
+frame "Scheduler Service" {
+    folder "Nominal Mode" {
+        file "Initial Task List" {
+            rectangle [Start Applications]
+            rectangle [Deploy Solar Panels]
+        }
 
-}
-
-file "Additional Task List" {  
-rectangle \[Capture Images\]
-
-}
-
-}
-
+        file "Additional Task List" {
+            rectangle [Capture Images]
+        }
+    }
 }
 
 @enduml

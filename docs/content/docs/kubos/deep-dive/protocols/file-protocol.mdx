@@ -147,9 +147,15 @@ Uploading a single chunk file from a ground station to an OBC:
 ```text
 @startuml
 
-participant "Ground Station" as ground participant "OBC" as obc
+participant "Ground Station" as ground
+participant "OBC" as obc
 
-ground -> obc : Metadata ground -> obc : Export obc -> ground : NAK ground -> obc : Send Chunk obc -> ground : ACK obc -> ground : Success
+ground -> obc : Metadata
+ground -> obc : Export 
+obc -> ground : NAK
+ground -> obc : Send Chunk
+obc -> ground : ACK
+obc -> ground : Success
 
 @enduml
 ```
@@ -159,9 +165,14 @@ Downloading a single chunk file from an OBC to a ground station:
 ```text
 @startuml
 
-participant "Ground Station" as ground participant "OBC" as obc
+participant "Ground Station" as ground
+participant "OBC" as obc
 
-ground -> obc : Import obc -> ground : Success ground -> obc : NAK obc -> ground : Send Chunk ground -> obc : ACK
+ground -> obc : Import 
+obc -> ground : Success 
+ground -> obc : NAK
+obc -> ground : Send Chunk
+ground -> obc : ACK
 
 @enduml
 ```
@@ -171,9 +182,18 @@ Uploading a three chunk file from ground station with a chunk re-request:
 ```text
 @startuml
 
-participant "Ground Station" as ground participant "OBC" as obc
+participant "Ground Station" as ground
+participant "OBC" as obc
 
-ground -> obc : Metadata ground -> obc : Export obc -> ground : NAK ground -> obc : Send Chunk ground -> obc : Send Chunk obc -> ground : NAK ground -> obc : Send Chunk obc -> ground : ACK obc -> ground : Success
+ground -> obc : Metadata 
+ground -> obc : Export 
+obc -> ground : NAK
+ground -> obc : Send Chunk
+ground -> obc : Send Chunk
+obc -> ground : NAK
+ground -> obc : Send Chunk
+obc -> ground : ACK
+obc -> ground : Success
 
 @enduml
 ```
