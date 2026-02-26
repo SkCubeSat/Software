@@ -1,10 +1,11 @@
 {
   "title": "RADSAT Docs",
+  "description": "RADSAT-SK2 software documentation",
+  "defaultOpen": true,
   "pages": [
     "index",
-    "getting-started",
-    "testing",
-    "crosscompiling",
-    "deployment-github-pages"
+    "setup",
+    "guides",
+    "documentation"
   ]
 }

@@ -1,3 +1,193 @@
 @import 'tailwindcss';
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
+
+:root {
+  --color-fd-background: hsl(220 20% 98%);
+  --color-fd-foreground: hsl(222 24% 14%);
+  --color-fd-muted: hsl(220 24% 96%);
+  --color-fd-muted-foreground: hsl(220 9% 42%);
+  --color-fd-popover: hsl(0 0% 100%);
+  --color-fd-popover-foreground: hsl(222 24% 14%);
+  --color-fd-card: hsl(0 0% 100%);
+  --color-fd-card-foreground: hsl(222 24% 14%);
+  --color-fd-border: hsla(220, 14%, 48%, 0.16);
+  --color-fd-primary: hsl(226 71% 40%);
+  --color-fd-primary-foreground: hsl(0 0% 100%);
+  --color-fd-secondary: hsl(220 26% 95%);
+  --color-fd-secondary-foreground: hsl(222 24% 14%);
+  --color-fd-accent: hsla(226, 71%, 55%, 0.1);
+  --color-fd-accent-foreground: hsl(226 71% 32%);
+  --color-fd-ring: hsl(226 71% 48%);
+  --color-fd-overlay: hsla(220, 20%, 10%, 0.24);
+}
+
+.dark {
+  --color-fd-background: hsl(226 28% 8%);
+  --color-fd-foreground: hsl(220 20% 94%);
+  --color-fd-muted: hsl(226 21% 13%);
+  --color-fd-muted-foreground: hsla(220, 16%, 75%, 0.88);
+  --color-fd-popover: hsl(226 26% 10%);
+  --color-fd-popover-foreground: hsl(220 20% 94%);
+  --color-fd-card: hsl(226 25% 10%);
+  --color-fd-card-foreground: hsl(220 20% 94%);
+  --color-fd-border: hsla(220, 24%, 72%, 0.14);
+  --color-fd-primary: hsl(221 91% 68%);
+  --color-fd-primary-foreground: hsl(226 30% 10%);
+  --color-fd-secondary: hsl(226 18% 14%);
+  --color-fd-secondary-foreground: hsl(220 20% 94%);
+  --color-fd-accent: hsla(221, 91%, 68%, 0.12);
+  --color-fd-accent-foreground: hsl(220 32% 93%);
+  --color-fd-ring: hsl(221 91% 72%);
+}
+
+html,
+body {
+  background:
+    radial-gradient(circle at 14% 8%, rgba(58, 103, 255, 0.12), transparent 40%),
+    radial-gradient(circle at 88% 12%, rgba(0, 187, 255, 0.08), transparent 32%),
+    var(--color-fd-background);
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-fd-primary) 28%, white);
+  color: var(--color-fd-foreground);
+}
+
+.dark ::selection {
+  background: color-mix(in oklab, var(--color-fd-primary) 36%, black);
+  color: var(--color-fd-foreground);
+}
+
+a {
+  text-underline-offset: 0.18em;
+}
+
+code:not(pre code) {
+  background: color-mix(in oklab, var(--color-fd-accent) 45%, transparent);
+  border-radius: 0.35rem;
+  padding: 0.08rem 0.3rem;
+}
+
+.vp-home-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--color-fd-border);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--color-fd-card) 86%, white) 0%, var(--color-fd-card) 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.65) inset,
+    0 20px 50px rgba(15, 23, 42, 0.06);
+}
+
+.dark .vp-home-hero {
+  background:
+    linear-gradient(180deg, rgba(25, 30, 48, 0.9) 0%, rgba(17, 21, 36, 0.95) 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    0 22px 55px rgba(0, 0, 0, 0.35);
+}
+
+.vp-home-hero::before,
+.vp-home-hero::after {
+  content: '';
+  position: absolute;
+  inset: auto;
+  pointer-events: none;
+  border-radius: 999px;
+  filter: blur(36px);
+  opacity: 0.9;
+}
+
+.vp-home-hero::before {
+  top: -5rem;
+  right: -4rem;
+  width: 14rem;
+  height: 14rem;
+  background: rgba(58, 103, 255, 0.22);
+}
+
+.vp-home-hero::after {
+  bottom: -6rem;
+  left: -3rem;
+  width: 12rem;
+  height: 12rem;
+  background: rgba(0, 187, 255, 0.12);
+}
+
+.vp-title-gradient {
+  background: linear-gradient(120deg, #3b5ccc 5%, #6d9cff 48%, #2aa8ff 92%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.vp-feature-card {
+  border: 1px solid var(--color-fd-border);
+  background: color-mix(in oklab, var(--color-fd-card) 94%, white);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.03);
+}
+
+.dark .vp-feature-card {
+  background: color-mix(in oklab, var(--color-fd-card) 88%, black);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+}
+
+.vp-chip {
+  border: 1px solid color-mix(in oklab, var(--color-fd-primary) 22%, var(--color-fd-border));
+  background: color-mix(in oklab, var(--color-fd-primary) 7%, var(--color-fd-card));
+  color: color-mix(in oklab, var(--color-fd-primary) 72%, var(--color-fd-foreground));
+}
+
+#nd-docs-layout {
+  --fd-layout-width: 1520px;
+}
+
+#nd-sidebar {
+  border-color: color-mix(in oklab, var(--color-fd-border) 100%, transparent);
+}
+
+#nd-sidebar [data-search-full] {
+  border-color: color-mix(in oklab, var(--color-fd-border) 90%, transparent);
+  background: color-mix(in oklab, var(--color-fd-secondary) 55%, var(--color-fd-card));
+}
+
+#nd-sidebar [data-radix-scroll-area-viewport] > div > div {
+  display: grid !important;
+  gap: 0.2rem;
+}
+
+#nd-sidebar [data-radix-scroll-area-viewport] > div > div > a[data-active] {
+  font-weight: 600;
+}
+
+#nd-sidebar [data-radix-scroll-area-viewport] > div > div > div[data-state] > button {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: color-mix(in oklab, var(--color-fd-muted-foreground) 85%, var(--color-fd-foreground));
+  border: 0;
+  background: transparent;
+}
+
+#nd-sidebar [data-radix-scroll-area-viewport] > div > div > div[data-state] > button:hover {
+  background: color-mix(in oklab, var(--color-fd-accent) 45%, transparent);
+  color: var(--color-fd-foreground);
+}
+
+#nd-sidebar [data-radix-scroll-area-viewport] > div > div > div[data-state] > [data-state] {
+  padding: 0 0 0.2rem;
+}
+
+#nd-sidebar [data-radix-scroll-area-viewport] a[data-active] {
+  border-radius: 0.6rem;
+}
+
+#nd-sidebar [data-radix-scroll-area-viewport] a[data-active='true'] {
+  background: color-mix(in oklab, var(--color-fd-primary) 10%, var(--color-fd-card));
+}
+
+#nd-sidebar [data-radix-scroll-area-viewport] a[data-active='false']:hover {
+  background: color-mix(in oklab, var(--color-fd-accent) 45%, transparent);
+}
