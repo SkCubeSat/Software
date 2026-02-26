@@ -10,6 +10,9 @@ const config = {
   output: 'export',
   reactStrictMode: true,
   trailingSlash: true,
+  env: {
+    NEXT_PUBLIC_BASE_PATH: basePath ?? '',
+  },
   images: {
     unoptimized: true,
   },
