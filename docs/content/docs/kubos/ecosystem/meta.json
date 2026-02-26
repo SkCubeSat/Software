@@ -1,0 +1,12 @@
+{
+  "title": "KubOS Ecosystem",
+  "description": "Applications, services, and Kubos Linux",
+  "defaultOpen": true,
+  "collapsible": true,
+  "pages": [
+    "index",
+    "apps",
+    "services",
+    "linux-docs"
+  ]
+}

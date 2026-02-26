@@ -6,6 +6,7 @@
     "index",
     "setup",
     "guides",
-    "documentation"
+    "documentation",
+    "kubos"
   ]
 }

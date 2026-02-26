@@ -1,0 +1,8 @@
+{
+  "pages": [
+    "index",
+    "installing-linux-mbm2",
+    "working-with-the-mbm2"
+  ],
+  "title": "KubOS for the Pumpkin MBM2"
+}

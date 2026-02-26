@@ -32,10 +32,21 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Setup Java (PlantUML)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      - name: Install Graphviz (dot)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
@@ -44,7 +55,7 @@ jobs:
         working-directory: docs
         run: bun install --frozen-lockfile
 
-      - name: Build docs (static export)
+      - name: Build docs (static export + PlantUML diagrams)
         working-directory: docs
         env:
           NEXT_TELEMETRY_DISABLED: '1'
