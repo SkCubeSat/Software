@@ -61,7 +61,7 @@ members = [
     "kubos/services/isis-ants-service",
     "kubos/test/integration/linux/isis-ants",
     "services/payload-services/star-risc",
-    "services/payload-services/mram-service",
+    "services/hardware-services/mram-service",
 ]
 
 exclude = ["kubos/apis/nosengine-rust", "kubos/test/integration/nosengine-rust"]
@@ -115,7 +115,7 @@ default-members = [
     "kubos/test/integration/large_upload",
     "kubos/utils",
     "services/simulator-services/clyde-3g-eps-simulator",
-    "services/payload-services/mram-service",
+    "services/hardware-services/mram-service",
 ]
 
 [workspace.package]
