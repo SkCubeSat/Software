@@ -16,13 +16,7 @@ fn main() {
     // Get configuration
     let config = Config::new("dosimeter").unwrap_or_else(|err| {
         log::error!("Failed to load service config: {:?}", err);
-        log::warn!("Using default configuration");
-        
-        // Create a default config with required fields
-        let default_config = Config::default();
-        // Note: You may need to manually set the hosturl if Config::default() doesn't provide one
-        // This depends on your kubos_service implementation
-        default_config
+        std::process::exit(1);
     });
 
     // Get I2C bus path from config or use default
@@ -43,8 +37,6 @@ fn main() {
     let connection = Connection::from_path(&i2c_bus, device_addr);
 
     // Create and start the service
-    // Note: If this still fails, you'll need to ensure the config has a valid hosturl
-    // or check the kubos_service documentation for proper Config initialization
     Service::new(
         config,
         Subsystem::new(connection),
