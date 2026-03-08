@@ -149,9 +149,15 @@ fn test_voltage_convert() {
 
     let result = do_query(Some(port), query);
     
-    // Expected: (2048 / 4095) * 3300 = 1650.0
+    // Expected from conversion formula: (adc / 4095) * 3300
     let voltage = result["data"]["voltageConvert"].as_f64().unwrap();
-    assert!((voltage - 1650.0).abs() < 0.1, "Expected ~1650.0, got {}", voltage);
+    let expected = (2048.0 / 4095.0) * 3300.0;
+    assert!(
+        (voltage - expected).abs() < 1e-6,
+        "Expected ~{}, got {}",
+        expected,
+        voltage
+    );
 }
 
 #[test]
@@ -161,7 +167,7 @@ fn test_temp_convert() {
     let _fixture = DosimeterServiceFixture::setup(Some(port));
 
     let query = r#"{
-        tempConvert(voltage_mv: 1650.0)
+        tempConvert(voltageMv: 1650.0)
     }"#;
 
     let result = do_query(Some(port), query);
