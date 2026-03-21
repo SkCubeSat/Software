@@ -1,64 +1,64 @@
 #!/usr/bin/env python3
 
 import argparse
-from kubos import app
 import sys
+# Import exactly what is defined in the kubos_app/__init__.py
+from kubos_app import Services, logging_setup
 
 def main():
-
-    logger = app.logging_setup("my-mission-app")
+    # Initialize logger directly from the imported function
+    logger = logging_setup("my-mission-app")
 
     parser = argparse.ArgumentParser()
-
-    parser.add_argument('--config', '-c')
-
+    parser.add_argument('--config', '-c', help='Path to kubos-config.toml')
     args = parser.parse_args()
 
-    if args.config is not None:
-        global SERVICES
-        SERVICES = app.Services(args.config)
-    else:
-        SERVICES = app.Services()
+    # Initialize Services based on whether a config path was provided
+    try:
+        if args.config:
+            services = Services(args.config)
+        else:
+            services = Services()
+    except Exception as e:
+        logger.error(f"Failed to load config: {e}")
+        sys.exit(1)
 
-    args = parser.parse_args()
-
-    request = '\{memInfo\{available\}\}'
+    # Cleaned up GraphQL query (removed unnecessary backslashes)
+    request = '{memInfo{available}}'
 
     try:
-        response = SERVICES.query(service="monitor-service", query=request)
-    except Exception as e: 
-        logger.error("Something went wrong: " + str(e))
+        response = services.query(service="monitor-service", query=request)
+        available = response["memInfo"]["available"]
+        logger.info(f"Current available memory: {available} kB")
+    except Exception as e:
+        logger.error(f"Monitor query failed: {e}")
         sys.exit(1)
 
-    data = response["memInfo"]
-    available = data["available"]
-
-    logger.info("Current available memory: %s kB" % (available))
-
-    request = '''
-        mutation \{
-            insert(subsystem: "OBC", parameter: "available_mem", value: "%s") \{
-                success,
-                errors
-            \}
-        \}
-        ''' % (available)
+    # Cleaned up Mutation string using a f-string or standard formatting
+    # Note: GraphQL mutations use double braces {{ }} if using .format(), 
+    # but since we are just doing simple substitution, we'll use a raw string.
+    mutation_query = f"""
+    mutation {{
+        insert(subsystem: "OBC", parameter: "available_mem", value: "{available}") {{
+            success,
+            errors
+        }}
+    }}
+    """
 
     try:
-        response = SERVICES.query(service="telemetry-service", query=request)
-    except Exception as e: 
-        logger.error("Something went wrong: " + str(e))
+        response = services.query(service="telemetry-service", query=mutation_query)
+        data = response["insert"]
+        
+        if not data["success"]:
+            logger.error(f"Telemetry insert encountered errors: {data['errors']}")
+            sys.exit(1)
+        else:
+            logger.info("Telemetry insert completed successfully")
+            
+    except Exception as e:
+        logger.error(f"Telemetry service query failed: {e}")
         sys.exit(1)
-
-    data = response["insert"]
-    success = data["success"]
-    errors = data["errors"]
-
-    if success == False:
-        logger.error("Telemetry insert encountered errors: " + str(errors))
-        sys.exit(1)
-    else:
-        logger.info("Telemetry insert completed successfully")
 
 if __name__ == "__main__":
     main()
