@@ -7,8 +7,14 @@ struct Mutation;
 #[derive(SimpleObject, Clone)]
 struct Data{
     Component: enum
-    Status: ____
+    Status: bool
     Confidence: u32
+}
+
+#[derive(SimpleObject, clone)]
+struct Error{
+    Component: enum
+    failure: str  
 }
 
 enum Checks{
@@ -20,15 +26,20 @@ enum Checks{
 impl Query{
 
     async fn GetStatus(&self, Part: Checks) -> Result<Data>{
-        let Part_Status = ____
+        let Part_Address = getaddresses(Checks)             
         
         Ok(Data {
             Component: Checks,
             Status: Part_Status
-            Confidence: ____
-        }
+            Confidence: 
+        })
 
-    {
+        Err(Error {
+            Component: Checks
+            failure: "Couldnt get address of Component"
+        })
+
+    }   
 }
 
 
