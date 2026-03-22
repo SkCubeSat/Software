@@ -1,0 +1,12 @@
+{
+  "title": "Mission Development",
+  "description": "Recommended KubOS mission development workflow",
+  "defaultOpen": true,
+  "collapsible": true,
+  "pages": [
+    "index",
+    "mission-needs",
+    "deployment",
+    "flight-ready"
+  ]
+}

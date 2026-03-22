@@ -1,0 +1,8 @@
+{
+  "pages": [
+    "index",
+    "i2c-hal",
+    "uart-hal"
+  ],
+  "title": "Kubos HAL Documentation"
+}

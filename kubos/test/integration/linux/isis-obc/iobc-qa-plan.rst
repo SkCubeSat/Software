@@ -19,7 +19,7 @@ Reference Documents
 
 - ISIS-OBC Datasheet
 - ISIS-OBC Quickstart Guide
-- docs.kubos.co/sphinx
+- https://kubos-preservation-group.github.io/kubos
 
 Scope
 ~~~~~

@@ -1,0 +1,69 @@
+---
+title: Getting Started
+description: Clone the repository, configure GitHub SSH access, and learn how to contribute.
+---
+
+## Setup
+
+To get started, first clone the repository using Git:
+
+```bash
+git clone "https://github.com/SkCubeSat/Software"
+```
+
+or:
+
+```bash
+git clone "git@github.com:SkCubeSat/Software.git"
+```
+
+## Using SSH with GitHub
+
+GitHub no longer allows password authentication for Git operations. Use SSH keys instead.
+
+These instructions mimic how you would set things up on the `radsat-server` computer. Tailor them as needed for your own machine.
+
+### 1. Generate an SSH key pair
+
+You can skip this if you already have an SSH key pair you want to use.
+
+Replace the email below with the email associated with your GitHub account:
+
+```bash
+ssh-keygen -t ed25519 -C "your_email@example.com"
+```
+
+Following the prompts, you can choose to add a passphrase. This is optional, but recommended for added security (especially on shared systems / the linuxbox).
+
+### 2. Start the SSH agent
+
+```bash
+eval "$(ssh-agent -s)"
+```
+
+### 3. Add your private key to the SSH agent
+
+```bash
+ssh-add ~/.ssh/id_ed25519
+```
+
+### 4. Copy your public key
+
+```bash
+cat ~/.ssh/id_ed25519.pub
+```
+
+Paste the public key into your GitHub SSH keys settings.
+
+For more info, see [GitHub's SSH documentation](https://docs.github.com/en/authentication/connecting-to-github-with-ssh).
+
+## Contribute
+
+We are always looking for people to help develop SkCubeSat software.
+
+If you would like to help, you can always create a pull request.
+
+If you want to get in touch, contact the current Software team leads:
+
+- `oren.rotaru@usask.ca`
+- `alvan.alam@usask.ca`

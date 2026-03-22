@@ -1,0 +1,12 @@
+{
+  "title": "RADSAT Docs",
+  "description": "RADSAT-SK2 software documentation",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "setup",
+    "guides",
+    "documentation",
+    "kubos"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "title": "Contributing",
+  "description": "Contribution guidelines for KubOS",
+  "defaultOpen": true,
+  "collapsible": true,
+  "pages": [
+    "index",
+    "reporting-bugs",
+    "feature-request",
+    "contribution-process",
+    "kubos-standards",
+    "documentation",
+    "testing"
+  ]
+}

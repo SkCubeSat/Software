@@ -6,7 +6,7 @@ It provides the ability to read the service's IP information from the config fil
 and then starts up GraphQL and Graphiql endpoints at the requested address
 
 More information about developing services can be found in our
-[service development guide](https://docs.kubos.com/latest/ecosystem/services/service-dev.html).
+[service development guide](https://skcubesat.github.io/Software/docs/kubos/ecosystem/services/service-dev).
 
 # Use
 

@@ -1,0 +1,81 @@
+# Cross Compiling Procedure
+
+## Purpose
+
+Cross compiling is the process used when you want to run a service on the KubOS OBC itself.
+
+In most cases, you should already have debugged the code locally as much as possible before this step. Because of that, a `release` build is usually preferred (smaller binary, faster transfer, better runtime performance).
+
+## What Is Happening Under the Hood
+
+This repository uses the Rust `cross` tool (the `cross` crate/command) to build for the KubOS ARM target in a reproducible environment.
+
+When you run:
+
+```bash
+cross build --target armv7-unknown-linux-gnueabihf ...
+```
+
+`cross` does not just run your local compiler directly. It uses:
+
+- `Cross.toml` to determine how to build a given target
+- `Dockerfile.cross` to define the Docker image used for `armv7-unknown-linux-gnueabihf`
+
+For this project, the `armv7-unknown-linux-gnueabihf` target in `Cross.toml` points to `./Dockerfile.cross`. That Dockerfile builds a Debian Buster-based image (matching the KubOS environment more closely) and installs the ARM cross-compilation toolchain and required system libraries (for example `gcc-arm-linux-gnueabihf`, `libc6-dev-armhf-cross`, and `libudev-dev:armhf`).
+
+## 1. Get the files onto the PowerEdge PC
+
+Before cross compiling, make sure your service source code is available on the PowerEdge machine.
+
+You can do this by either:
+
+- using SFTP to copy the files
+- pulling your branch directly on the PowerEdge PC
+
+## 2. Cross compile the service for KubOS (ARM)
+
+Run the following command from the repository on the PowerEdge PC:
+
+```bash
+cross build --target armv7-unknown-linux-gnueabihf -p <service-name> --release
+```
+
+This builds a release binary for the ARM target used by the KubOS system.
+
+If you want verbose output while building, add `-vv`:
+
+```bash
+cross build --target armv7-unknown-linux-gnueabihf -p <service-name> --release -vv
+```
+
+## 3. (Optional) Strip the binary to reduce size
+
+To further reduce the binary size before transfer, strip symbols from the compiled binary:
+
+```bash
+arm-linux-gnueabihf-strip <service-name>
+```
+
+Note: run this in the directory containing the compiled binary, or provide the full path to the binary.
+
+## 4. Find the compiled binary
+
+The compiled release binary will be located under:
+
+```bash
+target/armv7-unknown-linux-gnueabihf/release
+```
+
+## Debugging or Changing the Cross-Compile Process
+
+If cross compiling fails, or if you need to change the target environment/tooling, start by checking:
+
+- `Cross.toml` (maps target triples to Dockerfiles/images)
+- `Dockerfile.cross` (defines the Debian version and installed cross-compilation packages/tools)
+
+These are the main files to inspect if you need to:
+
+- change the Debian base image/version
+- add missing system packages or headers
+- update linker or `pkg-config` environment variables
+- adjust the target-specific build environment

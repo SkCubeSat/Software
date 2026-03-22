@@ -1,0 +1,19 @@
+{
+  "pages": [
+    "app-service",
+    "comms-framework",
+    "core-services",
+    "file",
+    "graphql",
+    "hardware-services",
+    "monitor-service",
+    "payload-services",
+    "scheduler",
+    "service-config",
+    "service-dev",
+    "service-outline-guide",
+    "shell",
+    "telemetry-db"
+  ],
+  "title": "Services"
+}

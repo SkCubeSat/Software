@@ -1,0 +1,8 @@
+{
+  "pages": [
+    "index",
+    "installing-linux-iobc",
+    "working-with-the-iobc"
+  ],
+  "title": "KubOS for the ISIS-OBC"
+}

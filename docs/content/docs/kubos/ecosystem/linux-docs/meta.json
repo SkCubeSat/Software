@@ -1,0 +1,11 @@
+{
+  "pages": [
+    "kubos-linux-overview",
+    "kubos-linux-recovery",
+    "kubos-linux-upgrade",
+    "logging",
+    "monitoring",
+    "using-kubos-linux"
+  ],
+  "title": "Linux Docs"
+}

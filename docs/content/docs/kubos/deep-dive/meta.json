@@ -1,0 +1,13 @@
+{
+  "title": "Under the Hood",
+  "description": "KubOS APIs, protocols, and internal design details",
+  "defaultOpen": true,
+  "collapsible": true,
+  "pages": [
+    "index",
+    "apis",
+    "protocols",
+    "klb",
+    "design-decisions"
+  ]
+}

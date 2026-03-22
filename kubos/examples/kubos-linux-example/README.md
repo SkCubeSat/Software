@@ -6,11 +6,11 @@ This is a simple "Hello World!" application built on top of the [Kubos Linux Pla
 
 For more information about the SDK, see our docs:
 
-- [Kubos Docs](http://docs.kubos.co)
-- [Installing the Kubos SDK](http://docs.kubos.co/latest/sdk-installing.html)
-- [Kubos SDK Cheatsheet](http://docs.kubos.co/latest/sdk-cheatsheet.html) 
-- [Kubos CLI Command Reference](http://docs.kubos.co/latest/sdk-reference.html) 
-- [Kubos Project Configuration](http://docs.kubos.co/latest/sdk-project-config.html)
+- [Kubos Docs](https://skcubesat.github.io/Software/docs)
+- [Installing the Kubos SDK](https://skcubesat.github.io/Software/docs/kubos/sdk-docs/sdk-installing)
+- [Kubos SDK Cheatsheet](https://kubos-preservation-group.github.io/kubos/latest/sdk-cheatsheet.html) 
+- [Kubos CLI Command Reference](https://kubos-preservation-group.github.io/kubos/latest/sdk-reference.html) 
+- [Kubos Project Configuration](https://kubos-preservation-group.github.io/kubos/latest/sdk-project-config.html)
 
     
     

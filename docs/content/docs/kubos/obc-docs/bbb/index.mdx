@@ -1,0 +1,38 @@
+---
+title: "KubOS for the Beaglebone Black"
+---
+
+## Reference Documents
+
+- [Beaglebone Black Web Page](https://beagleboard.org/black)
+- [Beaglebone Black Wiki](http://elinux.org/Beagleboard:BeagleBoneBlack)
+- [Beaglebone Black Hardware Diagrams](http://beagleboard.org/Support/bone101/#hardware)
+- [Beaglebone Black System Reference Manual Rev C](http://static6.arrow.com/aropdfconversion/8fff89aa85f5c451318cbdee2facd9c9fac36872/bbb_srm.pdf)
+
+## Debug Console Connection
+
+As documented in section 7.5 of the <span className="title-ref">Beaglebone Black System Reference Manual</span>, an FTDI cable can be connected to the serial debug connector in order to establish a debug console connection.
+
+This connection will be passed through to a Kubos Vagrant image as <span className="title-ref">/dev/FTDI</span>.
+
+## Ethernet Connection
+
+Please refer to our [ethernet overview](/docs/kubos/obc-docs/comms-setup#ethernet) for help setting up an SSH connection over ethernet.
+
+## Peripherals
+
+By default, KubOS exposes the following peripheral components:
+
+- Ethernet
+- 2 I2C buses
+- 1 SPI bus
+- 5 UART buses
+- 7 ADC pins
+- Many GPIO pins
+
+More information about these peripheral devices can be found in the `working-with-the-bbb` doc.
+
+## Pages in This Section
+
+- [installing-linux-bbb](installing-linux-bbb)
+- [working-with-the-bbb](working-with-the-bbb)
