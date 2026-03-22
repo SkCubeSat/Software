@@ -62,6 +62,8 @@ members = [
     "kubos/test/integration/linux/isis-ants",
     "services/payload-services/star-risc",
     "services/payload-services/mram-service",
+    "services/payload-services/dosimeter",
+    "services/payload-services/fram-service",
 ]
 
 exclude = ["kubos/apis/nosengine-rust", "kubos/test/integration/nosengine-rust"]
