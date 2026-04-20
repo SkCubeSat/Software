@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-use failure::Error;
+use anyhow::Error;
 use kubos_service::{process_errors, push_err, run};
 use log::{error, info};
 use novatel_oem6_api::Log::*;
@@ -26,7 +26,7 @@ use std::time::Duration;
 
 use crate::objects::*;
 
-pub const RECV_TIMEOUT: Duration = Duration::from_millis(350);
+pub const RECV_TIMEOUT: Duration = Duration::from_millis(2000);
 
 pub struct LockData {
     pub status: Mutex<LockStatus>,
@@ -409,11 +409,31 @@ impl Subsystem {
     pub fn passthrough(&self, command: String) -> Result<GenericResponse, Error> {
         // Convert the hex values in the string into actual hex values
         // Ex. "c3c2" -> [0xc3, 0xc2]
-        let tx: Vec<u8> = command
+        //
+        // Note: This function expects a string of raw hex byte pairs (e.g. "AA4F22").
+        // It does NOT accept ASCII NovAtel commands (e.g. "UNLOGALL TRUE") -- those
+        // are not supported by the binary framing layer used here.
+        let tx: Vec<u8> = match command
             .as_bytes()
             .chunks(2)
-            .map(|chunk| u8::from_str_radix(::std::str::from_utf8(chunk).unwrap(), 16).unwrap())
-            .collect();
+            .map(|chunk| {
+                let s = ::std::str::from_utf8(chunk)
+                    .map_err(|e| format!("Invalid UTF-8 in command: {}", e))?;
+                u8::from_str_radix(s, 16)
+                    .map_err(|e| format!("Invalid hex byte '{}': {}", s, e))
+            })
+            .collect::<Result<Vec<u8>, String>>()
+        {
+            Ok(bytes) => bytes,
+            Err(err) => {
+                let msg = format!("passthrough command parse error: {}", err);
+                push_err!(self.errors, msg.clone());
+                return Ok(GenericResponse {
+                    success: false,
+                    errors: msg,
+                });
+            }
+        };
 
         let result = run!(self.oem.passthrough(tx.as_slice()), self.errors);
 

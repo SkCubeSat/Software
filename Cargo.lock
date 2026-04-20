@@ -3439,13 +3439,12 @@ dependencies = [
 name = "novatel-oem6-service"
 version = "0.1.0"
 dependencies = [
- "failure",
- "juniper 0.11.1",
+ "anyhow",
+ "async-graphql",
  "kubos-service",
  "log 0.4.29",
  "novatel-oem6-api",
  "serde_json",
- "warp 0.1.23",
 ]
 
 [[package]]
