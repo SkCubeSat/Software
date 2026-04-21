@@ -18,10 +18,14 @@ use novatel_oem6_api::mock::*;
 use novatel_oem6_api::*;
 
 #[macro_export]
-/// Mock a service for the OEM6.
+/// Build a ready-to-execute async-graphql Schema for the OEM6 service,
+/// backed by a mock UART stream.
 macro_rules! service_new {
     ($mock:ident) => {{
+        use async_graphql::{EmptySubscription, Schema};
+        use kubos_service::Context;
         use novatel_oem6_api::Connection;
+        use std::collections::HashMap;
         use std::sync::{Arc, Mutex, RwLock};
         use std::thread;
         use std::time::Duration;
@@ -65,24 +69,23 @@ macro_rules! service_new {
         // run on CircleCI, it needs to be 500ms
         thread::sleep(Duration::from_millis(500));
 
-        let config = r#"
-            [novatel-oem6-service.addr]
-            ip = "127.0.0.1"
-            port = 9999"#;
+        let subsystem = Subsystem {
+            oem,
+            last_cmd: Arc::new(RwLock::new(AckCommand::None)),
+            errors: Arc::new(RwLock::new(vec![])),
+            lock_data: data.clone(),
+            error_recv: Arc::new(Mutex::new(error_recv)),
+            version_recv: Arc::new(Mutex::new(version_recv)),
+        };
 
-        Service::new(
-            Config::new_from_str("novatel-oem6-service", &config).unwrap(),
-            Subsystem {
-                oem,
-                last_cmd: Arc::new(RwLock::new(AckCommand::None)),
-                errors: Arc::new(RwLock::new(vec![])),
-                lock_data: data.clone(),
-                error_recv: Arc::new(Mutex::new(error_recv)),
-                version_recv: Arc::new(Mutex::new(version_recv)),
-            },
-            QueryRoot,
-            MutationRoot,
-        )
+        let context = Context {
+            subsystem,
+            storage: Arc::new(RwLock::new(HashMap::new())),
+        };
+
+        Schema::build(QueryRoot, MutationRoot, EmptySubscription)
+            .data(context)
+            .finish()
     }};
 }
 

@@ -160,8 +160,10 @@ if {$portcheck ne ""} {
 
 # ---- Connect to serial ----
 puts "\n🔌 Connecting to $serial at $baud baud..."
+# spawn -open [open $serial w+]
+# stty $baud raw -echo < $serial
+exec stty -F $serial $baud raw -echo clocal -crtscts
 spawn -open [open $serial w+]
-stty $baud raw -echo < $serial
 
 # ---- Login ----
 send "\r"

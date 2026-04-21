@@ -200,8 +200,12 @@ where
             })
             .unwrap();
 
-        // Create our application with routes
+        // Create our application with routes.
+        // "/" is the root GraphQL endpoint used by the kubos_app Python library
+        // (which posts to http://ip:port/ with no path suffix).
+        // "/graphql" serves the same handler and also exposes the GraphiQL browser UI.
         let app = Router::new()
+            .route("/", axum::routing::post_service(GraphQL::new(self.schema.clone())))
             .route("/graphql", get(Self::graphiql).post_service(GraphQL::new(self.schema)))
             .route("/graphiql", get(Self::graphiql));
 

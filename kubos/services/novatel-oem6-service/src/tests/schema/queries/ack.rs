@@ -140,11 +140,7 @@ fn ack_issue_raw_command() {
 
     let service = service_new!(mock);
 
-    let mutation = r#"mutation {
-            issueRawCommand(command: \"01\"){
-                success
-            }
-        }"#;
+    let mutation = "mutation { issueRawCommand(command: \"01\") { success } }";
 
     request!(service, mutation);
 
