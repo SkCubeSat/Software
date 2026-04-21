@@ -3441,6 +3441,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-graphql",
+ "futures 0.3.31",
  "kubos-service",
  "log 0.4.29",
  "novatel-oem6-api",

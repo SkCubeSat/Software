@@ -269,6 +269,7 @@ pub enum PosVelType {
     /// Single point position
     Single,
     /// Pseudorange differential solution
+    #[graphql(name = "PSRDIFF")]
     PSRDiff,
     /// Solution calculated using corrections from an WAAS
     WAAS,
