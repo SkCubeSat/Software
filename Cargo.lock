@@ -666,6 +666,7 @@ dependencies = [
 name = "clyde-3g-eps-service"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "async-graphql",
  "async-graphql-axum",
  "clyde-3g-eps-api",
