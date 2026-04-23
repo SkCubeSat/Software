@@ -1,0 +1,1 @@
+{"query":"mutation { deleteFile(name: \"note.txt\") { success errors deleted } }"}

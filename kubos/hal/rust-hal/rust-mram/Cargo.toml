@@ -1,0 +1,19 @@
+[package]
+name = "rust-mram"
+version = "0.1.0"
+authors = ["RADSAT Software Team"]
+edition = "2021"
+description = "Async embedded-hal driver for Everspin MR2xH40 MRAM"
+license = "Apache-2.0"
+
+[dependencies]
+embedded-hal = "1.0"
+embedded-hal-async = "1.0"
+embedded-io = "0.7"
+embedded-io-async = "0.7"
+
+[dev-dependencies]
+futures = "0.3"
+
+[package.metadata.release]
+release = false

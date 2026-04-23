@@ -1,0 +1,15 @@
+[mram-service]
+backend = "file"
+image_path = "/tmp/mram-service.img"
+# Must match MR2xH40 capacity for littlefs layout.
+image_capacity_bytes = 524288
+
+# Enable these when building with --features spidev
+# backend = "spidev"
+# spi_device = "/dev/spidev1.0"
+# spi_speed_hz = 10000000
+# spi_mode = 0
+
+[mram-service.addr]
+ip = "127.0.0.1"
+port = 8090

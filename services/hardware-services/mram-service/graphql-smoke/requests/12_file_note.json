@@ -1,0 +1,1 @@
+{"query":"{ file(name: \"note.txt\") { name size mimeType compressed createdAt updatedAt } }"}
