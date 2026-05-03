@@ -1,0 +1,53 @@
+---
+title: Deploying Docs to GitHub Pages
+description: Host the Fumadocs docs site on GitHub Pages using Next.js static export and Bun.
+---
+
+## Can Fumadocs Run on GitHub Pages?
+
+Yes, as long as the docs app is built as a static export.
+
+GitHub Pages serves static files only, so the Fumadocs site must export static HTML/CSS/JS (no always-on Node.js server).
+
+## How This Repo Is Configured
+
+This docs app uses Next.js static export in `docs/next.config.mjs`:
+
+- `output: 'export'`
+- `trailingSlash: true`
+- repo-aware `basePath` and `assetPrefix` for GitHub Pages project URLs
+- `images.unoptimized = true` for static export compatibility
+
+The GitHub Actions workflow builds the site from `docs/` and uploads `docs/out/` to GitHub Pages.
+
+## Important Limitations (Static Hosting)
+
+A GitHub Pages deployment cannot use runtime server features. Keep docs pages static and build-time generated.
+
+Examples of features that should be avoided (or redesigned) for Pages:
+
+- runtime API routes
+- runtime SSR-only features
+- anything requiring a persistent Node.js server
+
+## Search on Static Hosting (Orama)
+
+Search is still possible on GitHub Pages.
+
+This docs site uses Fumadocs built-in Orama search in static mode:
+
+- search route uses `staticGET` (pre-rendered search index output)
+- search client uses `type: 'static'` in the browser
+
+This keeps the site compatible with GitHub Pages while preserving built-in docs search.
+
+## Workflow File
+
+The Pages workflow is in:
+
+- `.github/workflows/docs-pages.yml`
+
+Before using it:
+
+1. Enable GitHub Pages in repository settings (GitHub Actions deployment).
+2. Confirm your default branch name matches the workflow trigger (`main` by default).

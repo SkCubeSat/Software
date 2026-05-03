@@ -1,0 +1,132 @@
+---
+title: Writing Docs with MDX, PlantUML, and Draw.io
+description: Author documentation pages in MDX and use the repo's static PlantUML and Draw.io diagram integrations.
+---
+
+## Overview
+
+This docs site is written in MDX (`.mdx`) and built with Fumadocs on top of a Next.js static export.
+
+In practice, that means you can write mostly normal Markdown, sprinkle in code fences and the occasional MDX component, and still keep everything compatible with GitHub Pages. PlantUML and Draw.io diagrams are both rendered into static SVG files during the build, so there is no runtime diagram rendering in production.
+
+## Where Docs Live
+
+All docs pages live under `docs/content/docs/`.
+
+Most sections also have a `meta.json` file next to them. That file controls how the section appears in the sidebar (title, icon, order, and whether it starts expanded).
+
+## MDX Basics in This Repo
+
+Every page should start with frontmatter, at minimum a title:
+
+````mdx
+---
+title: My Page Title
+description: Optional short summary shown in docs metadata/SEO.
+---
+````
+
+After that, write the page like regular Markdown. Headings, links, lists, images, and code fences all work the way you expect. Here is a small example:
+
+````mdx
+## Example Section
+
+Use `bun run build` to generate the static docs site.
+
+```bash
+cd docs
+bun run build
+```
+````
+
+## PlantUML Diagrams (Static)
+
+This repo already supports PlantUML diagrams as part of the docs build.
+
+### How to Author a PlantUML Diagram
+
+Add a fenced code block that includes the usual PlantUML start/end markers.
+
+The current integration detects PlantUML by the content itself, so the fence language is not especially important (many existing pages use `text`).
+
+This page includes a live PlantUML example below, so you can see what the rendered result looks like in the docs theme:
+
+```text
+@startuml
+left to right direction
+
+actor "Docs Author" as author
+rectangle "MDX Page" as mdx
+database "Static SVG" as svg
+
+author --> mdx : writes content
+mdx --> svg : build renders diagram
+@enduml
+```
+
+### How It Works
+
+At build time (and on `bun run dev` startup), `docs/scripts/generate-plantuml.mjs` scans MDX files, finds PlantUML blocks, and renders them to SVG files. A remark plugin then rewrites those code blocks into image references, and the MDX image renderer handles light/dark asset swapping in the browser.
+
+### Author Notes
+
+PlantUML output is fully static, so there is no client-side PlantUML runtime involved. For local builds you need Java and Graphviz (`dot`). During `bun run dev`, PlantUML diagrams are regenerated automatically when an MDX file containing PlantUML changes.
+
+## Draw.io Diagrams (Static, Single Source of Truth)
+
+The Draw.io integration is designed around one source of truth: a single `.drawio` file. The docs tooling exports that file into both light and dark SVG variants during build and local development.
+
+### How to Author a Draw.io Diagram
+
+Create a `.drawio` file near your page (a local `diagrams/` folder works well), then reference it from MDX with a `drawio` fenced block.
+
+Here is a live Draw.io example embedded on this page:
+
+```drawio src="./diagrams/docs-diagram-example.drawio" alt="Example Draw.io diagram rendered as static light/dark SVGs"
+```
+
+### Supported `drawio` Fence Metadata
+
+The `drawio` fence currently supports `src` (required) and `alt` (recommended). The `src` path is resolved relative to the current `.mdx` file.
+
+One important v1 limitation: `page=` is not supported yet, so Draw.io files should be single-page for now.
+
+### How It Works
+
+`docs/scripts/generate-drawio.mjs` scans MDX files for `drawio` fences, exports each referenced `.drawio` file twice (light and dark SVG) using Docker image `rlespinasse/drawio-export`, and writes the results into `docs/public/`. A remark plugin rewrites the fence into a static image URL, and the MDX image renderer swaps the light/dark SVG automatically based on the current theme.
+
+### Local Dev DX (Auto Rebuild on Draw.io Changes)
+
+`bun run dev` starts a Draw.io watcher in the background. When you edit a `.drawio` file, it regenerates the SVGs automatically, so you can refresh the page and see the updated diagram without running the build manually.
+
+For that to work locally, Docker needs to be running.
+
+### Build / Deployment Notes
+
+Both Draw.io and PlantUML outputs end up as static assets in `docs/public/`, which keeps the site compatible with GitHub Pages static hosting. Production pages just load images; they do not render diagrams on the client.
+
+## Recommended Authoring Pattern
+
+For diagram-heavy pages, a simple pattern works well: keep the page at `docs/content/docs/<section>/<page>.mdx`, put related diagram files in a sibling `diagrams/` folder, and reference them with relative paths. Also, give the diagram a meaningful `alt` text so the page is still readable with images disabled or via assistive tech.
+
+## Example in This Repo
+
+This page is also the example. It contains both a live PlantUML diagram and a live Draw.io diagram, so you can use it as a reference when adding diagrams to other docs pages.
+
+The Draw.io source file used here lives at:
+
+- `docs/content/docs/documentation/diagrams/docs-diagram-example.drawio`
+
+## Troubleshooting
+
+### Draw.io diagram does not update in local dev
+
+Start with the basics: make sure Docker is running and check the terminal output for `Draw.io watch: change detected ...`. Wait for regeneration to finish, then refresh the page. If it still looks stale, restart `bun run dev`.
+
+### Build fails on Draw.io export
+
+The most common causes are a bad `src="..."` path, Docker not running, or a multi-page `.drawio` file (v1 currently expects a single page).
+
+### Build fails on PlantUML export
+
+Usually this means one of the local dependencies is missing (Java or Graphviz/`dot`) or the PlantUML block has invalid syntax.

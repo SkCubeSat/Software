@@ -25,12 +25,7 @@ fn issue_raw_command_good() {
 
     let service = service_new!(mock);
 
-    let query = r#"mutation {
-            issueRawCommand(command: \"01020304FA\"){
-                errors,
-                success
-            }
-        }"#;
+    let query = "mutation { issueRawCommand(command: \"01020304FA\") { errors, success } }";
 
     let expected = json!({
             "issueRawCommand": {
@@ -48,12 +43,7 @@ fn issue_raw_command_bad() {
 
     let service = service_new!(mock);
 
-    let query = r#"mutation {
-            issueRawCommand(command: \"01020304FA\"){
-                errors,
-                success
-            }
-        }"#;
+    let query = "mutation { issueRawCommand(command: \"01020304FA\") { errors, success } }";
 
     let expected = json!({
             "issueRawCommand": {

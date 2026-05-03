@@ -1,0 +1,9 @@
+{
+  "pages": [
+    "index",
+    "c-i2c",
+    "python-i2c",
+    "rust-i2c"
+  ],
+  "title": "I2C HALs"
+}

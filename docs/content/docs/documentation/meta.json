@@ -1,0 +1,8 @@
+{
+  "title": "Documentation",
+  "icon": "FileText",
+  "description": "Docs site and documentation process notes",
+  "defaultOpen": false,
+  "collapsible": true,
+  "pages": ["writing-docs-mdx-diagrams", "deployment-github-pages"]
+}

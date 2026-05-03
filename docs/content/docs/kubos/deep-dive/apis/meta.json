@@ -1,0 +1,10 @@
+{
+  "pages": [
+    "device-api",
+    "device-api-guide",
+    "kubos-hal",
+    "kubos-libs",
+    "obc-api"
+  ],
+  "title": "Apis"
+}

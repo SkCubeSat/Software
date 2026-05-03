@@ -19,34 +19,33 @@ use super::*;
 
 use crate::model::*;
 use crate::schema::*;
-use kubos_service::{Config, Service};
+use async_graphql::Request;
 use serde_json::json;
 use std::sync::mpsc::sync_channel;
 
+/// Send a GraphQL request to an in-process schema and return the Response.
 macro_rules! request {
-    ($service:ident, $query:ident) => {{
-        // Warp doesn't like control characters (ie. new line characters)
-        // so we need to remove them before we send the request
-        let query = $query.replace("\n", "");
-        warp::test::request()
-            .header("Content-Type", "application/json")
-            .method("POST")
-            .body(format!("{{\"query\": \"{}\"}}", query))
-            .reply(&$service.filter)
+    ($schema:expr, $query:expr) => {{
+        let request = Request::new($query.replace("\n", ""));
+        futures::executor::block_on($schema.execute(request))
     }};
 }
 
-macro_rules! wrap {
-    ($result:ident) => {{
-        &json!({ "data": $result }).to_string()
+/// Extract the data body of a Response as a serde_json::Value.
+macro_rules! response_data {
+    ($res:expr) => {{
+        serde_json::from_str::<serde_json::Value>(&$res.data.into_json().unwrap().to_string())
+            .unwrap()
     }};
 }
 
+/// Assert that a GraphQL query returns the expected JSON data.
 macro_rules! test {
-    ($service:ident, $query:ident, $expected:ident) => {{
-        let res = request!($service, $query);
-
-        assert_eq!(res.body(), wrap!($expected));
+    ($schema:ident, $query:ident, $expected:ident) => {{
+        let res = request!($schema, $query);
+        assert!(res.errors.is_empty(), "GraphQL errors: {:?}", res.errors);
+        let data = response_data!(res);
+        assert_eq!(data, $expected);
     }};
 }
 
@@ -58,7 +57,7 @@ mod test_data;
 fn ping() {
     let mut mock = MockStream::default();
 
-    let service = service_new!(mock);
+    let schema = service_new!(mock);
 
     let query = r#"{
             ping
@@ -68,5 +67,5 @@ fn ping() {
             "ping": "pong"
     });
 
-    test!(service, query, expected);
+    test!(schema, query, expected);
 }
