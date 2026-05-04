@@ -1,0 +1,12 @@
+[package]
+name = "analog-ic-api"
+version = "0.1.0"
+authors = ["USST CUBICS Software Team"]
+edition = "2018"
+
+[dependencies]
+rust-i2c = { path = "../../hal/rust-hal/rust-i2c" }
+thiserror = "1.0"
+
+[package.metadata.release]
+release = false

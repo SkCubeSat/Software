@@ -40,6 +40,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "analog-ic-api"
+version = "0.1.0"
+dependencies = [
+ "rust-i2c",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "analog-ic-service"
+version = "0.1.0"
+dependencies = [
+ "analog-ic-api",
+ "anyhow",
+ "async-graphql",
+ "async-graphql-axum",
+ "kubos-service",
+ "log 0.4.29",
+ "rust-i2c",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "android_system_properties"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"

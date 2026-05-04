@@ -1,0 +1,19 @@
+[package]
+name = "analog-ic-service"
+version = "0.1.0"
+authors = ["USST CUBICS Software Team"]
+edition = "2018"
+
+[dependencies]
+analog-ic-api = { path = "../../../kubos/apis/analog-ic-api" }
+async-graphql = "7.0.16"
+async-graphql-axum = "7.0.17"
+thiserror = "1.0"
+anyhow = "1.0"
+
+kubos-service = { path = "../../../kubos/services/kubos-service" }
+log = "^0.4.0"
+rust-i2c = { path = "../../../kubos/hal/rust-hal/rust-i2c" }
+
+[package.metadata.release]
+release = false

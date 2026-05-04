@@ -1,0 +1,6 @@
+[analog-ic-service]
+bus = "/dev/i2c-1"
+
+[analog-ic-service.addr]
+ip = "127.0.0.1"
+port = 8002
