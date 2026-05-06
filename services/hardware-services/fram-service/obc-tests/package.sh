@@ -1,5 +1,5 @@
 #!/bin/sh
-set -eu
+set -e
 
 DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT=$(CDPATH= cd -- "$DIR/../../../.." && pwd)

@@ -30,6 +30,15 @@ From the repository root:
 services/hardware-services/fram-service/obc-tests/build.sh
 ```
 
+The build script strips the release binaries by default using
+`arm-linux-gnueabihf-strip` or `llvm-strip` if available. Override the strip tool
+or keep symbols with:
+
+```sh
+STRIP=/path/to/arm-linux-gnueabihf-strip services/hardware-services/fram-service/obc-tests/build.sh
+NO_STRIP=1 services/hardware-services/fram-service/obc-tests/build.sh
+```
+
 Equivalent explicit commands:
 
 ```sh
