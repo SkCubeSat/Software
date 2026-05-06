@@ -66,6 +66,7 @@ members = [
     "services/hardware-services/mram-service",
     "services/hardware-services/fram-service",
     "services/payload-services/dosimeter",
+]
 
 exclude = ["kubos/apis/nosengine-rust", "kubos/test/integration/nosengine-rust"]
 
