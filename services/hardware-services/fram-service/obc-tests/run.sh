@@ -1,5 +1,5 @@
 #!/bin/sh
-set -eu
+set -e
 
 DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 URL="${URL:-http://127.0.0.1:8091/graphql}"

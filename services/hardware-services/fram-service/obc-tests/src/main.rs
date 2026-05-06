@@ -375,8 +375,31 @@ fn graphql_mission_write_restore(url: &str) -> Result<(), String> {
     let original = query_detumbling(url)?;
     let test_value = !original;
 
-    set_detumbling(url, test_value)?;
-    let observed = query_detumbling(url)?;
+    if let Err(err) = set_detumbling(url, test_value) {
+        return match set_detumbling(url, original) {
+            Ok(()) => Err(format!(
+                "failed to write detumbling_complete={test_value}: {err}; original value restored"
+            )),
+            Err(restore_err) => Err(format!(
+                "failed to write detumbling_complete={test_value}: {err}; restore also failed: {restore_err}"
+            )),
+        };
+    }
+
+    let observed = match query_detumbling(url) {
+        Ok(value) => value,
+        Err(err) => {
+            return match set_detumbling(url, original) {
+                Ok(()) => Err(format!(
+                    "failed to read detumbling_complete after test write: {err}; original value restored"
+                )),
+                Err(restore_err) => Err(format!(
+                    "failed to read detumbling_complete after test write: {err}; restore also failed: {restore_err}"
+                )),
+            };
+        }
+    };
+
     if observed != test_value {
         let restore_result = set_detumbling(url, original);
         return match restore_result {
@@ -464,8 +487,8 @@ fn graphql(url: &str, query: &str) -> Result<String, String> {
     if !headers.starts_with("HTTP/1.1 200") && !headers.starts_with("HTTP/1.0 200") {
         return Err(format!("non-200 response: {headers}\n{body}"));
     }
-    if body.contains("\"errors\"") {
-        return Err(format!("GraphQL returned errors: {body}"));
+    if body.contains("\"errors\":[") {
+        return Err(format!("GraphQL returned top-level errors: {body}"));
     }
 
     Ok(body.to_string())
