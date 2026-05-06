@@ -1,0 +1,1 @@
+{"query":"{ health { backend capacityBytes framReachable lastError } }"}

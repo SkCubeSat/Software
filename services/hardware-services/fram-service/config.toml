@@ -1,3 +1,20 @@
+[fram-service]
+backend = "file"
+image_path = "/tmp/fram-service.img"
+image_capacity_bytes = 8192
+
+fw_printenv = "/usr/sbin/fw_printenv"
+fw_setenv = "/usr/sbin/fw_setenv"
+
+# Enable hardware mode by building with: cargo build -p fram-service --features i2c
+# backend = "i2c"
+# i2c_bus = "/dev/i2c-2"
+# i2c_addr = "0x50"
+# capacity_bytes = 8192
+# address_width_bytes = 2
+# max_transfer_bytes = 32
+# I2C bus speed is configured by Linux/device-tree. The FRAM supports up to 1 MHz.
+
 [fram-service.addr]
 ip = "127.0.0.1"
-port = 
+port = 8091

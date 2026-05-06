@@ -1651,14 +1651,15 @@ version = "0.1.0"
 dependencies = [
  "async-graphql",
  "async-graphql-axum",
- "axum",
- "chrono",
+ "crc32fast",
  "embedded-hal",
+ "futures 0.3.31",
  "kubos-service",
  "linux-embedded-hal",
  "log 0.4.29",
- "rust-i2c",
- "tokio 1.49.0",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
