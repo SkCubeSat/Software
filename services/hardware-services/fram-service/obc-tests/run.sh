@@ -13,6 +13,9 @@ I2C_ADDR="${I2C_ADDR:-0x50}"
 SCRATCH_OFFSET="${SCRATCH_OFFSET:-4096}"
 SCAN_ONLY="${FRAM_TEST_SCAN_ONLY:-0}"
 MISSION_WRITE="${FRAM_TEST_MISSION_WRITE:-0}"
+ENV_WRITE="${FRAM_TEST_ENV_WRITE:-0}"
+FW_PRINTENV="${FRAM_TEST_FW_PRINTENV:-/usr/sbin/fw_printenv}"
+FW_SETENV="${FRAM_TEST_FW_SETENV:-/usr/sbin/fw_setenv}"
 
 SERVICE_PID=""
 
@@ -97,6 +100,11 @@ if [ "$MISSION_WRITE" = "1" ]; then
   TEST_ARGS="$TEST_ARGS --mission-write"
 else
   echo "Mission flag write/restore is disabled. Set FRAM_TEST_MISSION_WRITE=1 to enable it."
+fi
+if [ "$ENV_WRITE" = "1" ]; then
+  TEST_ARGS="$TEST_ARGS --env-write --fw-printenv $FW_PRINTENV --fw-setenv $FW_SETENV"
+else
+  echo "U-Boot env mirror write/restore is disabled. Set FRAM_TEST_ENV_WRITE=1 to enable it."
 fi
 
 # shellcheck disable=SC2086

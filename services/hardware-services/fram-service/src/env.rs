@@ -28,6 +28,10 @@ impl EnvStore for CommandEnvStore {
             .map_err(|err| format!("failed to execute {}: {err}", self.printenv_path))?;
 
         if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+            if is_env_backend_error(&stderr) {
+                return Err(stderr);
+            }
             return Ok(None);
         }
 
@@ -58,6 +62,13 @@ impl EnvStore for CommandEnvStore {
             })
         }
     }
+}
+
+fn is_env_backend_error(stderr: &str) -> bool {
+    stderr.contains("Cannot open")
+        || stderr.contains("No such file or directory")
+        || stderr.contains("Permission denied")
+        || stderr.contains("Bad CRC")
 }
 
 #[derive(Default)]

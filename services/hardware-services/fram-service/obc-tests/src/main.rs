@@ -1,7 +1,7 @@
 use std::env;
 use std::io::{Read, Write};
 use std::net::TcpStream;
-use std::process;
+use std::process::{self, Command};
 use std::time::Duration;
 
 use fram_service::backend::{ByteStorage, I2cFramBackend};
@@ -28,6 +28,9 @@ struct Options {
     skip_graphql: bool,
     skip_direct: bool,
     mission_write: bool,
+    env_write: bool,
+    fw_printenv: String,
+    fw_setenv: String,
 }
 
 fn main() {
@@ -76,6 +79,20 @@ fn main() {
             run(
                 "GraphQL mission flag write/restore",
                 || graphql_mission_write_restore(&options.url),
+                &mut failures,
+            );
+        }
+
+        if options.env_write {
+            run(
+                "GraphQL env mirror write/restore",
+                || {
+                    graphql_env_write_restore(
+                        &options.url,
+                        &options.fw_printenv,
+                        &options.fw_setenv,
+                    )
+                },
                 &mut failures,
             );
         }
@@ -153,6 +170,11 @@ impl Options {
             skip_graphql: env::var("FRAM_TEST_SKIP_GRAPHQL").ok().as_deref() == Some("1"),
             skip_direct: env::var("FRAM_TEST_SKIP_DIRECT").ok().as_deref() == Some("1"),
             mission_write: env::var("FRAM_TEST_MISSION_WRITE").ok().as_deref() == Some("1"),
+            env_write: env::var("FRAM_TEST_ENV_WRITE").ok().as_deref() == Some("1"),
+            fw_printenv: env::var("FRAM_TEST_FW_PRINTENV")
+                .unwrap_or_else(|_| "/usr/sbin/fw_printenv".to_string()),
+            fw_setenv: env::var("FRAM_TEST_FW_SETENV")
+                .unwrap_or_else(|_| "/usr/sbin/fw_setenv".to_string()),
         };
 
         let mut args = env::args().skip(1);
@@ -182,6 +204,9 @@ impl Options {
                 "--skip-graphql" => options.skip_graphql = true,
                 "--skip-direct" => options.skip_direct = true,
                 "--mission-write" => options.mission_write = true,
+                "--env-write" => options.env_write = true,
+                "--fw-printenv" => options.fw_printenv = require_arg(&mut args, "--fw-printenv")?,
+                "--fw-setenv" => options.fw_setenv = require_arg(&mut args, "--fw-setenv")?,
                 "--help" | "-h" => {
                     print_usage();
                     process::exit(0);
@@ -228,7 +253,10 @@ fn print_usage() {
            --scan-only                Read-probe 0x50..0x57 and exit without writes\n\
            --skip-graphql             Do not call the GraphQL service\n\
            --skip-direct              Do not run direct I2C scratch test\n\
-           --mission-write            Toggle and restore detumbling_complete through GraphQL\n"
+           --mission-write            Toggle and restore detumbling_complete in FRAM only\n\
+           --env-write                Toggle and restore detumbling_complete in FRAM and U-Boot env\n\
+           --fw-printenv PATH         fw_printenv path for --env-write\n\
+           --fw-setenv PATH           fw_setenv path for --env-write\n"
     );
 }
 
@@ -424,6 +452,87 @@ fn graphql_mission_write_restore(url: &str) -> Result<(), String> {
     Ok(())
 }
 
+fn graphql_env_write_restore(url: &str, fw_printenv: &str, fw_setenv: &str) -> Result<(), String> {
+    let original = query_detumbling(url)?;
+    let original_env = read_uboot_env(fw_printenv, "detumbling_complete")?;
+    let test_value = !original;
+
+    if let Err(err) = set_detumbling_mirror(url, test_value, true) {
+        return match restore_detumbling(
+            url,
+            fw_printenv,
+            fw_setenv,
+            original,
+            original_env.as_deref(),
+        ) {
+            Ok(()) => Err(format!(
+                "failed to write mirrored detumbling_complete={test_value}: {err}; original values restored"
+            )),
+            Err(restore_err) => Err(format!(
+                "failed to write mirrored detumbling_complete={test_value}: {err}; restore also failed: {restore_err}"
+            )),
+        };
+    }
+
+    let observed_fram = match query_detumbling(url) {
+        Ok(value) => value,
+        Err(err) => {
+            return match restore_detumbling(
+                url,
+                fw_printenv,
+                fw_setenv,
+                original,
+                original_env.as_deref(),
+            ) {
+                Ok(()) => Err(format!(
+                    "failed to read FRAM state after mirrored write: {err}; original values restored"
+                )),
+                Err(restore_err) => Err(format!(
+                    "failed to read FRAM state after mirrored write: {err}; restore also failed: {restore_err}"
+                )),
+            };
+        }
+    };
+
+    let observed_env = read_uboot_env(fw_printenv, "detumbling_complete")?;
+    let expected = test_value.to_string();
+
+    let restore_result = restore_detumbling(
+        url,
+        fw_printenv,
+        fw_setenv,
+        original,
+        original_env.as_deref(),
+    );
+
+    if observed_fram != test_value {
+        return match restore_result {
+            Ok(()) => Err(format!(
+                "FRAM detumbling_complete was {observed_fram}, expected {test_value}; original values restored"
+            )),
+            Err(err) => Err(format!(
+                "FRAM detumbling_complete was {observed_fram}, expected {test_value}; restore also failed: {err}"
+            )),
+        };
+    }
+
+    if observed_env.as_deref() != Some(expected.as_str()) {
+        return match restore_result {
+            Ok(()) => Err(format!(
+                "env detumbling_complete was {:?}, expected {expected}; original values restored",
+                observed_env
+            )),
+            Err(err) => Err(format!(
+                "env detumbling_complete was {:?}, expected {expected}; restore also failed: {err}",
+                observed_env
+            )),
+        };
+    }
+
+    restore_result?;
+    Ok(())
+}
+
 fn query_detumbling(url: &str) -> Result<bool, String> {
     let body = graphql(url, "{ missionState { detumblingComplete } }")?;
     json_bool(&body, "detumblingComplete")
@@ -431,8 +540,12 @@ fn query_detumbling(url: &str) -> Result<bool, String> {
 }
 
 fn set_detumbling(url: &str, value: bool) -> Result<(), String> {
+    set_detumbling_mirror(url, value, false)
+}
+
+fn set_detumbling_mirror(url: &str, value: bool, mirror_to_env: bool) -> Result<(), String> {
     let query = format!(
-        "mutation {{ setMissionFlag(key: DETUMBLING_COMPLETE, value: {value}, mirrorToEnv: false) {{ success errors state {{ detumblingComplete }} }} }}"
+        "mutation {{ setMissionFlag(key: DETUMBLING_COMPLETE, value: {value}, mirrorToEnv: {mirror_to_env}) {{ success errors state {{ detumblingComplete }} }} }}"
     );
     let body = graphql(url, &query)?;
     expect_contains(&body, "\"success\":true")?;
@@ -444,6 +557,83 @@ fn set_detumbling(url: &str, value: bool) -> Result<(), String> {
         Err(format!(
             "detumblingComplete write returned {observed}, expected {value}"
         ))
+    }
+}
+
+fn restore_detumbling(
+    url: &str,
+    fw_printenv: &str,
+    fw_setenv: &str,
+    fram_value: bool,
+    env_value: Option<&str>,
+) -> Result<(), String> {
+    set_detumbling_mirror(url, fram_value, false)?;
+    write_uboot_env(fw_setenv, "detumbling_complete", env_value)?;
+
+    let observed_fram = query_detumbling(url)?;
+    if observed_fram != fram_value {
+        return Err(format!(
+            "FRAM restore readback was {observed_fram}, expected {fram_value}"
+        ));
+    }
+
+    let observed_env = read_uboot_env(fw_printenv, "detumbling_complete")?;
+    if observed_env.as_deref() != env_value {
+        return Err(format!(
+            "env restore readback was {:?}, expected {:?}",
+            observed_env, env_value
+        ));
+    }
+
+    Ok(())
+}
+
+fn read_uboot_env(fw_printenv: &str, key: &str) -> Result<Option<String>, String> {
+    let output = Command::new(fw_printenv)
+        .args(["-n", key])
+        .output()
+        .map_err(|err| format!("failed to execute {fw_printenv}: {err}"))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+        if is_env_backend_error(&stderr) {
+            return Err(stderr);
+        }
+        return Ok(None);
+    }
+
+    Ok(Some(
+        String::from_utf8_lossy(&output.stdout).trim().to_string(),
+    ))
+}
+
+fn is_env_backend_error(stderr: &str) -> bool {
+    stderr.contains("Cannot open")
+        || stderr.contains("No such file or directory")
+        || stderr.contains("Permission denied")
+        || stderr.contains("Bad CRC")
+}
+
+fn write_uboot_env(fw_setenv: &str, key: &str, value: Option<&str>) -> Result<(), String> {
+    let mut command = Command::new(fw_setenv);
+    command.arg(key);
+    if let Some(value) = value {
+        command.arg(value);
+    }
+
+    let output = command
+        .output()
+        .map_err(|err| format!("failed to execute {fw_setenv}: {err}"))?;
+
+    if output.status.success() {
+        Ok(())
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+        Err(if stderr.is_empty() {
+            format!("{fw_setenv} failed for {key}")
+        } else {
+            stderr
+        })
     }
 }
 

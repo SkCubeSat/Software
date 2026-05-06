@@ -142,6 +142,22 @@ That test toggles `detumbling_complete` with `mirrorToEnv: false`, verifies the
 readback, and restores the original value. Do not enable it during a real flight
 configuration unless you intend to touch that mission flag.
 
+To test the U-Boot environment mirror as well:
+
+```sh
+FRAM_TEST_ENV_WRITE=1 ./run.sh
+```
+
+That test toggles `detumbling_complete` with `mirrorToEnv: true`, verifies the
+FRAM state through GraphQL, verifies the U-Boot env value through
+`fw_printenv -n detumbling_complete`, then restores the original FRAM and env
+values. It writes persistent U-Boot env, so keep it gated.
+
+If `fw_printenv` prints `Cannot open /envar/uboot.env`, the U-Boot env partition
+or file is not mounted/present on the current image. Check `/etc/fw_env.config`,
+`mount | grep /envar`, and `ls -l /envar/uboot.env` before running
+`FRAM_TEST_ENV_WRITE=1`.
+
 ## Useful Overrides
 
 ```sh
@@ -151,6 +167,9 @@ TEST_BIN=/path/to/fram-obc-tests
 CONFIG=/path/to/fram-hw.toml
 SCRATCH_OFFSET=4096
 FRAM_TEST_MISSION_WRITE=1
+FRAM_TEST_ENV_WRITE=1
+FRAM_TEST_FW_PRINTENV=/usr/sbin/fw_printenv
+FRAM_TEST_FW_SETENV=/usr/sbin/fw_setenv
 FRAM_TEST_SCAN_ONLY=1
 START_SERVICE=0
 ```
