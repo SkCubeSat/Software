@@ -1,0 +1,29 @@
+[snn-service]
+# UART bus path the SNN payload board is wired to.
+uart_bus = "/dev/ttyUL2"
+uart_baud = 115200
+
+# Per-step timeouts (milliseconds). Distinct from the wall-clock processing time
+# which is bounded by `processing_timeout_ms` below.
+read_line_timeout_ms = 2000
+ready_timeout_ms = 2000
+rx_ok_timeout_ms = 5000
+processing_timeout_ms = 60000
+result_info_timeout_ms = 2000
+result_header_timeout_ms = 2000
+
+# Pending-job FIFO depth. Each slot holds an in-memory JPEG, so keep this small
+# unless you understand the RAM cost.
+queue_capacity = 4
+
+# Maximum number of completed inference results retained in-memory (LRU).
+# Mission apps must call getResult before eviction.
+result_retention = 4
+
+# Maximum accepted image size in bytes. Rejects oversize submissions before
+# they hit the wire.
+max_image_bytes = 4194304
+
+[snn-service.addr]
+ip = "127.0.0.1"
+port = 8092
