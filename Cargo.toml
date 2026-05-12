@@ -61,6 +61,8 @@ members = [
     "kubos/services/isis-ants-service",
     "kubos/test/integration/linux/isis-ants",
     "services/payload-services/star-risc",
+    "services/payload-services/dosimeter",
+    "services/payload-services/snn-service",
     "services/hardware-services/mram-service",
 ]
 
