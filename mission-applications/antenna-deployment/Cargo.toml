@@ -1,0 +1,10 @@
+[package]
+name = "antenna-deployment"
+edition = "2024"
+version.workspace = true
+description.workspace = true
+documentation.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
