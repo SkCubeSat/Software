@@ -1,0 +1,1 @@
+{"query":"mutation { reconcileMissionState(dryRun: true) { success errors actions { key framValue envValue mergedValue action errors } state { removeBeforeFlight deployed deployStart solarPanelDeployed uhfAntennaDeployed vhfAntennaDeployed initialSafeStateComplete detumblingComplete } } }"}

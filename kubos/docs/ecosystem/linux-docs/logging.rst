@@ -98,7 +98,7 @@ interface for usage when building services:
         Ok(())
     }
 
-Utilizing the ``kubos_system::logger`` interface also exposes two optional command line arguments:
+Utilizing the ``radsat_system::logger`` interface also exposes two optional command line arguments:
 
 - The ``--stdout`` flag will enable logging to stdout.
 - The ``-l log-level`` flag will control the verbosity of the logging. The following 

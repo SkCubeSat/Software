@@ -217,19 +217,25 @@ fn main() {
     // Initialize logging
     env_logger::init();
 
-    // Set up database connection
-    let mut database = Database::new("telemetry.db");
-    database.setup();
-
-    // Get configuration
+    // Get configuration first so we can read the database path
     let config = Config::new("telemetry-service").unwrap_or_else(|err| {
         log::error!("Failed to load service config: {:?}", err);
         std::process::exit(1);
     });
 
+    // Set up database connection using path from config
+    let db_path = config
+        .get("database")
+        .map(|v| v.as_str().unwrap_or("telemetry.db").to_string())
+        .unwrap_or_else(|| "telemetry.db".to_string());
+    
+    let mut database = Database::new(&db_path);
+    database.setup();
+
     // Determine if we should set up a UDP connection for passively receiving
     // telemetry for insertion
-    let direct_udp = config.get("direct_port").map(|port| {
+    let direct_udp = config.get("direct_port").and_then(|port| {
+        let port_num = port.as_integer()?;
         let host = config.hosturl().unwrap_or_else(|| {
             log::error!("Failed to load service URL");
             std::process::exit(1);
@@ -240,7 +246,7 @@ fn main() {
             std::process::exit(1);
         });
 
-        format!("{}:{}", host_ip, port)
+        Some(format!("{}:{}", host_ip, port_num))
     });
 
     // Create and start the service

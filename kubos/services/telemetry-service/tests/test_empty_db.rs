@@ -24,8 +24,10 @@ fn test() {
     let db_dir = TempDir::new().unwrap();
     let db_path = db_dir.path().join("test.db");
     let db = db_path.to_str().unwrap();
-    let _fixture = TelemetryServiceFixture::setup(db, None, None, None);
-    let res = do_query(None, "{telemetry{timestamp,subsystem,parameter,value}}");
+    let port = 8210;
+    let udp = 9210;
+    let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), None);
+    let res = do_query(Some(port), "{telemetry{timestamp,subsystem,parameter,value}}");
 
     assert_eq!(
         res,

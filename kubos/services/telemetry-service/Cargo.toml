@@ -8,7 +8,7 @@ edition = "2018"
 diesel = { version = "2.2.8", features = ["sqlite"] }
 env_logger = "0.11.7"
 flate2 = "1.0"
-juniper = "0.16.1"
+async-graphql = "7.0.16"
 kubos-service = { path = "../kubos-service" }
 kubos-telemetry-db = { path = "../../apis/telemetry-db-api" }
 log = "^0.4.0"

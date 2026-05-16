@@ -642,6 +642,9 @@ fn uninstall_kill() {
 
     let pid = result["startApp"]["pid"].as_i64().unwrap();
 
+    // Give the app time to start up and register its signal handler
+    thread::sleep(Duration::from_secs(2));
+
     let result = panic::catch_unwind(|| {
         let result = send_query(
             config.clone(),

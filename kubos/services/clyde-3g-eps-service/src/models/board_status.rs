@@ -15,13 +15,13 @@
 //
 
 //! Data returned by `boardStatus` telemetry query
-
+use async_graphql::SimpleObject;
 use clyde_3g_eps_api::BoardStatus;
 
 /// Board status flags
 ///
 /// Returned structure contains stringified versions of the [StatusCode flags](../../../clyde_3g_eps_api/struct.StatusCode.html)
-#[derive(Clone, Debug, GraphQLObject)]
+#[derive(Clone, Debug, SimpleObject)]
 pub struct BoardData {
     /// Status flags for the motherboard
     pub motherboard: Vec<String>,

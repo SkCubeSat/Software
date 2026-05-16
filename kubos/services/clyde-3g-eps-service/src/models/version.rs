@@ -17,9 +17,10 @@
 //! Data returned by the `version` telemetry query
 
 use clyde_3g_eps_api::{Version, VersionInfo};
+use async_graphql::SimpleObject;
 
 /// Board version informaton
-#[derive(Clone, Debug, GraphQLObject)]
+#[derive(Clone, Debug, SimpleObject)]
 pub struct VersionNum {
     /// Revision number of the firmware
     pub revision: i32,
@@ -28,7 +29,7 @@ pub struct VersionNum {
 }
 
 /// High-level version data structure
-#[derive(Clone, Debug, GraphQLObject)]
+#[derive(Clone, Debug, SimpleObject)]
 pub struct VersionData {
     /// Motherboard version information
     pub motherboard: VersionNum,

@@ -23,6 +23,7 @@ use thiserror::Error;
 /// Errors which occur when using the scheduler
 #[derive(Debug, Error, Eq, PartialEq)]
 #[allow(clippy::enum_variant_names)]
+#[allow(dead_code)]
 pub enum SchedulerError {
     /// An error was raised while activating a mode
     #[error("Failed to activate '{name}': {err}")]
@@ -78,6 +79,7 @@ pub enum SchedulerError {
     },
     // An error was raised when sending a graphql query
     #[error("Scheduler query failed: {err}")]
+    #[allow(dead_code)]
     QueryError {
         /// The error encountered
         err: String,

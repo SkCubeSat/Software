@@ -22,16 +22,16 @@ use std::thread;
 use std::time::Duration;
 use util::SchedulerFixture;
 
-#[test]
-fn import_new_schedule() {
+#[tokio::test]
+async fn import_new_schedule() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8020);
 
-    fixture.create_mode("operational");
+    fixture.create_mode("operational").await;
 
     let schedule = json!({ "tasks": [ ] });
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
     assert_eq!(
-        fixture.import_task_list("first", &schedule_path, "operational"),
+        fixture.import_task_list("first", &schedule_path, "operational").await,
         json!({
             "data" : {
                 "importTaskList": {
@@ -43,7 +43,7 @@ fn import_new_schedule() {
     );
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active, schedule { filename } } }"#),
+        fixture.query(r#"{ availableModes { name, active, schedule { filename } } }"#).await,
         json!({
             "data": {
                 "availableModes": [
@@ -67,13 +67,13 @@ fn import_new_schedule() {
     );
 }
 
-#[test]
-fn import_new_schedule_nonexistant_file() {
+#[tokio::test]
+async fn import_new_schedule_nonexistant_file() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8021);
-    fixture.create_mode("operational");
+    fixture.create_mode("operational").await;
 
     assert_eq!(
-        fixture.import_task_list("first", "", ""),
+        fixture.import_task_list("first", "", "").await,
         json!({
             "data" : {
                 "importTaskList": {
@@ -87,7 +87,7 @@ fn import_new_schedule_nonexistant_file() {
     assert_eq!(
         fixture.query(
             r#"{ availableModes(name: "operational") { name, active, schedule { filename } } }"#
-        ),
+        ).await,
         json!({
             "data": {
                 "availableModes": [
@@ -102,14 +102,14 @@ fn import_new_schedule_nonexistant_file() {
     );
 }
 
-#[test]
-fn import_new_schedule_nonexistant_mode() {
+#[tokio::test]
+async fn import_new_schedule_nonexistant_mode() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8022);
 
     let schedule = json!({ "init": [ ] });
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
     assert_eq!(
-        fixture.import_task_list("first", &schedule_path, "operational"),
+        fixture.import_task_list("first", &schedule_path, "operational").await,
         json!({
             "data" : {
                 "importTaskList": {
@@ -121,17 +121,17 @@ fn import_new_schedule_nonexistant_mode() {
     );
 }
 
-#[test]
-fn import_duplicate_schedule() {
+#[tokio::test]
+async fn import_duplicate_schedule() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8023);
-    fixture.create_mode("operational");
+    fixture.create_mode("operational").await;
 
     let schedule = json!({ "tasks": [ ] });
     let schedule_one_path = fixture.create_task_list(Some(schedule.to_string()));
     let schedule_two_path = fixture.create_task_list(Some(schedule.to_string()));
 
     assert_eq!(
-        fixture.import_task_list("imager", &schedule_one_path, "operational"),
+        fixture.import_task_list("imager", &schedule_one_path, "operational").await,
         json!({
             "data" : {
                 "importTaskList": {
@@ -145,7 +145,7 @@ fn import_duplicate_schedule() {
     assert_eq!(
         fixture.query(
             r#"{ availableModes(name: "operational") { name, active, schedule { filename } } }"#
-        ),
+        ).await,
         json!({
             "data": {
                 "availableModes": [
@@ -164,7 +164,7 @@ fn import_duplicate_schedule() {
     );
 
     assert_eq!(
-        fixture.import_task_list("imager", &schedule_two_path, "operational"),
+        fixture.import_task_list("imager", &schedule_two_path, "operational").await,
         json!({
             "data" : {
                 "importTaskList": {
@@ -178,7 +178,7 @@ fn import_duplicate_schedule() {
     assert_eq!(
         fixture.query(
             r#"{ availableModes(name: "operational") { name, active, schedule { filename } } }"#
-        ),
+        ).await,
         json!({
             "data": {
                 "availableModes": [
@@ -197,17 +197,17 @@ fn import_duplicate_schedule() {
     );
 }
 
-#[test]
-fn import_two_schedules() {
+#[tokio::test]
+async fn import_two_schedules() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8024);
-    fixture.create_mode("flight");
+    fixture.create_mode("flight").await;
 
     let schedule = json!({ "tasks": [ ] });
     let schedule_one_path = fixture.create_task_list(Some(schedule.to_string()));
     let schedule_two_path = fixture.create_task_list(Some(schedule.to_string()));
 
     assert_eq!(
-        fixture.import_task_list("solar", &schedule_one_path, "flight"),
+        fixture.import_task_list("solar", &schedule_one_path, "flight").await,
         json!({
             "data" : {
                 "importTaskList": {
@@ -219,7 +219,7 @@ fn import_two_schedules() {
     );
 
     assert_eq!(
-        fixture.import_task_list("imaging", &schedule_two_path, "flight"),
+        fixture.import_task_list("imaging", &schedule_two_path, "flight").await,
         json!({
             "data" : {
                 "importTaskList": {
@@ -232,7 +232,8 @@ fn import_two_schedules() {
 
     assert_eq!(
         fixture
-            .query(r#"{ availableModes(name: "flight") { name, active, schedule { filename } } }"#),
+            .query(r#"{ availableModes(name: "flight") { name, active, schedule { filename } } }"#)
+            .await,
         json!({
             "data": {
                 "availableModes": [
@@ -270,19 +271,21 @@ macro_rules! assert_option {
     }};
 }
 
-#[test]
-fn import_two_schedules_check_revised() {
+#[tokio::test]
+async fn import_two_schedules_check_revised() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8025);
-    fixture.create_mode("flight");
+    fixture.create_mode("flight").await;
 
     let schedule = json!({ "tasks": [ ] });
     let schedule_one_path = fixture.create_task_list(Some(schedule.to_string()));
     let schedule_two_path = fixture.create_task_list(Some(schedule.to_string()));
 
-    fixture.import_task_list("solar", &schedule_one_path, "flight");
-    let sched_one_result = fixture.query(
-        r#"{ availableModes(name: "flight") { name, active, lastRevised, schedule { filename, timeImported } } }"#
-    );
+    fixture.import_task_list("solar", &schedule_one_path, "flight").await;
+    let sched_one_result = fixture
+        .query(
+            r#"{ availableModes(name: "flight") { name, active, lastRevised, schedule { filename, timeImported } } }"#
+        )
+        .await;
 
     let mode = &sched_one_result["data"]["availableModes"][0];
     assert!(mode.is_object());
@@ -300,11 +303,13 @@ fn import_two_schedules_check_revised() {
 
     thread::sleep(Duration::from_secs(1));
 
-    fixture.import_task_list("imaging", &schedule_two_path, "flight");
+    fixture.import_task_list("imaging", &schedule_two_path, "flight").await;
 
-    let sched_two_result = fixture.query(
-        r#"{ availableModes(name: "flight") { name, active, lastRevised, schedule { filename, timeImported } } }"#
-    );
+    let sched_two_result = fixture
+        .query(
+            r#"{ availableModes(name: "flight") { name, active, lastRevised, schedule { filename, timeImported } } }"#
+        )
+        .await;
 
     let mode = &sched_two_result["data"]["availableModes"][0];
     assert!(mode.is_object());
@@ -327,16 +332,16 @@ fn import_two_schedules_check_revised() {
     assert!(sched_one_dt < sched_two_dt);
 }
 
-#[test]
-fn import_new_schedule_mixed_case_code() {
+#[tokio::test]
+async fn import_new_schedule_mixed_case_code() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8026);
 
-    fixture.create_mode("operational");
+    fixture.create_mode("operational").await;
 
     let schedule = json!({ "tasks": [ ] });
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
     assert_eq!(
-        fixture.import_task_list("FIrst", &schedule_path, "OPerational"),
+        fixture.import_task_list("FIrst", &schedule_path, "OPerational").await,
         json!({
             "data" : {
                 "importTaskList": {
@@ -348,7 +353,7 @@ fn import_new_schedule_mixed_case_code() {
     );
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active, schedule { filename } } }"#),
+        fixture.query(r#"{ availableModes { name, active, schedule { filename } } }"#).await,
         json!({
             "data": {
                 "availableModes": [
@@ -372,15 +377,15 @@ fn import_new_schedule_mixed_case_code() {
     );
 }
 
-#[test]
-fn import_invalid_schedule() {
+#[tokio::test]
+async fn import_invalid_schedule() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8027);
 
-    fixture.create_mode("operational");
+    fixture.create_mode("operational").await;
 
     let schedule_path = fixture.create_task_list(Some("not json".to_owned()));
     assert_eq!(
-        fixture.import_task_list("firST", &schedule_path, "operational"),
+        fixture.import_task_list("firST", &schedule_path, "operational").await,
         json!({
             "data" : {
                 "importTaskList": {
@@ -392,7 +397,7 @@ fn import_invalid_schedule() {
     );
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active, schedule { filename } } }"#),
+        fixture.query(r#"{ availableModes { name, active, schedule { filename } } }"#).await,
         json!({
             "data": {
                 "availableModes": [
@@ -412,12 +417,12 @@ fn import_invalid_schedule() {
     );
 }
 
-#[test]
-fn import_safe_schedule_upper_case() {
+#[tokio::test]
+async fn import_safe_schedule_upper_case() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8028);
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active, schedule { filename } } }"#),
+        fixture.query(r#"{ availableModes { name, active, schedule { filename } } }"#).await,
         json!({
             "data": {
                 "availableModes": [
@@ -434,7 +439,7 @@ fn import_safe_schedule_upper_case() {
     let schedule = json!({ "tasks": [ ] });
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
     assert_eq!(
-        fixture.import_task_list("first", &schedule_path, "SAFE"),
+        fixture.import_task_list("first", &schedule_path, "SAFE").await,
         json!({
             "data" : {
                 "importTaskList": {
@@ -446,7 +451,7 @@ fn import_safe_schedule_upper_case() {
     );
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active, schedule { filename } } }"#),
+        fixture.query(r#"{ availableModes { name, active, schedule { filename } } }"#).await,
         json!({
             "data": {
                 "availableModes": [

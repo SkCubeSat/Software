@@ -19,12 +19,12 @@ mod util;
 use serde_json::json;
 use util::SchedulerFixture;
 
-#[test]
-fn activate_existing_mode() {
+#[tokio::test]
+async fn activate_existing_mode() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8020);
 
     assert_eq!(
-        fixture.create_mode("operational"),
+        fixture.create_mode("operational").await,
         json!({
             "data" : {
                 "createMode": {
@@ -36,7 +36,7 @@ fn activate_existing_mode() {
     );
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active } }"#),
+        fixture.query(r#"{ availableModes { name, active } }"#).await,
         json!({
             "data": {
                 "availableModes": [
@@ -54,7 +54,7 @@ fn activate_existing_mode() {
     );
 
     assert_eq!(
-        fixture.activate_mode("operational"),
+        fixture.activate_mode("operational").await,
         json!({
             "data" : {
                 "activateMode": {
@@ -66,7 +66,7 @@ fn activate_existing_mode() {
     );
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active } }"#),
+        fixture.query(r#"{ availableModes { name, active } }"#).await,
         json!({
             "data": {
                 "availableModes": [
@@ -84,12 +84,12 @@ fn activate_existing_mode() {
     );
 }
 
-#[test]
-fn activate_non_existent_schedule() {
+#[tokio::test]
+async fn activate_non_existent_schedule() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8021);
 
     assert_eq!(
-        fixture.activate_mode("operational"),
+        fixture.activate_mode("operational").await,
         json!({
             "data" : {
                 "activateMode": {
@@ -101,7 +101,7 @@ fn activate_non_existent_schedule() {
     );
 
     assert_eq!(
-        fixture.query(r#"{ activeMode { name, active } }"#),
+        fixture.query(r#"{ activeMode { name, active } }"#).await,
         json!({
             "data": {
                 "activeMode": {
@@ -113,15 +113,15 @@ fn activate_non_existent_schedule() {
     );
 }
 
-#[test]
-fn activate_two_modes() {
+#[tokio::test]
+async fn activate_two_modes() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8022);
 
-    fixture.create_mode("first");
-    fixture.create_mode("second");
+    fixture.create_mode("first").await;
+    fixture.create_mode("second").await;
 
     assert_eq!(
-        fixture.activate_mode("first"),
+        fixture.activate_mode("first").await,
         json!({
             "data" : {
                 "activateMode": {
@@ -133,7 +133,7 @@ fn activate_two_modes() {
     );
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active } }"#),
+        fixture.query(r#"{ availableModes { name, active } }"#).await,
         json!({
             "data": {
                 "availableModes": [{
@@ -151,7 +151,7 @@ fn activate_two_modes() {
     );
 
     assert_eq!(
-        fixture.activate_mode("second"),
+        fixture.activate_mode("second").await,
         json!({
             "data" : {
                 "activateMode": {
@@ -163,7 +163,7 @@ fn activate_two_modes() {
     );
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active } }"#),
+        fixture.query(r#"{ availableModes { name, active } }"#).await,
         json!({
             "data": {
                 "availableModes": [{
@@ -181,14 +181,14 @@ fn activate_two_modes() {
     );
 }
 
-#[test]
-fn switch_to_nonexistant_mode() {
+#[tokio::test]
+async fn switch_to_nonexistant_mode() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8023);
 
-    fixture.create_mode("operational");
+    fixture.create_mode("operational").await;
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active } }"#),
+        fixture.query(r#"{ availableModes { name, active } }"#).await,
         json!({
             "data": {
                 "availableModes": [
@@ -206,7 +206,7 @@ fn switch_to_nonexistant_mode() {
     );
 
     assert_eq!(
-        fixture.activate_mode("operational"),
+        fixture.activate_mode("operational").await,
         json!({
             "data" : {
                 "activateMode": {
@@ -218,7 +218,7 @@ fn switch_to_nonexistant_mode() {
     );
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active } }"#),
+        fixture.query(r#"{ availableModes { name, active } }"#).await,
         json!({
             "data": {
                 "availableModes": [
@@ -236,7 +236,7 @@ fn switch_to_nonexistant_mode() {
     );
 
     assert_eq!(
-        fixture.activate_mode("none"),
+        fixture.activate_mode("none").await,
         json!({
             "data" : {
                 "activateMode": {
@@ -248,7 +248,7 @@ fn switch_to_nonexistant_mode() {
     );
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active } }"#),
+        fixture.query(r#"{ availableModes { name, active } }"#).await,
         json!({
             "data": {
                 "availableModes": [
@@ -266,14 +266,14 @@ fn switch_to_nonexistant_mode() {
     );
 }
 
-#[test]
-fn switch_to_safe_mode() {
+#[tokio::test]
+async fn switch_to_safe_mode() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8025);
 
-    fixture.create_mode("operational");
+    fixture.create_mode("operational").await;
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active } }"#),
+        fixture.query(r#"{ availableModes { name, active } }"#).await,
         json!({
             "data": {
                 "availableModes": [
@@ -290,10 +290,10 @@ fn switch_to_safe_mode() {
         })
     );
 
-    fixture.activate_mode("operational");
+    fixture.activate_mode("operational").await;
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active } }"#),
+        fixture.query(r#"{ availableModes { name, active } }"#).await,
         json!({
             "data": {
                 "availableModes": [
@@ -311,7 +311,7 @@ fn switch_to_safe_mode() {
     );
 
     assert_eq!(
-        fixture.activate_mode("safe"),
+        fixture.activate_mode("safe").await,
         json!({
             "data" : {
                 "activateMode": {
@@ -323,7 +323,7 @@ fn switch_to_safe_mode() {
     );
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active } }"#),
+        fixture.query(r#"{ availableModes { name, active } }"#).await,
         json!({
             "data": {
                 "availableModes": [
@@ -341,7 +341,7 @@ fn switch_to_safe_mode() {
     );
 
     assert_eq!(
-        fixture.activate_safe(),
+        fixture.activate_safe().await,
         json!({
             "data" : {
                 "safeMode": {
@@ -353,7 +353,7 @@ fn switch_to_safe_mode() {
     );
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active } }"#),
+        fixture.query(r#"{ availableModes { name, active } }"#).await,
         json!({
             "data": {
                 "availableModes": [

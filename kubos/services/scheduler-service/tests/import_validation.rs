@@ -19,16 +19,16 @@ mod util;
 use serde_json::json;
 use util::SchedulerFixture;
 
-#[test]
-fn validate_bad_json() {
+#[tokio::test]
+async fn validate_bad_json() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8020);
 
-    fixture.create_mode("operational");
+    fixture.create_mode("operational").await;
 
     let schedule = json!("not json");
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
     assert_eq!(
-        fixture.import_task_list("first", &schedule_path, "operational"),
+        fixture.import_task_list("first", &schedule_path, "operational").await,
         json!({
             "data" : {
                 "importTaskList": {
@@ -40,11 +40,11 @@ fn validate_bad_json() {
     );
 }
 
-#[test]
-fn validate_no_task_app() {
+#[tokio::test]
+async fn validate_no_task_app() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8022);
 
-    fixture.create_mode("operational");
+    fixture.create_mode("operational").await;
 
     let schedule = json!({
         "tasks": [
@@ -56,7 +56,7 @@ fn validate_no_task_app() {
     });
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
     assert_eq!(
-        fixture.import_task_list("first", &schedule_path, "operational"),
+        fixture.import_task_list("first", &schedule_path, "operational").await,
         json!({
             "data" : {
                 "importTaskList": {
@@ -68,11 +68,11 @@ fn validate_no_task_app() {
     );
 }
 
-#[test]
-fn validate_no_app_name() {
+#[tokio::test]
+async fn validate_no_app_name() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8023);
 
-    fixture.create_mode("operational");
+    fixture.create_mode("operational").await;
 
     let schedule = json!({
         "tasks": [
@@ -85,7 +85,7 @@ fn validate_no_app_name() {
     });
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
     assert_eq!(
-        fixture.import_task_list("first", &schedule_path, "operational"),
+        fixture.import_task_list("first", &schedule_path, "operational").await,
         json!({
             "data" : {
                 "importTaskList": {
@@ -97,11 +97,11 @@ fn validate_no_app_name() {
     );
 }
 
-#[test]
-fn validate_no_time_specification() {
+#[tokio::test]
+async fn validate_no_time_specification() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8021);
 
-    fixture.create_mode("operational");
+    fixture.create_mode("operational").await;
 
     let schedule = json!({
         "tasks": [
@@ -115,7 +115,7 @@ fn validate_no_time_specification() {
     });
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
     assert_eq!(
-        fixture.import_task_list("first", &schedule_path, "operational"),
+        fixture.import_task_list("first", &schedule_path, "operational").await,
         json!({
             "data" : {
                 "importTaskList": {
@@ -127,11 +127,11 @@ fn validate_no_time_specification() {
     );
 }
 
-#[test]
-fn validate_bad_delay() {
+#[tokio::test]
+async fn validate_bad_delay() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8024);
 
-    fixture.create_mode("operational");
+    fixture.create_mode("operational").await;
 
     let schedule = json!({
         "tasks": [
@@ -146,7 +146,7 @@ fn validate_bad_delay() {
     });
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
     assert_eq!(
-        fixture.import_task_list("first", &schedule_path, "operational"),
+        fixture.import_task_list("first", &schedule_path, "operational").await,
         json!({
             "data" : {
                 "importTaskList": {
@@ -158,11 +158,11 @@ fn validate_bad_delay() {
     );
 }
 
-#[test]
-fn validate_bad_time() {
+#[tokio::test]
+async fn validate_bad_time() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8025);
 
-    fixture.create_mode("operational");
+    fixture.create_mode("operational").await;
 
     let schedule = json!({
         "tasks": [
@@ -177,7 +177,7 @@ fn validate_bad_time() {
     });
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
     assert_eq!(
-        fixture.import_task_list("first", &schedule_path, "operational"),
+        fixture.import_task_list("first", &schedule_path, "operational").await,
         json!({
             "data" : {
                 "importTaskList": {
@@ -189,11 +189,11 @@ fn validate_bad_time() {
     );
 }
 
-#[test]
-fn validate_bad_period() {
+#[tokio::test]
+async fn validate_bad_period() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8026);
 
-    fixture.create_mode("operational");
+    fixture.create_mode("operational").await;
 
     let schedule = json!({
         "tasks": [
@@ -209,7 +209,7 @@ fn validate_bad_period() {
     });
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
     assert_eq!(
-        fixture.import_task_list("first", &schedule_path, "operational"),
+        fixture.import_task_list("first", &schedule_path, "operational").await,
         json!({
             "data" : {
                 "importTaskList": {
@@ -221,11 +221,11 @@ fn validate_bad_period() {
     );
 }
 
-#[test]
-fn validate_past_time() {
+#[tokio::test]
+async fn validate_past_time() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8027);
 
-    fixture.create_mode("operational");
+    fixture.create_mode("operational").await;
 
     let schedule = json!({
         "tasks": [
@@ -240,7 +240,7 @@ fn validate_past_time() {
     });
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
     assert_eq!(
-        fixture.import_task_list("first", &schedule_path, "operational"),
+        fixture.import_task_list("first", &schedule_path, "operational").await,
         json!({
             "data" : {
                 "importTaskList": {
@@ -252,11 +252,11 @@ fn validate_past_time() {
     );
 }
 
-#[test]
-fn validate_far_future_time() {
+#[tokio::test]
+async fn validate_far_future_time() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8028);
 
-    fixture.create_mode("operational");
+    fixture.create_mode("operational").await;
 
     let schedule = json!({
         "tasks": [
@@ -271,7 +271,7 @@ fn validate_far_future_time() {
     });
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
     assert_eq!(
-        fixture.import_task_list("first", &schedule_path, "operational"),
+        fixture.import_task_list("first", &schedule_path, "operational").await,
         json!({
             "data" : {
                 "importTaskList": {
@@ -283,11 +283,11 @@ fn validate_far_future_time() {
     );
 }
 
-#[test]
-fn validate_time_and_delay() {
+#[tokio::test]
+async fn validate_time_and_delay() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8029);
 
-    fixture.create_mode("operational");
+    fixture.create_mode("operational").await;
 
     let schedule = json!({
         "tasks": [
@@ -303,7 +303,7 @@ fn validate_time_and_delay() {
     });
     let schedule_path = fixture.create_task_list(Some(schedule.to_string()));
     assert_eq!(
-        fixture.import_task_list("first", &schedule_path, "operational"),
+        fixture.import_task_list("first", &schedule_path, "operational").await,
         json!({
             "data" : {
                 "importTaskList": {

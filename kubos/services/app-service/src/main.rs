@@ -15,9 +15,6 @@
  */
 #![deny(warnings)]
 
-#[macro_use]
-extern crate juniper;
-
 mod app_entry;
 mod error;
 mod monitor;
@@ -28,6 +25,7 @@ mod schema;
 mod tests;
 
 use crate::registry::AppRegistry;
+use crate::schema::{MutationRoot, QueryRoot};
 use anyhow::{anyhow, Error};
 use kubos_service::{Config, Logger, Service};
 use log::error;
@@ -57,7 +55,7 @@ fn main() -> Result<(), Error> {
         }
     };
 
-    Service::new(config, registry, schema::QueryRoot, schema::MutationRoot).start();
+    Service::new(config, registry, QueryRoot, MutationRoot).start();
 
     Ok(())
 }

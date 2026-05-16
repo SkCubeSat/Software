@@ -15,13 +15,14 @@
 //
 
 use crate::models::subsystem::Subsystem;
-use crate::schema::mutation::Root as MutationRoot;
+use crate::schema::mutation::MutationRoot as MutationRoot;
 use crate::schema::query::Root as QueryRoot;
 use clyde_3g_eps_api::*;
 use eps_api::*;
 use kubos_service::{Config, Service};
 use serde_json::json;
 use std::sync::{Arc, Mutex};
+use async_graphql::{Schema, Request};
 
 struct MockBadEps {
     checksum: Arc<Mutex<clyde_3g_eps_api::Checksum>>,
@@ -164,15 +165,18 @@ fn gen_mock_good_eps() -> Box<dyn Clyde3gEps + Send> {
 }
 
 macro_rules! request {
-    ($service:ident, $query:ident) => {{
+    ($schema:expr, $query:expr) => {{
         // Warp doesn't like control characters (ie. new line characters)
         // so we need to remove them before we send the request
-        let query = $query.replace("\n", "");
-        warp::test::request()
-            .header("Content-Type", "application/json")
-            .method("POST")
-            .body(format!("{{\"query\": \"{}\"}}", query))
-            .reply(&$service.filter)
+        // let query = $query.replace("\n", "");
+        // warp::test::request()
+        //     .header("Content-Type", "application/json")
+        //     .method("POST")
+        //     .body(format!("{{\"query\": \"{}\"}}", query))
+        //     .reply(&$service.filter)
+
+        let request = Request::new($query.replace("\n", ""));
+        futures::executor::block_on($schema.execute(request))
     }};
 }
 

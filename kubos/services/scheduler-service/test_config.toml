@@ -1,0 +1,10 @@
+[scheduler-service.addr]
+ip = "127.0.0.1"
+port = 8002
+
+[scheduler-service]
+schedules_dir = "/tmp/test_schedules"
+
+[app-service.addr]
+ip = "127.0.0.1"
+port = 9002 

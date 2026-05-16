@@ -19,12 +19,12 @@ mod util;
 use serde_json::json;
 use util::SchedulerFixture;
 
-#[test]
-fn create_new_mode() {
+#[tokio::test]
+async fn create_new_mode() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8020);
 
     assert_eq!(
-        fixture.create_mode("operational"),
+        fixture.create_mode("operational").await,
         json!({
             "data" : {
                 "createMode": {
@@ -36,7 +36,7 @@ fn create_new_mode() {
     );
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active } }"#),
+        fixture.query(r#"{ availableModes { name, active } }"#).await,
         json!({
             "data": {
                 "availableModes": [
@@ -54,12 +54,12 @@ fn create_new_mode() {
     );
 }
 
-#[test]
-fn create_duplicate_mode() {
+#[tokio::test]
+async fn create_duplicate_mode() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8021);
 
     assert_eq!(
-        fixture.create_mode("operational"),
+        fixture.create_mode("operational").await,
         json!({
             "data" : {
                 "createMode": {
@@ -71,7 +71,7 @@ fn create_duplicate_mode() {
     );
 
     assert_eq!(
-        fixture.create_mode("operational"),
+        fixture.create_mode("operational").await,
         json!({
             "data" : {
                 "createMode": {
@@ -83,12 +83,12 @@ fn create_duplicate_mode() {
     );
 }
 
-#[test]
-fn create_two_modes() {
+#[tokio::test]
+async fn create_two_modes() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8022);
 
     assert_eq!(
-        fixture.create_mode("operational"),
+        fixture.create_mode("operational").await,
         json!({
             "data" : {
                 "createMode": {
@@ -100,7 +100,7 @@ fn create_two_modes() {
     );
 
     assert_eq!(
-        fixture.create_mode("low_power"),
+        fixture.create_mode("low_power").await,
         json!({
             "data" : {
                 "createMode": {
@@ -112,7 +112,7 @@ fn create_two_modes() {
     );
 
     assert_eq!(
-        fixture.query(r#"{ availableModes { name, active } }"#),
+        fixture.query(r#"{ availableModes { name, active } }"#).await,
         json!({
             "data": {
                 "availableModes": [
@@ -134,12 +134,12 @@ fn create_two_modes() {
     );
 }
 
-#[test]
-fn create_modes_name_filter() {
+#[tokio::test]
+async fn create_modes_name_filter() {
     let fixture = SchedulerFixture::spawn("127.0.0.1", 8023);
 
     assert_eq!(
-        fixture.create_mode("operational"),
+        fixture.create_mode("operational").await,
         json!({
             "data" : {
                 "createMode": {
@@ -151,7 +151,7 @@ fn create_modes_name_filter() {
     );
 
     assert_eq!(
-        fixture.create_mode("low_power"),
+        fixture.create_mode("low_power").await,
         json!({
             "data" : {
                 "createMode": {
@@ -163,7 +163,7 @@ fn create_modes_name_filter() {
     );
 
     assert_eq!(
-        fixture.query(r#"{ availableModes(name: "operational") { name, active } }"#),
+        fixture.query(r#"{ availableModes(name: "operational") { name, active } }"#).await,
         json!({
             "data": {
                 "availableModes": [
@@ -177,7 +177,7 @@ fn create_modes_name_filter() {
     );
 
     assert_eq!(
-        fixture.query(r#"{ availableModes(name: "low_power") { name, active } }"#),
+        fixture.query(r#"{ availableModes(name: "low_power") { name, active } }"#).await,
         json!({
             "data": {
                 "availableModes": [

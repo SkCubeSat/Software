@@ -1,0 +1,8 @@
+{
+  "pages": [
+    "index",
+    "installing-linux-bbb",
+    "working-with-the-bbb"
+  ],
+  "title": "KubOS for the Beaglebone Black"
+}

@@ -1,8 +1,30 @@
-[build-system]
-requires = ["flit_core >=3.2,<4"]
-build-backend = "flit_core.buildapi"
-
 [project]
-name = "lumache"
-authors = [{name = "Graziella", email = "graziella@lumache"}]
-dynamic = ["version", "description"]
+name = "radsat-software"
+version = "1.0.0"
+description = "RadSat Software Monorepo"
+requires-python = ">=3.10"
+dependencies = [
+    "kubos",
+    "kubos-app",
+    "kubos-service",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
+
+[tool.uv.sources]
+kubos = { workspace = true }
+kubos-app = { workspace = true }
+kubos-service = { workspace = true }
+
+[tool.uv.workspace]
+members = [
+    "kubos/apis/app-api/python",
+    "kubos/libs/kubos",
+    "kubos/libs/kubos-service",
+    "kubos/hal/python-hal/i2c",
+    "kubos/examples/python-service",
+    "kubos/tools",
+]

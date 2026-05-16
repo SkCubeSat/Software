@@ -15,10 +15,12 @@
 //
 
 use crate::app_entry;
+use crate::monitor;
+use async_graphql::*;
 
 /// Common response fields structure for requests
 /// which don't return any specific data
-#[derive(GraphQLObject)]
+#[derive(SimpleObject)]
 pub struct GenericResponse {
     /// Any errors encountered by the request
     pub errors: String,
@@ -27,7 +29,7 @@ pub struct GenericResponse {
 }
 
 /// Response fields for the `register` mutation
-#[derive(GraphQLObject)]
+#[derive(SimpleObject)]
 pub struct RegisterResponse {
     /// Any errors encountered by the request
     pub errors: String,
@@ -38,7 +40,7 @@ pub struct RegisterResponse {
 }
 
 /// Response fields for the `startApp` mutation
-#[derive(GraphQLObject)]
+#[derive(SimpleObject)]
 pub struct StartResponse {
     /// Any errors encountered by the request
     pub errors: String,
@@ -48,54 +50,80 @@ pub struct StartResponse {
     pub pid: Option<i32>,
 }
 
-pub struct KApp(pub app_entry::App);
+#[derive(SimpleObject)]
+#[graphql(name = "App")]
+pub struct KApp {
+    /// Name
+    pub name: String,
+    /// Version
+    pub version: String,
+    /// Author
+    pub author: String,
+    /// Absolute Path to Executable
+    pub executable: String,
+    /// Configuration File Path
+    pub config: String,
+}
 
-graphql_object!(KApp: () as "App" where Scalar = <S> |&self| {
-    description: "Kubos Application"
-
-    field name() -> &String
-        as "Name"
-    {
-        &self.0.name
+impl From<app_entry::App> for KApp {
+    fn from(app: app_entry::App) -> Self {
+        KApp {
+            name: app.name,
+            version: app.version,
+            author: app.author,
+            executable: app.executable,
+            config: app.config,
+        }
     }
+}
 
-    field version() -> &String
-        as "Version"
-    {
-        &self.0.version
+#[derive(SimpleObject)]
+#[graphql(name = "AppRegistryEntry")]
+pub struct KAppRegistryEntry {
+    /// App
+    pub app: KApp,
+    /// Active
+    pub active: bool,
+}
+
+impl From<app_entry::AppRegistryEntry> for KAppRegistryEntry {
+    fn from(entry: app_entry::AppRegistryEntry) -> Self {
+        KAppRegistryEntry {
+            app: KApp::from(entry.app),
+            active: entry.active_version,
+        }
     }
+}
 
-    field author() -> &String
-        as "Author"
-    {
-        &self.0.author
+/// GraphQL-compatible version of MonitorEntry
+#[derive(SimpleObject)]
+#[graphql(name = "MonitorEntry")]
+pub struct KMonitorEntry {
+    pub name: String,
+    pub version: String,
+    pub start_time: String,
+    pub end_time: Option<String>,
+    pub running: bool,
+    pub pid: Option<i32>,
+    pub last_rc: Option<i32>,
+    pub last_signal: Option<i32>,
+    pub args: Option<Vec<String>>,
+    pub config: String,
+}
+
+impl From<monitor::MonitorEntry> for KMonitorEntry {
+    fn from(entry: monitor::MonitorEntry) -> Self {
+        KMonitorEntry {
+            name: entry.name,
+            version: entry.version,
+            start_time: entry.start_time.to_rfc3339(),
+            end_time: entry.end_time.map(|dt| dt.to_rfc3339()),
+            running: entry.running,
+            pid: entry.pid,
+            last_rc: entry.last_rc,
+            last_signal: entry.last_signal,
+            args: entry.args,
+            config: entry.config,
+        }
     }
-
-    field executable() -> &String
-        as "Absolute Path to Exectuable"
-    {
-        &self.0.executable
-    }
-
-    field config() -> &String
-        as "Configuration File Path"
-    {
-        &self.0.config
-    }
-});
-
-pub struct KAppRegistryEntry(pub app_entry::AppRegistryEntry);
-
-graphql_object!(KAppRegistryEntry: () as "AppRegistryEntry" where Scalar = <S> |&self| {
-    field app() -> KApp
-        as "App"
-    {
-        KApp(self.0.app.clone())
-    }
-
-    field active() -> bool
-        as "Active"
-    {
-        self.0.active_version
-    }
-});
+}

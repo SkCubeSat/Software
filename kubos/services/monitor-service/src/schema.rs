@@ -14,52 +14,51 @@
 // limitations under the License.
 //
 
-use juniper::{graphql_object, FieldError, FieldResult};
+use async_graphql::{Context, Object, Result};
 
 use crate::loadavg;
 use crate::meminfo;
 use crate::objects::*;
 use crate::process;
 
-type Context = kubos_service::Context<()>;
-
 pub struct QueryRoot;
 
 // Base GraphQL query model
-#[graphql_object(context = Context)]
+#[Object]
 impl QueryRoot {
-    fn ping() -> FieldResult<String> {
-        Ok(String::from("pong"))
+    async fn ping(&self) -> &str {
+        "pong"
     }
 
-    fn mem_info(&self, _context: &Context) -> FieldResult<MemInfoResponse> {
+    async fn mem_info(&self, _ctx: &Context<'_>) -> Result<MemInfoResponse> {
         meminfo::MemInfo::from_proc()
             .map(|info| MemInfoResponse { info })
-            .map_err(|err| FieldError::new(err, juniper::Value::null()))
+            .map_err(|err| async_graphql::Error::new(err.to_string()))
     }
 
-    fn ps(&self, _context: &Context, pids: Option<Vec<i32>>) -> FieldResult<Vec<PSResponse>> {
+    async fn ps(&self, _ctx: &Context<'_>, pids: Option<Vec<i32>>) -> Result<Vec<PSResponse>> {
         let pids_vec: Vec<i32> = match pids {
             Some(vec) => vec,
-            None => process::running_pids()?,
+            None => process::running_pids()
+                .map_err(|err| async_graphql::Error::new(err.to_string()))?,
         };
 
         Ok(pids_vec.into_iter().map(PSResponse::new).collect())
     }
 
-    fn load_avg(&self, _context: &Context) -> FieldResult<LoadAvgResponse> {
+    async fn load_avg(&self, _ctx: &Context<'_>) -> Result<LoadAvgResponse> {
         loadavg::LoadAvg::from_proc()
             .map(|avgs| LoadAvgResponse { avgs })
-            .map_err(|err| FieldError::new(err, juniper::Value::null()))
+            .map_err(|err| async_graphql::Error::new(err.to_string()))
     }
 }
 
 pub struct MutationRoot;
 
 // Base GraphQL mutation model
-#[graphql_object(context = Context)]
+#[Object]
 impl MutationRoot {
-    fn noop(&self, _context: &Context) -> FieldResult<bool> {
-        Ok(true)
+    async fn noop(&self, _ctx: &Context<'_>) -> bool {
+        true
     }
 }

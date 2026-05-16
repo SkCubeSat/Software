@@ -1,0 +1,6 @@
+[star-risc]
+# Star RISC Payload Service Configuration
+
+[star-risc.addr]
+ip = "127.0.0.1"
+port = 8001 

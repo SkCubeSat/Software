@@ -28,13 +28,13 @@ fn test_udp_timestamp() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8111;
-    let udp = 8121;
+    let port = 8320;
+    let udp = 9320;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), None);
 
     let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
-    let service = format!("0.0.0.0:{}", udp);
+    let service = format!("127.0.0.1:{}", udp);
 
     let entry1 = json!({
             "timestamp": 1000,
@@ -58,16 +58,19 @@ fn test_udp_timestamp() {
     socket
         .send_to(&ser::to_vec(&entry1).unwrap(), &service)
         .unwrap();
+    // Add small delay between UDP packets to ensure reliable delivery on CI
+    ::std::thread::sleep(Duration::from_millis(50));
     socket
         .send_to(&ser::to_vec(&entry2).unwrap(), &service)
         .unwrap();
+    ::std::thread::sleep(Duration::from_millis(50));
     socket
         .send_to(&ser::to_vec(&entry3).unwrap(), &service)
         .unwrap();
 
     // Give the service time to process the messages, since we're not actually waiting
-    // for a response
-    ::std::thread::sleep(Duration::from_secs(1));
+    // for a response. Increased from 1s to 2s for CI reliability.
+    ::std::thread::sleep(Duration::from_secs(2));
 
     let res = do_query(
         Some(port),
@@ -95,13 +98,13 @@ fn test_udp_no_timestamp() {
 
     let db = db_path.to_str().unwrap();
 
-    let port = 8112;
-    let udp = 8122;
+    let port = 8321;
+    let udp = 9321;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), None);
 
     let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
-    let service = format!("0.0.0.0:{}", udp);
+    let service = format!("127.0.0.1:{}", udp);
 
     let entry1 = json!({
             "subsystem": "test1",
@@ -127,19 +130,23 @@ fn test_udp_no_timestamp() {
     socket
         .send_to(&ser::to_vec(&entry1).unwrap(), &service)
         .unwrap();
+    // Add small delay between UDP packets to ensure reliable delivery on CI
+    ::std::thread::sleep(Duration::from_millis(50));
     socket
         .send_to(&ser::to_vec(&entry2).unwrap(), &service)
         .unwrap();
+    ::std::thread::sleep(Duration::from_millis(50));
     socket
         .send_to(&ser::to_vec(&entry3).unwrap(), &service)
         .unwrap();
+    ::std::thread::sleep(Duration::from_millis(50));
     socket
         .send_to(&ser::to_vec(&entry4).unwrap(), &service)
         .unwrap();
 
     // Give the service time to process the messages, since we're not actually waiting
-    // for a response
-    ::std::thread::sleep(Duration::from_secs(1));
+    // for a response. Increased from 1s to 2s for CI reliability.
+    ::std::thread::sleep(Duration::from_secs(2));
 
     let res = do_query(Some(port), "{telemetry{subsystem,parameter,value}}");
 
@@ -164,13 +171,13 @@ fn test_udp_bulk_timestamp() {
     let db_path = db_dir.path().join("test.db");
 
     let db = db_path.to_str().unwrap();
-    let port = 8113;
-    let udp = 8123;
+    let port = 8322;
+    let udp = 9322;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), None);
 
     let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
-    let service = format!("0.0.0.0:{}", udp);
+    let service = format!("127.0.0.1:{}", udp);
 
     let entries = json!([{
             "timestamp": 1000,
@@ -223,13 +230,13 @@ fn test_udp_bulk_no_timestamp() {
 
     let db = db_path.to_str().unwrap();
 
-    let port = 8114;
-    let udp = 8124;
+    let port = 8323;
+    let udp = 9323;
 
     let _fixture = TelemetryServiceFixture::setup(db, Some(port), Some(udp), None);
 
     let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
-    let service = format!("0.0.0.0:{}", udp);
+    let service = format!("127.0.0.1:{}", udp);
 
     let entries = json!([{
             "subsystem": "test1",

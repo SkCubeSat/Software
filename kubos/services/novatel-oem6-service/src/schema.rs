@@ -16,23 +16,22 @@
 
 use crate::model::*;
 use crate::objects::*;
-use juniper::FieldResult;
+use async_graphql::{Object, Result as QueryResult};
 
-type Context = kubos_service::Context<Subsystem>;
+/// The kubos-service context type for this service
+type ServiceContext = kubos_service::Context<Subsystem>;
 
 pub struct QueryRoot;
 
-// Base GraphQL query model
-graphql_object!(QueryRoot: Context as "Query" |&self| {
-
+#[Object]
+impl QueryRoot {
     // Test query to verify service is running without attempting
     // to communicate with the underlying subsystem
     //
     // {
     //     ping: "pong"
     // }
-    field ping() -> FieldResult<String>
-    {
+    async fn ping(&self) -> QueryResult<String> {
         Ok(String::from("pong"))
     }
 
@@ -43,9 +42,13 @@ graphql_object!(QueryRoot: Context as "Query" |&self| {
     // {
     //     ack: AckCommand
     // }
-    field ack(&executor) -> FieldResult<AckCommand>
-    {
-        let last_cmd = executor.context().subsystem().last_cmd.read()?;
+    async fn ack(&self, ctx: &async_graphql::Context<'_>) -> QueryResult<AckCommand> {
+        let context = ctx.data::<ServiceContext>()?;
+        let last_cmd = context
+            .subsystem()
+            .last_cmd
+            .read()
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         Ok(*last_cmd)
     }
 
@@ -54,18 +57,20 @@ graphql_object!(QueryRoot: Context as "Query" |&self| {
     // {
     //     errors: [String]
     // }
-    field errors(&executor) -> FieldResult<Vec<String>>
-    {
-        executor.context().subsystem().get_errors();
+    async fn errors(&self, ctx: &async_graphql::Context<'_>) -> QueryResult<Vec<String>> {
+        let context = ctx.data::<ServiceContext>()?;
+        context.subsystem().get_errors();
 
-        match executor.context().subsystem().errors.write() {
+        match context.subsystem().errors.write() {
             Ok(mut master_vec) => {
                 let current = master_vec.clone();
                 master_vec.clear();
                 master_vec.shrink_to_fit();
                 Ok(current)
-            },
-            _ => Ok(vec!["Error: Failed to borrow master errors vector".to_owned()])
+            }
+            _ => Ok(vec![
+                "Error: Failed to borrow master errors vector".to_owned()
+            ]),
         }
     }
 
@@ -81,9 +86,12 @@ graphql_object!(QueryRoot: Context as "Query" |&self| {
     //         uptime: Int
     //     }
     // }
-    field power(&executor) -> FieldResult<GetPowerResponse>
-    {
-        Ok(executor.context().subsystem().get_power()?)
+    async fn power(&self, ctx: &async_graphql::Context<'_>) -> QueryResult<GetPowerResponse> {
+        let context = ctx.data::<ServiceContext>()?;
+        context
+            .subsystem()
+            .get_power()
+            .map_err(|e| async_graphql::Error::new(e.to_string()))
     }
 
     // Get the current configuration of the system
@@ -93,8 +101,7 @@ graphql_object!(QueryRoot: Context as "Query" |&self| {
     // {
     //     config: "Not Implemented"
     // }
-    field config(&executor) -> FieldResult<String>
-    {
+    async fn config(&self) -> QueryResult<String> {
         Ok(String::from("Not Implemented"))
     }
 
@@ -107,8 +114,12 @@ graphql_object!(QueryRoot: Context as "Query" |&self| {
     //         telemetryDebug{...}
     //     }
     // }
-    field test_results(&executor) -> FieldResult<IntegrationTestResults> {
-        Ok(executor.context().subsystem().get_test_results()?)
+    async fn test_results(&self, ctx: &async_graphql::Context<'_>) -> QueryResult<IntegrationTestResults> {
+        let context = ctx.data::<ServiceContext>()?;
+        context
+            .subsystem()
+            .get_test_results()
+            .map_err(|e| async_graphql::Error::new(e.to_string()))
     }
 
     // Get the current system status and errors
@@ -119,9 +130,12 @@ graphql_object!(QueryRoot: Context as "Query" |&self| {
     //        status: Vec<String>
     //     }
     // }
-    field system_status(&executor) -> FieldResult<SystemStatus>
-    {
-        Ok(executor.context().subsystem().get_system_status()?)
+    async fn system_status(&self, ctx: &async_graphql::Context<'_>) -> QueryResult<SystemStatus> {
+        let context = ctx.data::<ServiceContext>()?;
+        context
+            .subsystem()
+            .get_system_status()
+            .map_err(|e| async_graphql::Error::new(e.to_string()))
     }
 
     // Get current status of position information gathering
@@ -139,9 +153,14 @@ graphql_object!(QueryRoot: Context as "Query" |&self| {
     //           velocityType: PosVelType
     //     }
     // }
-    field lock_status(&executor) -> FieldResult<LockStatus>
-    {
-        Ok(executor.context().subsystem().get_lock_status()?)
+    async fn lock_status(&self, ctx: &async_graphql::Context<'_>) -> QueryResult<LockStatusGql> {
+        let context = ctx.data::<ServiceContext>()?;
+        Ok(LockStatusGql(
+            context
+                .subsystem()
+                .get_lock_status()
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?,
+        ))
     }
 
     // Get the last known good position information
@@ -156,48 +175,30 @@ graphql_object!(QueryRoot: Context as "Query" |&self| {
     //        velocity: Vec<Float>
     //     }
     // }
-    field lock_info(&executor) -> FieldResult<LockInfo>
-    {
-        Ok(executor.context().subsystem().get_lock_info()?)
+    async fn lock_info(&self, ctx: &async_graphql::Context<'_>) -> QueryResult<LockInfoGql> {
+        let context = ctx.data::<ServiceContext>()?;
+        Ok(LockInfoGql(
+            context
+                .subsystem()
+                .get_lock_info()
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?,
+        ))
     }
 
     // Get current telemetry information for the system
-    //
-    // {
-    //     telemetry{
-    //         debug {
-    //             components: [{
-    //                 bootVersion: String,
-    //                 compType: Int,
-    //                 compileDate: String,
-    //                 compileTime: String,
-    //                 hwVersion: String,
-    //                 model: String,
-    //                 serialNum: String,
-    //                 swVersion: String,
-    //             }],
-    //             numComponents: Int
-    //         },
-    //         nominal{
-    //             lockInfo {...},
-    //             lockStatus {...},
-    //             systemStatus: {
-    //                errors: Vec<String>,
-    //                status: Vec<String>
-    //             }
-    //         }
-    //     }
-    // }
-    field telemetry(&executor) -> FieldResult<Telemetry>
-    {
-        Ok(executor.context().subsystem().get_telemetry()?)
+    async fn telemetry(&self, ctx: &async_graphql::Context<'_>) -> QueryResult<Telemetry> {
+        let context = ctx.data::<ServiceContext>()?;
+        context
+            .subsystem()
+            .get_telemetry()
+            .map_err(|e| async_graphql::Error::new(e.to_string()))
     }
-});
+}
 
 pub struct MutationRoot;
 
-// Base GraphQL mutation model
-graphql_object!(MutationRoot: Context as "Mutation" |&self| {
+#[Object]
+impl MutationRoot {
     // Get all errors encountered while processing this GraphQL request
     //
     // Note: This will only return errors thrown by fields which have
@@ -206,13 +207,15 @@ graphql_object!(MutationRoot: Context as "Mutation" |&self| {
     // mutation {
     //     errors: [String]
     // }
-    field errors(&executor) -> FieldResult<Vec<String>>
-    {
-        executor.context().subsystem().get_errors();
+    async fn errors(&self, ctx: &async_graphql::Context<'_>) -> QueryResult<Vec<String>> {
+        let context = ctx.data::<ServiceContext>()?;
+        context.subsystem().get_errors();
 
-        match executor.context().subsystem().errors.read() {
+        match context.subsystem().errors.read() {
             Ok(master_vec) => Ok(master_vec.clone()),
-            _ => Ok(vec!["Error: Failed to borrow master errors vector".to_owned()])
+            _ => Ok(vec![
+                "Error: Failed to borrow master errors vector".to_owned()
+            ]),
         }
     }
 
@@ -224,11 +227,18 @@ graphql_object!(MutationRoot: Context as "Mutation" |&self| {
     //         success: Boolean
     //    }
     // }
-    field noop(&executor) -> FieldResult<GenericResponse>
-    {
-        let mut last_cmd = executor.context().subsystem().last_cmd.write()?;
+    async fn noop(&self, ctx: &async_graphql::Context<'_>) -> QueryResult<GenericResponse> {
+        let context = ctx.data::<ServiceContext>()?;
+        let mut last_cmd = context
+            .subsystem()
+            .last_cmd
+            .write()
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         *last_cmd = AckCommand::Noop;
-        Ok(executor.context().subsystem().noop()?)
+        context
+            .subsystem()
+            .noop()
+            .map_err(|e| async_graphql::Error::new(e.to_string()))
     }
 
     // Control the power state of the system
@@ -238,9 +248,13 @@ graphql_object!(MutationRoot: Context as "Mutation" |&self| {
     // mutation {
     //     controlPower: "Not Implemented"
     // }
-    field control_power(&executor) -> FieldResult<String>
-    {
-        let mut last_cmd = executor.context().subsystem().last_cmd.write()?;
+    async fn control_power(&self, ctx: &async_graphql::Context<'_>) -> QueryResult<String> {
+        let context = ctx.data::<ServiceContext>()?;
+        let mut last_cmd = context
+            .subsystem()
+            .last_cmd
+            .write()
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         *last_cmd = AckCommand::ControlPower;
         Ok(String::from("Not Implemented"))
     }
@@ -265,14 +279,22 @@ graphql_object!(MutationRoot: Context as "Mutation" |&self| {
     //         success: Boolean,
     //     }
     // }
-    field configure_hardware(
-        &executor,
+    async fn configure_hardware(
+        &self,
+        ctx: &async_graphql::Context<'_>,
         config: Vec<ConfigStruct>,
-    ) -> FieldResult<ConfigureHardwareResponse>
-    {
-        let mut last_cmd = executor.context().subsystem().last_cmd.write()?;
+    ) -> QueryResult<ConfigureHardwareResponse> {
+        let context = ctx.data::<ServiceContext>()?;
+        let mut last_cmd = context
+            .subsystem()
+            .last_cmd
+            .write()
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         *last_cmd = AckCommand::ConfigureHardware;
-        Ok(executor.context().subsystem().configure_hardware(config)?)
+        context
+            .subsystem()
+            .configure_hardware(config)
+            .map_err(|e| async_graphql::Error::new(e.to_string()))
     }
 
     // Run a system self-test
@@ -294,15 +316,30 @@ graphql_object!(MutationRoot: Context as "Mutation" |&self| {
     //         }
     //    }
     // }
-    field test_hardware(&executor, test: TestType) -> FieldResult<TestResults>
-    {
-        let mut last_cmd = executor.context().subsystem().last_cmd.write()?;
+    async fn test_hardware(
+        &self,
+        ctx: &async_graphql::Context<'_>,
+        test: TestType,
+    ) -> QueryResult<TestResults> {
+        let context = ctx.data::<ServiceContext>()?;
+        let mut last_cmd = context
+            .subsystem()
+            .last_cmd
+            .write()
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         *last_cmd = AckCommand::TestHardware;
         match test {
-            TestType::Integration => Ok(TestResults::Integration(executor.context().subsystem()
-                    .get_test_results().unwrap())),
+            TestType::Integration => Ok(TestResults::Integration(
+                context
+                    .subsystem()
+                    .get_test_results()
+                    .map_err(|e| async_graphql::Error::new(e.to_string()))?,
+            )),
             TestType::Hardware => Ok(TestResults::Hardware(HardwareTestResults {
-                        errors: "Not Implemented".to_owned(), success: true, data: "".to_owned()}))
+                errors: "Not Implemented".to_owned(),
+                success: true,
+                data: "".to_owned(),
+            })),
         }
     }
 
@@ -318,10 +355,21 @@ graphql_object!(MutationRoot: Context as "Mutation" |&self| {
     //         response: String
     //     }
     // }
-    field issue_raw_command(&executor, command: String) -> FieldResult<GenericResponse>
-    {
-        let mut last_cmd = executor.context().subsystem().last_cmd.write()?;
+    async fn issue_raw_command(
+        &self,
+        ctx: &async_graphql::Context<'_>,
+        command: String,
+    ) -> QueryResult<GenericResponse> {
+        let context = ctx.data::<ServiceContext>()?;
+        let mut last_cmd = context
+            .subsystem()
+            .last_cmd
+            .write()
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         *last_cmd = AckCommand::IssueRawCommand;
-        Ok(executor.context().subsystem().passthrough(command)?)
+        context
+            .subsystem()
+            .passthrough(command)
+            .map_err(|e| async_graphql::Error::new(e.to_string()))
     }
-});
+}

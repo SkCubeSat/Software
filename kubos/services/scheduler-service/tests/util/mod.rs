@@ -74,7 +74,7 @@ impl SchedulerFixture {
         scheduler_service.build();
         scheduler_service.spawn();
 
-        thread::sleep(Duration::from_millis(2000));
+        thread::sleep(Duration::from_millis(5000));
 
         SchedulerFixture {
             service: RefCell::new(scheduler_service),
@@ -107,69 +107,69 @@ impl SchedulerFixture {
     }
 
     // Sends createMode mutation to service under test
-    pub fn create_mode(&self, name: &str) -> serde_json::Value {
+    pub async fn create_mode(&self, name: &str) -> serde_json::Value {
         let mutation = format!(
             r#"mutation {{ createMode(name: "{}") {{ errors, success }} }}"#,
             name
         );
 
-        service_query(&mutation, &self.ip, self.port)
+        service_query(&mutation, &self.ip, self.port).await
     }
 
     // Sends createMode mutation to service under test
-    pub fn remove_mode(&self, name: &str) -> serde_json::Value {
+    pub async fn remove_mode(&self, name: &str) -> serde_json::Value {
         let mutation = format!(
             r#"mutation {{ removeMode(name: "{}") {{ errors, success }} }}"#,
             name
         );
 
-        service_query(&mutation, &self.ip, self.port)
+        service_query(&mutation, &self.ip, self.port).await
     }
 
     // Sends activateMode mutation to service under test
-    pub fn activate_mode(&self, name: &str) -> serde_json::Value {
+    pub async fn activate_mode(&self, name: &str) -> serde_json::Value {
         let mutation = format!(
             r#"mutation {{ activateMode(name: "{}") {{ errors, success }} }}"#,
             name
         );
 
-        service_query(&mutation, &self.ip, self.port)
+        service_query(&mutation, &self.ip, self.port).await
     }
 
-    pub fn activate_safe(&self) -> serde_json::Value {
+    pub async fn activate_safe(&self) -> serde_json::Value {
         let mutation = r#"mutation { safeMode { errors, success } }"#;
 
-        service_query(mutation, &self.ip, self.port)
+        service_query(mutation, &self.ip, self.port).await
     }
 
-    pub fn import_task_list(&self, name: &str, path: &str, mode: &str) -> serde_json::Value {
+    pub async fn import_task_list(&self, name: &str, path: &str, mode: &str) -> serde_json::Value {
         let mutation = format!(
             r#"mutation {{ importTaskList(name: "{}", path: "{}", mode: "{}") {{ errors, success }} }}"#,
             name, path, mode
         );
 
-        service_query(&mutation, &self.ip, self.port)
+        service_query(&mutation, &self.ip, self.port).await
     }
 
-    pub fn import_raw_task_list(&self, name: &str, mode: &str, json: &str) -> serde_json::Value {
+    pub async fn import_raw_task_list(&self, name: &str, mode: &str, json: &str) -> serde_json::Value {
         let mutation = format!(
             r#"mutation {{ importRawTaskList(name: "{}", mode: "{}", json: "{}") {{ errors, success }} }}"#,
             name, mode, json
         );
 
-        service_query(&mutation, &self.ip, self.port)
+        service_query(&mutation, &self.ip, self.port).await
     }
 
-    pub fn remove_task_list(&self, name: &str, mode: &str) -> serde_json::Value {
+    pub async fn remove_task_list(&self, name: &str, mode: &str) -> serde_json::Value {
         let mutation = format!(
             r#"mutation {{ removeTaskList(name: "{}", mode: "{}") {{ errors, success }} }}"#,
             name, mode
         );
 
-        service_query(&mutation, &self.ip, self.port)
+        service_query(&mutation, &self.ip, self.port).await
     }
 
-    pub fn query(&self, query: &str) -> serde_json::Value {
-        service_query(query, &self.ip, self.port)
+    pub async fn query(&self, query: &str) -> serde_json::Value {
+        service_query(query, &self.ip, self.port).await
     }
 }

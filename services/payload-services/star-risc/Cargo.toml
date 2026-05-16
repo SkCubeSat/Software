@@ -1,0 +1,19 @@
+[package]
+name = "star-risc"
+edition = "2024"
+version.workspace = true
+description.workspace = true
+documentation.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+async-graphql = "7.0.16"
+async-graphql-axum = "7.0.17"
+rust-uart = { path = "../../../kubos/hal/rust-hal/rust-uart" }
+kubos-service = { path = "../../../kubos/services/kubos-service" }
+tokio = "1.45.1"
+axum = "0.8.4"
+chrono = "0.4.41"
+tokio-serial = "5.4.5"
+serialport = "4.7.2"

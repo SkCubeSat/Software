@@ -16,8 +16,10 @@
 
 //! EPS system components
 
+use async_graphql::{SimpleObject, Enum};
+
 /// Generic mutation response struct
-#[derive(GraphQLObject)]
+#[derive(Clone, Debug, SimpleObject)]
 pub struct MutationResponse {
     /// Any errors which occurred during query
     pub errors: String,
@@ -26,7 +28,7 @@ pub struct MutationResponse {
 }
 
 /// Generic mutation response struct
-#[derive(GraphQLEnum)]
+#[derive(Clone, Copy, Debug, Enum, Eq, PartialEq)]
 pub enum PowerState {
     /// System is on
     On,
@@ -35,7 +37,7 @@ pub enum PowerState {
 }
 
 /// System power status
-#[derive(GraphQLObject)]
+#[derive(Clone, Debug, SimpleObject)]
 pub struct GetPowerResponse {
     /// Motherboard power status
     pub motherboard: PowerState,
@@ -46,7 +48,7 @@ pub struct GetPowerResponse {
 /// Input field for 'testHardware' mutation
 ///
 /// Indicates which test should be run against the AntS device
-#[derive(GraphQLEnum)]
+#[derive(Clone, Copy, Debug, Enum, Eq, PartialEq)]
 pub enum TestType {
     /// Integration (non-invasive) test
     Integration,

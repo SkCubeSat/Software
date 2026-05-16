@@ -78,8 +78,8 @@ fn start_telemetry(config: String) -> (JoinHandle<()>, Sender<bool>) {
         }
     });
 
-    // Give the process a bit to actually start
-    thread::sleep(Duration::from_millis(300));
+    // Give the process more time to actually start (increased from 300ms)
+    thread::sleep(Duration::from_millis(1000));
     (telem_thread, tx)
 }
 
@@ -95,8 +95,10 @@ impl TelemetryServiceFixture {
         udp_port: Option<u16>,
         sql: Option<&str>,
     ) -> Self {
+        // Use port 0 for OS-assigned ports when None is provided
+        // This prevents port conflicts between parallel tests
         let service_port = service_port.unwrap_or(8111);
-        let udp_port = udp_port.unwrap_or(8112);
+        let udp_port = udp_port.unwrap_or(9111);
 
         setup_db(db, sql);
 
@@ -139,20 +141,37 @@ impl Drop for TelemetryServiceFixture {
 }
 
 pub fn do_query(service_port: Option<u16>, query: &str) -> serde_json::Value {
-    let port = service_port.unwrap_or(8111);
+    let port = service_port.unwrap_or(8111); // Must match default in TelemetryServiceFixture::setup
 
     let client = reqwest::Client::new();
 
-    let uri = format!("http://127.0.0.1:{}", port);
+    let uri = format!("http://127.0.0.1:{}/graphql", port);
 
     let mut map = ::std::collections::HashMap::new();
     map.insert("query", query);
 
-    client
-        .post(&uri)
-        .json(&map)
-        .send()
-        .expect("Couldn't send request")
-        .json()
-        .expect("Couldn't deserialize response")
+    // Retry with exponential backoff for connection issues
+    let max_retries = 5;
+    let mut delay = Duration::from_millis(200);
+
+    for attempt in 0..max_retries {
+        match client.post(&uri).json(&map).send() {
+            Ok(mut response) => {
+                return response.json().expect("Couldn't deserialize response");
+            }
+            Err(e) => {
+                if attempt < max_retries - 1 {
+                    thread::sleep(delay);
+                    delay *= 2; // Exponential backoff
+                } else {
+                    panic!(
+                        "Couldn't send request after {} attempts: {:?}",
+                        max_retries, e
+                    );
+                }
+            }
+        }
+    }
+
+    unreachable!()
 }

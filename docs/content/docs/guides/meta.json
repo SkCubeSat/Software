@@ -1,0 +1,8 @@
+{
+  "title": "Guides",
+  "icon": "BookOpen",
+  "description": "Operational workflows and service guides",
+  "defaultOpen": true,
+  "collapsible": true,
+  "pages": ["testing", "crosscompiling"]
+}

@@ -1,0 +1,1 @@
+{"query":"{ readFile(name: \"note.txt\") { name mimeType compressed totalSize offset length dataBase64 } }"}

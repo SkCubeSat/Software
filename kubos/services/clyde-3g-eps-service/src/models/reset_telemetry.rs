@@ -16,13 +16,14 @@
 
 //! Data returned by `reset` telemetry query
 
-use crate::schema::Context;
+// use crate::schema::Context;
 use clyde_3g_eps_api::ResetTelemetry::Data as ResetTelemetryData;
 use clyde_3g_eps_api::ResetTelemetry::Type as ResetTelemetryType;
-use juniper::FieldResult;
+// use juniper::FieldResult;
+use async_graphql::{Enum, Object, Result as FieldResult, SimpleObject};
 
 /// Reset count telemetry structure used by each reset type
-#[derive(Clone, Debug, GraphQLObject)]
+#[derive(Clone, Debug, SimpleObject)]
 pub struct Data {
     /// Motherboard reset count
     pub motherboard: i32,
@@ -40,7 +41,8 @@ impl From<ResetTelemetryData> for Data {
 }
 
 /// Reset types
-#[derive(Clone, Debug, Eq, Hash, GraphQLEnum, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, Hash, Enum, PartialEq)]
+#[graphql(name = "ResetTelemetryType")]
 pub enum Type {
     /// Brown-out reset
     BrownOut,
@@ -64,26 +66,52 @@ impl From<Type> for ResetTelemetryType {
 }
 
 /// High-level reset telemetry structure
-pub struct Telemetry;
+pub struct ResetTelemetry;
 
-graphql_object!(Telemetry: Context as "ResetTelemetry" |&self| {
-    field brown_out(&executor) -> FieldResult<Data>
-    {
-        Ok(executor.context().subsystem().get_reset_telemetry(Type::BrownOut)?)
+#[Object]
+impl ResetTelemetry {
+    async fn brown_out(&self, ctx: &async_graphql::Context<'_>) -> FieldResult<Data> {
+        let context = ctx.data::<crate::schema::Context>()?;
+        let data = context.subsystem().get_reset_telemetry(Type::BrownOut)?;
+        Ok(Data::from(data))
     }
 
-    field automatic_software(&executor) -> FieldResult<Data>
-    {
-        Ok(executor.context().subsystem().get_reset_telemetry(Type::AutomaticSoftware)?)
+    async fn automatic_software(&self, ctx: &async_graphql::Context<'_>) -> FieldResult<Data> {
+        let context = ctx.data::<crate::schema::Context>()?;
+        let data = context.subsystem().get_reset_telemetry(Type::AutomaticSoftware)?;
+        Ok(Data::from(data))
     }
 
-    field manual(&executor) -> FieldResult<Data>
-    {
-        Ok(executor.context().subsystem().get_reset_telemetry(Type::Manual)?)
+    async fn manual(&self, ctx: &async_graphql::Context<'_>) -> FieldResult<Data> {
+        let context = ctx.data::<crate::schema::Context>()?;
+        let data = context.subsystem().get_reset_telemetry(Type::Manual)?;
+        Ok(Data::from(data))
     }
 
-    field watchdog(&executor) -> FieldResult<Data>
-    {
-        Ok(executor.context().subsystem().get_reset_telemetry(Type::Watchdog)?)
+    async fn watchdog(&self, ctx: &async_graphql::Context<'_>) -> FieldResult<Data> {
+        let context = ctx.data::<crate::schema::Context>()?;
+        let data = context.subsystem().get_reset_telemetry(Type::Watchdog)?;
+        Ok(Data::from(data))
     }
-});
+}
+// graphql_object!(Telemetry: Context as "ResetTelemetry" |&self| {
+//     field brown_out(&executor) -> FieldResult<Data>
+//     {
+//         Ok(executor.context().subsystem().get_reset_telemetry(Type::BrownOut)?)
+//     }
+
+//     field automatic_software(&executor) -> FieldResult<Data>
+//     {
+//         Ok(executor.context().subsystem().get_reset_telemetry(Type::AutomaticSoftware)?)
+//     }
+
+//     field manual(&executor) -> FieldResult<Data>
+//     {
+//         Ok(executor.context().subsystem().get_reset_telemetry(Type::Manual)?)
+//     }
+
+//     field watchdog(&executor) -> FieldResult<Data>
+//     {
+//         Ok(executor.context().subsystem().get_reset_telemetry(Type::Watchdog)?)
+//     }
+// });

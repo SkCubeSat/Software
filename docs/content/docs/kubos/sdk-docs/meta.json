@@ -1,0 +1,15 @@
+{
+  "title": "KubOS SDK Docs",
+  "description": "KubOS SDK usage and development guides",
+  "defaultOpen": true,
+  "collapsible": true,
+  "pages": [
+    "index",
+    "sdk-installing",
+    "sdk-rust",
+    "sdk-python",
+    "sdk-c",
+    "sdk-upgrading",
+    "sdk-advanced-cross-compiling"
+  ]
+}

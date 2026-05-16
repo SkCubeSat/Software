@@ -313,11 +313,6 @@
 //! ```
 //!
 
-#![recursion_limit = "256"]
-
-#[macro_use]
-extern crate juniper;
-
 mod model;
 mod objects;
 mod schema;

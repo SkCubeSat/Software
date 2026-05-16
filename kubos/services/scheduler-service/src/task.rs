@@ -20,17 +20,15 @@
 
 use crate::app::App;
 use crate::error::SchedulerError;
-use juniper::GraphQLObject;
-use log::error;
+use async_graphql::SimpleObject;
+use log::{error, info};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-use std::time::Instant;
-use tokio::prelude::*;
-use tokio::timer::Delay;
-use tokio::timer::Interval;
+use tokio::task::JoinHandle;
+use tokio::time::{sleep, interval_at, Instant};
 
 // Configuration used to schedule app execution
-#[derive(Clone, Debug, GraphQLObject, Serialize, Deserialize)]
+#[derive(Clone, Debug, SimpleObject, Serialize, Deserialize)]
 pub struct Task {
     // Description of task
     pub description: String,
@@ -101,47 +99,46 @@ impl Task {
         }
     }
 
-    pub fn schedule(&self, service_url: String) -> Box<dyn Future<Item = (), Error = ()> + Send> {
-        let name = self.app.name.to_owned();
-        let duration = match self.get_duration() {
-            Ok(d) => d,
-            Err(e) => {
-                error!(
-                    "Failed to parse time specification for task '{}': {}",
-                    name, e
-                );
-                return Box::new(future::err::<(), ()>(()));
+    /// Schedule this task to run using modern tokio
+    /// Returns a JoinHandle that can be used to manage the task
+    pub fn schedule(&self, service_url: String) -> Result<JoinHandle<()>, SchedulerError> {
+        let name = self.app.name.clone();
+        let description = self.description.clone();
+        let duration = self.get_duration()?;
+        let period = self.get_period()?;
+        let app = self.app.clone();
+
+        info!("Scheduling task '{}': {}", name, description);
+
+        let handle = match period {
+            Some(period_duration) => {
+                // Recurring task
+                tokio::spawn(async move {
+                    let start_time = Instant::now() + duration;
+                    let mut interval = interval_at(start_time, period_duration);
+                    
+                    loop {
+                        interval.tick().await;
+                        info!("Executing recurring task '{}'", name);
+                        if let Err(e) = app.execute(&service_url).await {
+                            error!("Failed to execute recurring task '{}': {}", name, e);
+                        }
+                    }
+                })
+            }
+            None => {
+                // One-time task
+                tokio::spawn(async move {
+                    sleep(duration).await;
+                    info!("Executing one-time task '{}'", name);
+                    if let Err(e) = app.execute(&service_url).await {
+                        error!("Failed to execute one-time task '{}': {}", name, e);
+                    }
+                })
             }
         };
 
-        let when = Instant::now() + duration;
-        let period = self.get_period();
-        let app = self.app.clone();
-
-        match period {
-            Ok(Some(period)) => Box::new(
-                Interval::new(when, period)
-                    .for_each(move |_| {
-                        app.execute(&service_url.clone());
-                        Ok(())
-                    })
-                    .map_err(move |e| {
-                        error!("Recurring interval errored for task '{}': {}", name, e);
-                        panic!("Recurring interval errored for task '{}': {}", name, e)
-                    }),
-            ),
-            _ => Box::new(
-                Delay::new(when)
-                    .and_then(move |_| {
-                        app.execute(&service_url);
-                        Ok(())
-                    })
-                    .map_err(move |e| {
-                        error!("Delay errored for task '{}': {}", name, e);
-                        panic!("Delay errored for task '{}': {}", name, e)
-                    }),
-            ),
-        }
+        Ok(handle)
     }
 }
 

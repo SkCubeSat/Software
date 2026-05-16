@@ -1,19 +1,22 @@
-[tool.poetry]
+[project]
 name = "i2c"
 version = "1.22.0"
-description = ""
-authors = ["Marshall Culpepper <marshall@xplore.com>"]
-license = "Apache Public License v2"
+description = "I2C HAL for KubOS"
+authors = [{name = "Marshall Culpepper", email = "marshall@xplore.com"}]
+license = {text = "Apache-2.0"}
 readme = "README.md"
-packages = []
+requires-python = ">=3.8"
+dependencies = [
+    "toml>=0.10.2",
+    "requests>=2.28.1",
+]
 
-[tool.poetry.dependencies]
-python = "^3.7"
-toml = "^0.10.2"
-responses = "^0.22.0"
-requests = "^2.28.1"
-mock = "^4.0.3"
+[project.optional-dependencies]
+dev = [
+    "responses>=0.22.0",
+    "mock>=4.0.3",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
