@@ -1,0 +1,25 @@
+[package]
+name = "novatel-oem7-service"
+version = "0.1.0"
+edition = "2021"
+description = "Kubos service for interacting with a NovAtel OEM7 GNSS receiver"
+
+[[bin]]
+name = "novatel-oem7-service"
+path = "src/main.rs"
+
+[dependencies]
+novatel-oem7-api = { path = "../../../kubos/apis/novatel-oem7-api" }
+kubos-service = { path = "../../../kubos/services/kubos-service" }
+async-graphql = "7"
+anyhow = "1"
+log = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[dev-dependencies]
+futures = "0.3"
+async-graphql = "7"
+
+[package.metadata.release]
+release = false

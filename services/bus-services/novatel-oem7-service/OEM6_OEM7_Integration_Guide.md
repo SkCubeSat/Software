@@ -1,0 +1,2006 @@
+
+
+OEM6toOEM7
+IntegrationGuide
+OEM6toOEM7IntegrationGuidev2May2025
+
+OEM6toOEM7IntegrationGuidev22
+OEM6toOEM7IntegrationGuide
+PublicationNumber:D100401
+RevisionLevel:v2
+RevisionDate:May2025
+FirmwareVersion:7.09.05/OM7MR0905RN0000
+## Proprietarynotice
+Thisdocumentandtheinformationcontainedhereinaretheexclusivepropertiesofthelegalentitiesthat
+comprisetheAutonomousSolutionsdivisionoftheHexagonABgroupofcompanies(“Hexagon”).
+Nopartofthisdocumentmaybereproduced,displayed,distributed,orusedinanymedium,inconnectionwith
+anyothermaterials,orforanypurposewithoutpriorwrittenpermissionfromHexagon.Applicationsfor
+permissionmaybedirectedtocontact.ap@hexagon.com.Unauthorizedreproduction,display,distributionor
+usemayresultincivilaswellascriminalsanctionsundertheapplicablelaws.Hexagonaggressivelyprotects
+andenforcesitsintellectualpropertyrightstothefullestextentallowedbylaw.
+ThisdocumentandtheinformationcontainedhereinareprovidedASISandwithoutanyrepresentationor
+warrantyofanykind.Hexagondisclaimsallwarranties,expressorimplied,includingbutnotlimitedtoany
+warrantiesofmerchantability,non-infringement,andfitnessforaparticularpurpose.Nothingherein
+constitutesabindingobligationonHexagon.
+## Theinformationcontainedhereinissubjecttochangewithoutnotice.
+ALIGN,GLIDE,NovAtel,NovAtelCORRECT,OEM6,OEM7,PwrPak7,RTKASSIST,SPAN,STEADYLINE
+andTerraStararetrademarksofHexagonABand/oritssubsidiariesandaffiliates,and/ortheirlicensors.All
+othertrademarksarepropertiesoftheirrespectiveowners.
+©Copyright2017–2025HexagonABand/oritssubsidiariesandaffiliates.Allrightsreserved.
+
+OEM6toOEM7IntegrationGuidev23
+TableofContents
+## Figures
+## Tables
+CustomerSupport
+Chapter1OEM6toOEM7integration
+Chapter2NewforOEM7–firmware
+2.1Firmwareversionnaming14
+2.2OEM6toOEM7–commands14
+2.2.1Deletedcommands14
+2.2.2Revisedcommands16
+2.2.3Newcommands18
+2.3OEM6toOEM7–logs20
+2.3.1Deletedlogs20
+2.3.2Revisedlogs21
+2.3.3Newlogs23
+2.4OEM6toOEM7–SPAN25
+2.4.1Translationaloffsets25
+2.4.2Rotationaloffsets25
+2.4.3INSprofiles26
+2.4.4INS seed26
+2.4.5ALIGNcalibration26
+2.4.6Multi-linebodytovehiclecalibration26
+2.4.7IMU-KVH1750andIMU-P1750baudrateconversion27
+2.4.8INSProfiles28
+2.4.9Multi-linebodytovehicleframerotationcalibrationroutine29
+2.4.10INS Seed/FastINSinitialization31
+Chapter3OEM6toOEM7–hardware
+3.1Physicalchanges34
+3.1.1Shielding34
+3.1.2Mounting34
+3.1.3Weight34
+3.2Electricalchanges35
+3.2.1COMportdatarate35
+3.2.2Powersupply35
+3.2.3USBinterfaces36
+3.2.4Inputandoutputlines36
+3.2.5LNApower36
+3.3Environmentalchanges37
+3.3.1Thermaldissipation37
+3.3.2Vibration37
+3.4Interference37
+3.4.1Interferencefromco-locatedLNA38
+
+OEM6toOEM7IntegrationGuidev24
+3.1Receivercardinterfaceexamples39
+3.4.2EVENT_IN,EVENT_OUTandPPSsignalprotection39
+3.4.3PositionValid(PV)LEDdriver41
+3.4.4Communicationports42
+3.4.5CANcontrollerports43
+3.4.6USBinterface44
+3.4.7Ethernetport46
+3.5DifferencesbetweenPwrPak7andOEM6enclosures48
+3.6DifferencesbetweenSMART7andSMART652
+3.7DifferencesbetweenRELAY7andRELAY55
+Chapter4Receivertechnicalspecifications
+
+OEM6toOEM7IntegrationGuidev25
+## Figures
+Figure1:Multi-lineIMUbodytovehiclecalibration30
+Figure2:SMARTantennainterferenceexample38
+Figure3:ProtectionandbufferingforEVENT_IN,PPSandEVENT_OUTsignals40
+Figure4:OEM7bufferfordrivinghigh-brightnessLEDsfromPV42
+Figure5:OEM7CANtransceiverexample43
+Figure6:OEM7USBdeviceinterfaceexample44
+Figure7:OEM7USBhostinterfaceexample45
+Figure8:Ethernetreferenceschematic47
+
+OEM6toOEM7IntegrationGuidev26
+## Tables
+Table1:DeletedandreplacedcommandsinOEM714
+Table2:RevisedcommandsinOEM716
+Table3:NewcommandsinOEM718
+Table4:DeletedandreplacedlogsinOEM720
+Table5:RevisedlogsinOEM721
+Table6:NewlogsinOEM723
+Table7:CommandsforenteringSPANoffsetsandrotations25
+Table8:OEM7INSProfiles28
+Table9:NVMseedindication33
+Table10:OEM6receiverinrushcurrent35
+Table11:OEM7receiverinrushcurrent35
+Table12:EVENT_IN,EVENT_OUTandPPSpindesignation40
+Table13:Billofmaterials(criticalcomponents)41
+Table14:PVpindesignation42
+Table15:PVLEDdriverbillofmaterials(criticalcomponents)42
+Table16:CANtransceiverpindesignation43
+Table17:CANtransceiverexamplebillofmaterials(criticalcomponents)43
+Table18:USBdeviceinterfacepindesignation44
+Table19:USBdeviceinterfaceexamplebillofmaterials45
+Table20:USBhostinterfacepindesignation46
+Table21:USBhostinterfaceexamplebillofmaterials46
+Table22:Ethernetpindesignation47
+Table23:Ethernettransformercharacteristics47
+Table24:Billofmaterials(criticalcomponents)48
+Table25:Physicalspecifications48
+Table26:Powerrequirements48
+Table27:Signalstracked48
+Table28:Horizontalpositionaccuracy(RMS)49
+Table29:Communicationsports50
+Table30:RFinput51
+Table31:I/Ostrobes51
+Table32:Features51
+Table33:Physicalspecifications52
+Table34:Powerrequirements52
+
+## Tables
+OEM6toOEM7IntegrationGuidev27
+Table35:Signalstracked52
+Table36:Horizontalpositionaccuracy53
+Table37:Communicationsports54
+Table38:I/Ostrobes54
+Table39:Features55
+Table40:Physicalspecifications55
+Table41:Powerrequirements55
+Table42:Supportedradios56
+
+OEM6toOEM7IntegrationGuidev28
+CustomerSupport
+NovAtelknowledgebase
+Ifyouhaveatechnicalissue,visittheNovAtelSupportpageatnovatel.com/support.ThroughtheSupport
+pageyoucancontactCustomerSupport,findpapersandtutorialsordownloadthelatestfirmware.Toaccess
+thelatestuserdocumentation,visitdocs.novatel.com/OEM7.
+BeforecontactingCustomerSupport
+BeforecontactingNovAtelCustomerSupportaboutasoftwareproblem,performthefollowingsteps:
+IfloggingdataoveranRS-232serialcable,ensurethattheconfiguredbaudratecansupportthedata
+bandwidth(seeSERIALCONFIGcommand).NovAtelrecommendsaminimumsuggestedbaudrate
+of230400bps.
+1.UsetheinformationintheTroubleshootingsectiontodiagnoseandtroubleshootyourreceiver's
+symptoms.RefertotheOEM7DocumentationPortal
+(docs.novatel.com/OEM7/Content/Troubleshooting/Troubleshooting.htm).
+2.LogthedatasuggestedintheappropriateTroubleshootingLogssectiontoafileonyourcomputerfor
+## 15minutes.
+l
+## Generaltroubleshootinglogsonthenextpage
+l
+## Trackingandinterferencetroubleshootinglogsonthenextpage
+l
+SPANtroubleshootinglogsonpage 10
+l
+RTKtroubleshootinglogsonpage 10
+l
+PPPtroubleshootinglogsonpage 11
+l
+ALIGNtroubleshootinglogsonpage 12
+IfusingNovAtelApplicationSuite,logtheTroubleshootingmessagesetfor15minutes.
+3.SendthedatafiletoNovAtelCustomerSupport:support.novatel@hexagon.com
+4.YoucanalsoissueaFRESETcommandtothereceivertoclearanyunknownsettings.
+TheFRESETcommandwilleraseallusersettings.Youshouldknowyourconfiguration(by
+requestingtheRXCONFIGAlog)andbeabletoreconfigurethereceiverbeforeyousendthe
+FRESETcommand.
+Ifyouarehavingahardwareproblem,sendalistofthetroubleshootingstepstakenandtheresults.
+## Contactinformation
+LogasupportrequestwithNovAtelCustomerSupportusingoneofthefollowingmethods:
+## Logacaseandsearchknowledge:
+## Website:novatel.com/support
+
+CustomerSupport
+OEM6toOEM7IntegrationGuidev29
+## Logacase,searchknowledgeandviewyourcasehistory:(loginaccessrequired)
+WebPortal:shop.novatel.com/novatelstore/s/login/
+## E-mail:
+support.novatel@hexagon.com
+## Telephone:
+U.S.andCanada:   1-800-NOVATEL(1-800-668-2835)
+## International:   +1-403-295-4900
+## Generaltroubleshootinglogs
+## LOGRXSTATUSBONCHANGED
+## LOGRAWEPHEMBONNEW
+## LOGGLORAWEPHEMBONNEW
+## LOGBESTPOSBONTIME1
+## LOGRANGEBONTIME0.5
+## LOGRXCONFIGAONCE
+## LOGVERSIONAONCE
+## LOGLOGLISTAONCE
+## LOGPORTSTATSAONTIME10
+## LOGPROFILEINFOAONCE
+## LOGHWMONITORAONTIME10
+## Trackingandinterferencetroubleshootinglogs
+## LOGVERSIONAONCE
+## LOGRXCONFIGAONCE
+## LOGCHANCONFIGLISTBONCE
+## LOGPASSTHROUGHAONNEW
+## LOGRXSTATUSBONCHANGED
+## LOGCLOCKSTEERINGBONCHANGED
+## LOGRAWEPHEMBONNEW
+## LOGGLORAWEPHEMBONNEW
+## LOGGALINAVRAWEPHEMERISBONNEW
+## LOGBDSEPHEMERISBONNEW
+## LOGQZSSEPHEMERISBONNEW
+## LOGNAVICEPHEMERISBONNEW
+## LOGRAWALMBONNEW
+## LOGGLORAWALMBONNEW
+## LOGGALALMANACBONNEW
+## LOGBDSALMANACBONNEW
+## LOGQZSSALMANACBONNEW
+## LOGNAVICALMANACBONNEW
+## LOGIONUTCBONNEW
+## LOGGLOCLOCKBONNEW
+## LOGGALCLOCKBONNEW
+## LOGBDSCLOCKBONNEW
+## LOGTRACKSTATBONTIME1
+## LOGRANGEBONTIME0.5
+## LOGBESTPOSBONTIME1
+## LOGSATVIS2BONTIME30
+## LOGITDETECTSTATUSBONCHANGED
+
+CustomerSupport
+OEM6toOEM7IntegrationGuidev210
+## Fordualantennareceivers,addtheselogs:
+## LOGTRACKSTATB_1ONTIME1
+## LOGRANGEB_1ONTIME0.5
+## Forinterferenceissuesaddthislog:
+## LOGITPSDDETECTBONNEW
+Forinterferenceissues,whenyouhaveenoughdatalinkbandwidthtohandlelargelogs,addthislog:
+## LOGITPSDFINALBONNEW
+SPANtroubleshootinglogs
+## LOGRXSTATUSBONCHANGED
+## LOGRAWEPHEMBONNEW
+## LOGGLORAWEPHEMBONNEW
+## LOGGALINAVRAWEPHEMERISBONNEW
+## LOGBDSEPHEMERISBONNEW
+## LOGBESTPOSBONTIME1
+## LOGRANGEBONTIME0.5
+## LOGRXCONFIGAONCE
+## LOGVERSIONAONCE
+## LOGRAWIMUSXBONNEW
+## LOGINSUPDATESTATUSBONCHANGED
+## LOGINSPVAXBONTIME1
+## LOGINSCONFIGAONCHANGED
+## LOGBESTGNSSPOSBONTIME1
+RTKtroubleshootinglogs
+## LOGRXSTATUSBONCHANGED
+## LOGRAWEPHEMBONNEW
+## LOGGLORAWEPHEMBONNEW
+## LOGQZSSRAWEPHEMBONNEW
+## LOGBDSRAWNAVSUBFRAMEBONNEW
+## LOGGALFNAVRAWEPHEMERISBONNEW
+## LOGGALINAVRAWEPHEMERISBONNEW
+## LOGRANGEBONTIME0.5
+## LOGBESTPOSBONTIME1.0
+## LOGRXCONFIGBONCE
+## LOGVERSIONBONCE
+## LOGTRACKSTATBONTIME1.0
+## LOGRTKPOSBONTIME1.0
+## LOGMATCHEDPOSBONNEW
+## LOGMATCHEDSATSBONNEW
+## LOGRTKSATSBONTIME1.0
+## LOGPSRPOSBONTIME1.0
+## LOGRAWALMBONNEW
+## LOGIONUTCBONNEW
+## LOGGLORAWALMBONNEW
+## LOGGLOCLOCKBONNEW
+## LOGPASSTHROUGHBONNEW
+## LOGCLOCKMODELBONTIME1.0
+## LOGREFSTATIONBONNEW
+## LOGRTKVELBONTIME1.0
+
+CustomerSupport
+OEM6toOEM7IntegrationGuidev211
+PPPtroubleshootinglogs
+## LOGRXSTATUSBONCHANGED
+## LOGGPSEPHEMBONNEW
+## LOGGLOEPHEMERISBONNEW
+## LOGQZSSEPHEMERISBONNEW
+## LOGBDSEPHEMERISBONNEW
+LOGBDSBCNAV1EPHEMERISBONNEW(firmwareversions7.08.03and7.08.10andlater)
+LOGBDSBCNAV2EPHEMERISBONNEW(firmwareversions7.08.03and7.08.10andlater)
+LOGBDSBCNAV3EPHEMERISBONNEW(firmwareversions7.08.03and7.08.10andlater)
+## LOGGALFNAVEPHEMERISBONNEW
+## LOGGALINAVEPHEMERISBONNEW
+## LOGRANGEBONTIME0.5
+## LOGBESTPOSBONTIME1.0
+## LOGRXCONFIGBONCE
+## LOGVERSIONBONCE
+## LOGTRACKSTATBONTIME10.0
+## LOGLBANDTRACKSTATBONTIME1.0
+## LOGPPPPOSBONTIME1.0
+## LOGPPPSATSBONTIME1.0
+## LOGTERRASTARINFOBONCHANGED
+## LOGTERRASTARSTATUSBONCHANGED
+## LOGPSRPOSBONTIME1.0
+## LOGALMANACBONNEW
+## LOGGLOALMANACBONNEW
+## LOGGALALMANACBONNEW
+## LOGBDSALMANACBONNEW
+## LOGQZSSALMANACBONNEW
+## LOGIONUTCBONNEW
+## LOGGLOCLOCKBONNEW
+## LOGLBANDBEAMTABLEBONCHANGED
+
+CustomerSupport
+OEM6toOEM7IntegrationGuidev212
+ALIGNtroubleshootinglogs
+## LOGRXSTATUSBONCHANGED
+## LOGRAWEPHEMBONNEW
+## LOGGLORAWEPHEMBONNEW
+## LOGGALINAVRAWEPHEMERISBONNEW
+## LOGBDSEPHEMERISBONNEW
+## LOGBESTPOSBONTIME1
+## LOGRANGEBONTIME0.5
+## LOGRXCONFIGAONCE
+## LOGVERSIONAONCE
+## LOGLOGLISTAONCE
+## LOGPORTSTATSAONTIME10
+## LOGALIGNBSLNENUBONNEW
+## LOGALIGNBSLNXYZBONNEW
+## LOGALIGNDOPBONNEW
+## LOGHEADING2BONNEW
+## LOGMASTERPOSBONNEW
+LOGROVERPOSBONNEW(ThislogcanonlybeoutputonareceiverwhereALIGNisenabled.)
+LOGHEADINGSATSAONNEW(ThislogcanonlybeoutputonareceiverwhereALIGNisenabledand
+configuredastheALIGNrover.)
+## LOGDUALANTENNAHEADINGBONTIME1.0
+LOGTRACKSTATB_1ONTIME1(dualantennareceiversonly)
+LOGRANGEB_1ONTIME0.5(dualantennareceiversonly)
+
+OEM6toOEM7IntegrationGuidev213
+Chapter1OEM6toOEM7integration
+WhenupgradingfromanOEM6receivertoanOEM7receiver,thereareseveralhardwareandsoftware
+differencesthatmustbeaccountedforinthesystemdesign.
+## Thesedifferencesaredescribedinthefollowingchapters:
+l
+NewforOEM7–firmwareonpage 14
+l
+OEM6toOEM7–hardwareonpage 34
+l
+## Receivertechnicalspecificationsonpage 57
+
+OEM6toOEM7IntegrationGuidev214
+Chapter2NewforOEM7–firmware
+Thischapterdescribesthenewcommands,logs,featuresandfunctionalityavailableonOEM7receivers.
+2.1Firmwareversionnaming
+Forinformationaboutthefieldsinthefirmwareversion,refertotheVERSIONlog.
+2.2OEM6toOEM7–commands
+ThefollowingsectionsdescribethecommandchangesbetweenOEM6andOEM7.
+ForinformationabouttheOEM7commands,refertotheOEM7CommandsandLogsReferenceManual.
+2.2.1Deletedcommands
+ThefollowingtableliststheOEM6commandsthathavebeendeletedorreplacedinOEM7.
+## OEM6OEM7
+APPLYVEHICLEBODYROTATIONDeleted.
+ASSIGNLBANDReplaced.UsetheexistingASSIGNLBANDBEAMcommand
+ASSIGNLBAND2Replaced.UsetheexistingASSIGNLBANDBEAMcommand
+## BASEANTENNAMODEL
+Replaced.UsetheexistingBASEANTENNAPCOcommandand
+BASEANTENNAPCVcommand
+Table1:DeletedandreplacedcommandsinOEM7
+
+Chapter2  NewforOEM7–firmware
+OEM6toOEM7IntegrationGuidev215
+## OEM6OEM7
+COMReplaced.UsetheexistingSERIALCONFIGcommand
+## COMCONFIG
+Replaced.UsetheexistingSERIALCONFIGcommand,
+INTERFACEMODEcommandandECHOcommand
+DGPSEPHEMDELAYDeleted.
+EXTHDGOFFSETReplaced.UsethenewSETINSROTATIONcommand
+GIMBALSPANROTATIONReplaced.UsethenewSETINSROTATIONcommand
+INSWHEELUPDATEReplaced.UsetheexistingSETINSUPDATEcommand
+INSZUPTCONTROLReplaced.UsetheexistingSETINSUPDATEcommand
+LEVERARMCALIBRATEReplaced.UsethenewINSCALIBRATEcommand
+OMNIUSEGLONASSDeleted.
+PDPVELOCITYOUTReplaced.UsetheexistingBESTVELTYPEcommand
+RTKCOMMANDDeleted.
+RTKELEVMASKDeleted.
+RVBCALIBRATEReplaced.UsethenewINSCALIBRATEcommand
+SETCANNAMEDeleted.
+SETGIMBALORIENTATIONReplaced.UsethenewSETINSROTATIONcommand
+SETIMUORIENTATIONReplaced.UsethenewSETINSROTATIONcommand
+SETIMUTOANTOFFSETReplaced.UsethenewSETINSTRANSLATIONcommand
+SETIMUTOANTOFFSET2Replaced.UsethenewSETINSTRANSLATIONcommand
+SETIMUTOEXTOFFSETReplaced.UsethenewSETINSTRANSLATIONcommand
+SETIMUTOGIMBALOFFSETReplaced.UsethenewSETINSTRANSLATIONcommand
+SETINSOFFSETReplaced.UsethenewSETINSTRANSLATIONcommand
+SETINITATTITUDEReplaced.UsetheexistingSETINITAZIMUTHcommand
+## SETINSOFFSETS
+Replaced.UsethenewSETINSROTATIONcommandand
+SETINSTRANSLATIONcommand
+## SETINSROTATION
+Replaced.TheexistingSETINSROTATIONcommand(MessageID 1796)
+hasremoved.
+AnewSETINSROTATIONcommand(MessageID 1921)hasbeen
+added.Thisnewcommandhasenhancedcapabilityandisthe
+recommendcommandtouse.
+
+Chapter2  NewforOEM7–firmware
+OEM6toOEM7IntegrationGuidev216
+## OEM6OEM7
+## SETMARK1OFFSET
+## SETMARK2OFFSET
+## SETMARK3OFFSET
+## SETMARK4OFFSET
+Replaced.UsethenewSETINSROTATIONcommandand
+SETINSTRANSLATIONcommand
+SETRTCM16Deleted.
+SETRTCM36Deleted.
+SETRTCMRXVERSIONDeleted.
+SETRTCMTXVERSIONDeleted.
+SETWHEELSOURCEDeleted.
+VEHICLEBODYROTATIONReplaced.UsethenewSETINSROTATIONcommand
+2.2.2Revisedcommands
+## Revisedcommandsarelistedinthefollowingtable.
+## OEM6OEM7
+## ANTENNAPOWER
+3V3optionremoved
+## Ifashortcircuitorotherproblemcausesanoverloadofthe
+currentsuppliedtotheantenna,thereceiverhardwareshutsdown
+thepowersuppliedtotheantenna.Torestorepower,powercycle
+thereceiver.TheReceiverStatusword,availableintheRXSTATUS
+log,providesmoreinformationaboutthecauseoftheproblem.
+## ASSIGN,ASSIGNALL,
+## LOCKOUT,
+## SBASCONTROL,
+## TRACKSV,
+## UNLOCKOUT
+TheOEM7tracksSBASPRNs120-158and183-187.
+TheOEM6tracked120-138and183-187
+## ASSIGNLBANDBEAM
+ThiscommandnowsupportsmultipleL-Bandchannels.
+TheFrequencyfieldisenteredonlyinHz.
+Table2:RevisedcommandsinOEM7
+
+Chapter2  NewforOEM7–firmware
+OEM6toOEM7IntegrationGuidev217
+## OEM6OEM7
+## AUTH
+NewoptionswereaddedfortheStateparameter
+ASCIIBinaryDescription
+## ERASE_
+## TABLE
+## 7
+Eraseallauthcodesfromthesystem.Requiresaspecial
+authcodetopreventagainstaccidentalerasing
+## CLEAN_
+## TABLE
+8Removeallinvalidauthcodesfromthesystem
+SpecialauthcodefortheERASE_TABLEcase:
+## PW5W2B,WW5TM9,WW2PCZ,WW3M4H,WW4HPG,ERASE_AUTH
+SpecialauthcodefortheCLEAN_TABLEcase:
+## 4DR69H,G369W8,34MNJJ,5NHXCJ,GW7C75,CLEAN_AUTH
+COMCONTROLTheCOMportsavailablehavechangedtoreflecttheOEM7receivers.
+## CONNECTIMU
+AddedtheEPSONG320NIMU.
+RemovedtheLitefLCI-1IMU.
+FortheIMUTypeparameter,theASCIIvaluesforIMUnolongerusethe"IMU_"prefix.
+However,thelegacyASCII valuesthatcontainthe"IMU_"prefixarestillsupported.
+ThebinaryIMUtypevalueshavenotchanged.
+## ETHCONFIG
+## Ethernetinterfacehardwarenowautomaticallyconnectsproperlytotheotherphysical
+device
+## EXTERNALPVAS
+TheformatofseveraloftheoptionsinthiscommandhavebeenchangedfromDouble
+toFloat.
+## FRESET
+AddednewFRESETtargets.
+BinaryASCIIDescription
+## 10USERDATA
+ResetstheuserdatasavedusingtheNVMUSERDATA
+command
+## INTERFACEMODE
+AddednewInterfaceModeoptions:
+BinaryASCIIDescription
+## 49NOVATELMINBINARY
+NovAtelbinarymessagewithaminimal
+header.
+OnlyavailableforCCOMports.
+
+Chapter2  NewforOEM7–firmware
+OEM6toOEM7IntegrationGuidev218
+## OEM6OEM7
+## LOG
+TheoptionalparametersPeriod,OffsetandHoldareonlyusedwhentheTriggeris
+ONTIME.Previousversionsofthefirmwareaccepted(butignored)non-zerovaluesfor
+PeriodandOffseteveniftheTriggerwasnotONTIME.ThefirmwareonOEM7
+receiverswillrejectsuchcommandsandreturnanerror.
+ItisespeciallyimportantthatthesevaluesarezerowhenenteringaLOGcommandin
+BinaryorASCIIformat.
+POSAVEThe“state”fieldnolongeroptional;defaultON.Avaluemustnowbeentered
+SETINITAZIMUTHTherangeforthestandarddeviationparameterhaschangedto1to25degrees.
+2.2.3Newcommands
+ThefollowingtableliststhecommandsaddedinOEM7.
+OEM7Description
+CANCONFIGConfigurestheCANportparameters
+## CCOMCONFIG
+BindsaCANporttoaJ1939nodeconfigurestheCANprotocolusedby
+theport.
+FORCEGALE6CODEForcesGalileoE6channelstotrackE6BorE6C
+INSCALIBRATEInitiatesthecalibrationofINSoffsets
+INSSEEDEnablesordisablessavingandrestoringthelastknownSPANsolution
+ITBANDPASSCONFIGConfiguresabandpassfilteronthereceiver
+ITDETECTCONFIGEnablesinterferencedetection
+ITFRONTENDMODEConfiguresthefrontendmodeforeachRFpath
+ITPROGFILTCONFIGConfiguresfilteringonthereceiver
+ITSPECTRALANALYSISEnablesandconfiguresspectralanalysisonthereceiver
+J1939CONFIGConfigurestheCANJ1939network-levelparameters
+NMEAFORMATCustomizestheNMEAoutput
+NVMUSERDATAWritesthedataprovidedtoNVM
+PPPBASICCONVERGEDCRITERIASetstheconvergencethresholdforloweraccuracyPPPsolutions.
+PPPDYNAMICSEEDSeedthePPPfilterinanyplatformmotionstate
+PPPRESETResetsthePPP filter.
+REFERENCESTATIONTIMEOUTSetsatimeoutforremovingpreviouslystoredbasestations
+## RFINPUTGAIN
+SelectsthemodeofsettingtheCAGforthepurposeofinterference
+detection.
+Table3:NewcommandsinOEM7
+
+Chapter2  NewforOEM7–firmware
+OEM6toOEM7IntegrationGuidev219
+OEM7Description
+## RTKPORTMODE
+AssignsaportontheroverreceiverfortheRTKandALIGNinformation
+beingreceived
+RTKRESETResetstheRTKfilter.
+SETINSPROFILESetthefilterbehaviortooptimizetheoutputforaspecificenvironment
+## SETINSROTATION
+SpecifiestherotationaloffsetsbetweentheIMUframeandother
+referenceframes,suchasthevehicleframeoranALIGNbaseline
+## SETINSTRANSLATION
+SpecifiesthetranslationaloffsetsbetweentheIMUframeandother
+referenceframes,includingGNSSantennasorthedesiredoutputframe
+
+Chapter2  NewforOEM7–firmware
+OEM6toOEM7IntegrationGuidev220
+2.3OEM6toOEM7–logs
+ThefollowingsectionsdescribethelogchangesbetweenOEM6andOEM7.
+ForinformationabouttheOEM7logs,refertotheOEM7CommandsandLogsReferenceManual.
+2.3.1Deletedlogs
+ThefollowingtableliststheOEM6logsthathavebeendeletedorreplacedinOEM7.
+## OEM6OEM7
+BESTLEVERARMReplaced.UsethenewINSCONFIGlog
+BESTLEVERARM2Replaced.UsethenewINSCONFIGlog
+CMRDatalogsDeletedthelogsCMRDESC,CMRGLOOBS,CMROBS,CMRPLUS,CMRREF
+## GALEPHEMERIS
+ReplacedwiththeGALFNAVEPHEMERISlogforGalileoFNAVephemerisinformation
+andGALINAVEPHEMERISlogforGalileoINAVephemerisinformation
+## GPGGARTK
+## Deleted
+RefertotheNMEAFORMATcommandforinformationaboutaccessingtheinformation
+thatwasprovidedbythislog.
+HEADINGReplaced.UsetheexistingHEADING2log
+IMUTOANTOFFSETSReplaced.UsethenewINSCONFIGlog
+INSCOVReplaced.UsethenewINSSTDEVlog
+INSCOVSReplaced.UsethenewINSSTDEVSlog
+INSUPDATEReplaced.UsethenewINSUPDATESTATUSlog
+## LBANDINFO
+## Replaced.
+UsetheexistingTERRASTARINFOlogorVERIPOSINFOlogtologsubscription
+information
+UsetheexistingTERRASTARSTATUSlogorVERIPOSSTATUSlogtologdecoder
+andsubscriptionstatusinformation
+## LBANDSTAT
+## OMNIHPPOS
+## OMNIHPSATS
+## OMNIVIS
+PSRTIMEDeleted
+RAWLBANDFRAMEDeleted
+RAWLBANDPACKETDeleted
+SATVISReplaced.UsetheexistingSATVIS2log
+RTCADataLogs
+Deletedthelogs:RTCA1,RTCAEPHEM,RTCAOBS,RTCAOBS2,RTCAOBS3,
+## RTCAREF,RTCAREFEXT
+Table4:DeletedandreplacedlogsinOEM7
+
+Chapter2  NewforOEM7–firmware
+OEM6toOEM7IntegrationGuidev221
+## OEM6OEM7
+RTCMDataLogs
+Deletedthelogs:RTCM1,RTCM3,RTCM9,RTCM15,RTCM16,RTCM16T,
+## RTCM1819,RTCM2021,RTCM22,RTCM23,RTCM24,RTCM31,RTCM32,RTCM36,
+## RTCM36T,RTCM59,RTCM59GLO,RTCMOMNI1
+## WAAS0,WAAS1,
+WAAS2,etc.
+Replaced.UsetheexistingSBAS0log,SBAS1log,SBAS2log,etc.
+2.3.2Revisedlogs
+## Revisedlogsarelistedinthetablebelow.
+## OEM6OEM7
+## AUTHCODES
+AddedauthcodetypesforReservedandHighSpeedSignatures:
+## 4=RESERVED
+## 5=HIGH_SPEED
+## CHANCONFIGLIST
+ThefollowingsignaltypeshavebeenaddedtoTable:CHANCONFIGLISTSignal
+## Type
+ValueNameDescription
+32BEIDOUB1B3BeiDouB1,B3
+33BEIDOUB3BeiDouB3
+34BEIDOUB1B2B3BeiDouB1,B2andB3
+35GALE1E5AE5BALTBOCE6GalileoE1,E5A,E5B,AltBOC,E6
+## 36GPSL1L2PL2CL5L1CGPSL1CA,L2P,L2C,L5,L1C
+## 37QZSSL1CAL2CL5L1CQZSSL1CA,L2C,L5,L1C
+## 38QZSSL1CAL2CL5L1CL6QZSSL1CA,L2C,L5,L1C,L6
+## 39GLOL1L3GLONASSL1CA,L3
+## 40GLOL3GLONASSL3
+## 41GLOL1L2PL2CL3GLONASSL1CA,L2P,L2CA,L3
+## 42GPSL1L2PL2CL1CGPSL1CA,L2P,L2C,L1C
+## 43QZSSL1CAL2CL1CQZSSL1CA,L2C,L1C
+## GPHDT
+TheGPHDTlogcanonlybeloggedusingtheONCHANGEDtrigger.Other
+triggers,suchasONTIMEarenotaccepted.
+## HWMONITOR
+Anewstatus,PeripheralCoreVoltage,wasaddedforOEM7receivers.Also,the
+statusoptionssupportedbyOEM7receiversareindicated.
+Table5:RevisedlogsinOEM7
+
+Chapter2  NewforOEM7–firmware
+OEM6toOEM7IntegrationGuidev222
+## OEM6OEM7
+## INSATTX,
+## INSPOSX,
+## INSPVAX,
+## INSUPDATESTATUS,
+## INSVELX,
+## RELINSPVA,
+## SYNCRELINSPVA
+AdditionalstatusinformationhasbeenaddedtotheExtendedSolutionStatus
+word.TheExtendedSolutionStatuswordisavailableintheselogs.
+SeetheINSATTXlogforadescriptionofthenewstatusvaluesavailable.
+## GIMBALLEDPVA,
+## IMURATEPVA,
+## IMURATEPVAS,
+## INSATT,INSATTS,
+## INSATTX,INSPOS,
+## INSPOSS,INSPOSX,
+## INSPVA,INSPVAS,
+## INSPVAX,INSSPD,
+## INSSPDS,INSVEL,
+## INSVELS,INSVELX,
+MARKxPVA,
+## RELINSPVA,
+## SYNCRELINSPVA
+ThefollowingstatuseshavebeenaddedtotheInertialSolutionStatustable.
+BinaryASCIIDescription
+## 10
+## WAITING_
+## AZIMUTH
+TheINSfilerhasorientation,initialbiases,initial
+positionandvalidroll/pitchestimated.Willnot
+proceeduntilinitialazimuthisentered.
+## 11
+## INITIALIZING_
+## BIASES
+TheINSfilterisestimatinginitialbiasesduring
+thefirst10secondsofstationarydata.
+## 12
+## MOTION_
+## DETECT
+TheINSfilterhasnotcompletelyaligned,buthas
+detectedmotion.
+## LBANDTRACKSTAT
+ThislognowreportstheL-BandtrackingandViterbistatusformorethanone
+beam.
+## RANGECMP
+GLONASSfrequencynumberaddedtotheRangeRecordFormattable.The
+changesareshownbelow:
+## Data
+## Bitsfirstto
+last
+## Length
+## (bits)
+## Scale
+factor
+## Units
+C/No165-1695(20+n)dB-Hz
+GLONASSFrequency
+## Number
+## 170-175n+71
+## Reserved176-19116
+## RANGE,RANGECMP,
+## RANGECMP2
+OEM7tracksadditionalGNSSsignals:
+GPSL1C,GLONASSL3,QZSSL1CandQZSSL6
+## RANGE,RANGECMP,
+## RANGECMP2,
+## RANGECMP4,
+## RANGEGPSL1,SATVIS2,
+## TRACKSTAT
+TheOEM7tracksSBASPRNs120-158and183-192.
+TheOEM7tracksQZSSPRNs193-202.
+TheOEM6tracksSBASPRNs120-138and183-187.
+TheOEM6tracksQZSSPRNs193-197.
+
+Chapter2  NewforOEM7–firmware
+OEM6toOEM7IntegrationGuidev223
+## OEM6OEM7
+## RXSTATUS
+NewOEM7errorandstatusstateshavebeenaddedtotheReceiverError,
+ReceiverStatus,Auxiliary1StatusandAuxiliary2Statuswords.
+SeetheRXSTATUSlog
+ThereceiverfamilyfromwhichtheRXSTATUSlogwasgenerated
+mustbeknowntoproperlyinterprettheinformationprovidedbythe
+ErrorandStatuswords.Todeterminethereceiverfamily,usethe
+VersionBits(25and26)oftheReceiverStatusword.
+Ifbit25is1andbit26is0,theRXSTATUSlogisfromanOEM7
+receiver.
+Ifbit25is0andbit26is0,theRXSTATUSlogisfromanOEM6or
+earlierreceiver.
+TRACKSTATTheOEM7haschannelstate23forBOCsidepeakcheck.
+## VARIABLELEVERARM
+ThecomputedleverarmoffsetisnowreportedintheIMUBodyframe,rather
+thantheSPANcomputationframe.
+2.3.3Newlogs
+ThetablebelowliststhelogsaddedinOEM7.
+OEM7Description
+GALCNAVRAWPAGEProvidesGalileorawC-NAVpagedatafromGalileoE6signals.
+INSCALSTATUSProvidesthestatusandestimatedvaluesforthecurrentlyrunningoffsetcalibration.
+INSCONFIGProvidesthecurrentconfigurationoftheSPAN system.
+INSSTDEVProvidestheINSPVAstandarddeviations.
+INSSTDEVSProvidestheINSPVAstandarddeviationsandhasashortheader.
+INSUPDATESTATUSProvidesthemostrecentINSupdateinformation
+ITBANDPASSBANKProvidestheallowablebandpassfilterconfigurations
+ITDETECTSTATUSProvidesalistofdetectedinterference
+ITFILTTABLEProvidesthefilterconfigurationforeachfrequency
+ITPROGFILTBANKProvidestheallowablefilterconfigurations
+ITPSDFINALProvidestheprocessedpowerspectraldensityinformation
+J1939STATUSProvidesthestatusoftheJ1939node
+MODELFEATURESClearlystatesthefeaturesavailableforthecurrentloadedmodel
+RANGECMP4HighlycompressedversionoftheRANGElog
+Table6:NewlogsinOEM7
+
+Chapter2  NewforOEM7–firmware
+OEM6toOEM7IntegrationGuidev224
+OEM7Description
+RAWSBASFRAME2ProvidestherawSBASframedataandthetransmittedfrequency.
+RTKASSISTSTATUSProvidesinformationonthestateofRTKASSIST
+SAFEMODESTATUSProvidestheSafeModestatus
+
+Chapter2  NewforOEM7–firmware
+OEM6toOEM7IntegrationGuidev225
+2.4OEM6toOEM7–SPAN
+ThecommandsusedtoentertranslationaloffsetsandrotationaloffsetshavechangedinOEM7.For
+informationabouttranslationsandrotations,seeSPANTranslationsandRotationsintheOEM7SPAN
+InstallationandOperationUserManual.
+2.4.1Translationaloffsets
+DeterminingthetranslationaloffsetsinOEM7issimilartotheprocessinOEM6.Threedimensionaldistances
+fromIMUtotheotherSPAN systemdevice(e.g.GNSSantenna)areenteredintotheSPANreceiver.The
+differencesarethecommandsusedtoentertheoffsetshavechangedandthedistancescanbeenteredinthe
+IMUframeorthevehicleframe.
+SeeTable7:CommandsforenteringSPANoffsetsandrotationsbelowforthechangesinthecommands
+usedforenteringtranslationaloffsets.SeetheSETINSTRANSLATIONcommandformoreinformation.
+TheOEM6offsetcommandsrequiredthatalltranslationaloffsetsbeenteredintheIMUBodyFrame,soto
+translatetothenewcommands,thesamevaluescanbeenteredwithinthenewstructure.
+2.4.2Rotationaloffsets
+DeterminingrotationaloffsetsinOEM7haschangedsignificantly.WiththeOEM6commands,rotations
+usuallyreferencedtheSPANComputationFrame.Now,allrotationsaregivenastherotationfromtheIMU
+BodyFrame,totheframeofinterest.ForIMUsinstalledwiththeirZaxispointedupwards,rotationangleswill
+besimilarasthoseusedwiththelegacycommands.ForIMUsinstalledinotherorientations,angleswillbe
+verydifferent.
+SeeTable7:CommandsforenteringSPANoffsetsandrotationsbelowforthechangesinthecommands
+usedforenteringrotationaloffsets.SeetheSETINSROTATIONcommandformoreinformation.
+OEM6commandOEM7commandNotes
+## SETIMUTOANTOFFSET
+## SETINSTRANSLATION
+## ANT1
+## SETIMUTOANTOFFSET2
+## SETINSTRANSLATION
+## ANT2
+## SETIMUTOEXTOFFSET
+## SETINSTRANSLATION
+## EXTERNAL
+## SETIMUTOGIMBALOFFSET
+## SETINSTRANSLATION
+## GIMBAL
+## SETINSOFFSET
+## SETINSTRANSLATION
+## USER
+SETMARKxOFFSET
+## SETINSTRANSLATION
+MARKx
+## SETINSROTATION
+MARKx
+## Translationalandrotationaloffsetsarenow
+enteredseparately.
+MarkxcanbeMARK1,MARK2,MARK3or
+## MARK4.
+Table7:CommandsforenteringSPANoffsetsandrotations
+
+Chapter2  NewforOEM7–firmware
+OEM6toOEM7IntegrationGuidev226
+OEM6commandOEM7commandNotes
+## VEHICLEBODYROTATION
+## SETIMUORIENTATION
+## SETINSROTATIONRBV
+TheinformationprovidedbytheOEM6
+commandsisnowcombinedintheRBV
+rotation.
+## GIMBALSPANROTATION
+## SETGIMBALORIENTATION
+## SETINSROTATIONRBM
+TheinformationprovidedbytheOEM6
+commandsisnowcombinedintheRBM
+rotation.
+TheRBVrotationmustalsobespecifiedfor
+correctoperation.
+## EXTHDGOFFSET
+## SETINSROTATION
+## ALIGN
+## Thisoffsetcontinuestobeautomatically
+calculatedifthetranslationaloffsetstothe
+primaryandsecondaryGNSSantennasare
+provided.
+## APPLYVEHICLEBODYROTATIONSETINSROTATIONRBV
+DefaultattitudeoutputisnowintheVehicle
+Frame,aslongasanRBVrotationis
+provided.ThisisoverriddenifaUSER
+rotationaloffsetisprovided.
+2.4.3INSprofiles
+INSProfilesareamethodtoimprovetheperformanceofthesystemindifferentconditions.Whenareceiveris
+configuredwithanINSProfile,thedefaultreceiversettingsaremodifiedtooptimizeperformanceinthe
+selectedcondition.SeeINSProfilesonpage 28formoreinformation.
+2.4.4INS seed
+TheINSSeedfunctionalityisanalignmentmethodwherebyINSalignmentinformationfromaprevious
+powerupcanbeinjectedintothesystematstartuptoachieveanINSalignmentveryquickly.Thisisespecially
+usefulforsystemsthatpreviouslyrequiredakinematicalignment.SeeINS Seed/FastINSinitializationon
+page 31formoreinformation.
+2.4.5ALIGNcalibration
+ForoptimalSPANperformancewhenusingDualAntennawithSPAN,anALIGNoffset
+calibrationisrequiredforeachuniqueinstallation.ThiscalibrationrefinestheIMUto
+antennabaselineangularoffsetfromtheinitialestimatederivedfromtheinputleverarms.
+RefertoINSCALIBRATEcommandfordetails.
+2.4.6Multi-linebodytovehiclecalibration
+TheBodytoVehicleframeoffsetcalibrationfeatureassumesflatgroundwhenestimatingtherolloffsets
+betweentheIMUBodyandVehicleframes.Forapplicationswherevehiclerollmustbewellknown,orpass-to-
+passaccuracyofahighlyoffsetpositionisespeciallyimportant,theMulti-LineIMUBodytoVehicleframe
+offsetcalibrationroutineoffershighercalibratedaccuracyinroll.Thisisdonebyrunningindependent
+calibrationsoverthesamegroundpathinoppositedirections;averagingtheresultscancelsouttheeffectof
+anyterraininducedroll.SeeMulti-linebodytovehicleframerotationcalibrationroutineonpage 29formore
+information.
+
+Chapter2  NewforOEM7–firmware
+OEM6toOEM7IntegrationGuidev227
+2.4.7IMU-KVH1750andIMU-P1750baudrateconversion
+IfpurchaseddirectlyfromKVH,anIMU-KVH1750orIMU-P1750IMUmustbeconfiguredbeforeitcanbeused
+withanOEM7receiver.
+TheIMU-KVH1750andIMU-P1750nativelycommunicateat921,600bps,howeverthemaximumbaudrateof
+theCOMportsonanOEM7receiveris460,800bps.Thus,IMU-KVH1750andIMU-P1750IMUspurchased
+fromKVHmustbemodifiedtouse460,800bps.Also,theMSYNCsettingontheIMU-KVH1750orIMU-P1750
+mustbesettoEXT.
+Thoughslower,460,800bpsismorethanadequatetotransmitthedataattherequired200Hzwithout
+anyimpacttoperformance.
+TherearetwomethodstochangetheIMU-KVH1750orIMU-P1750IMUbaudrate.IfanOEM6receiveris
+available,acommandisavailablethatwillallowthereceivertochangetheIMUbaudrate.Ifnot,adirectRS-
+422connectionat921,600baudisrequiredtochangetheIMUbaudrate.
+ConnectdirectlytotheIMU
+ThismethodrequiresadirectconnectiontotheIMUat921,600baudoverRS-422.Makesurethe
+RS-422linkusediscapableof921,600baudasnotallserialportsarecapableofthatrate.
+1.Openacommandterminalat921,600baudviaanRS-422seriallink.
+Bydefault,theIMUwilloutput0.5Hzbinarymessageswhichwillhelpconfirmyouareconnected
+properly.
+2.Issuethefollowingcommandsinsequencetoenterconfigurationmodeandchangethebaudrate.
+## =CONFIG,1
+## =MSYNC,EXT
+## =BAUD,460800
+3.Uponcompletionofthesecommands,powercycletheIMUtobootupinthenewbaudrate.
+4.ConfirmthechangebyconnectingtotheIMUat460,800baudandverifyingtheincomingmessages.
+ThenewbaudrateconfigurationissavedtotheIMUNVMautomaticallysotheprocessiscompleteandtheIMUis
+readyforusewithanOEM7receiver.
+UseanOEM6receivercommand
+OEM6firmwareasofversionOEM060631RN0000(Dec2016)includestheIMUCONFIGURATIONcommand
+thatinternallyconfigurestheIMU-KVH1750orIMU-P1750IMUforSPANcommunication.Threesetsof
+configurationoptionsareavailable,twoofwhichallowchangingthebaudrateoftheIMUtoeither921,600or
+460,800.ThisprovidescustomersupgradingtoOEM7aneasymethodtomodifythebaudrate.Tochangethe
+IMUto460800baud,usethefollowingprocedure:
+1.ConnecttheIMUtoanRS-422capableOEM6receivercommunicationport.
+2.Issuethefollowingcommand.
+## CONNECTIMUCOM#IMU_KVH_1750
+
+Chapter2  NewforOEM7–firmware
+OEM6toOEM7IntegrationGuidev228
+3.Issuethefollowingcommand.
+## IMUCONFIGURATIONIMU_KVH_17502
+TheIMUCONFIGURATIONcommandcanbeusedtoconfigureanIMU-KVH1750orIMU-P1750IMU
+dependingonthevalueoftheOptionfield.
+IMUCONFIGURATIONIMUType[Option]
+IMUtypeOptionConfigurationdetails
+## IMU_KVH_1750
+0ConfigureKVHoptionsforNovAtelcommunication.
+1ChangeKVHbaudrateto921,600
+2ChangeKVHbaudrateto460,800
+2.4.8INSProfiles
+INSProfilesprovidetwomajorfunctions;simplifiedconfigurationandenhancedperformance.EachINS
+Profilesetsspecificfilterbehaviortoenhancesystemperformanceinparticularenvironments.
+TheINSprofilesettingsareenabledbythereceivermodel.AreceivermodelwithanINS ModeofS,P,RorK
+isrequiredtoenableINS Profiles.TheINSprofileaddsenhancedbehaviorsuchasDeadReckoningforland
+andHeaveformarineandallowsforsimpleconfigurationratherthansendingmanydiscreetcommands.
+ProfileDescriptionEnhancedProfilesettings
+## DEFAULT
+ThedefaultSPANprofile.
+ThisprofilehaslegacySPANdefaultsettings.
+## N/A
+## LAND
+INSProfileforfixedaxlelandvehicles.Enables
+robustkinematicalignmentroutinesandconfigures
+theupdateprofile.
+## Enablesintelligentvehicledynamics
+modelingforlandvehicles(Dead
+## Reckoning)
+## Enablescourseovergroundattitude
+updates
+## Enablesdirectiondetectionon
+kinematicalignmentroutine
+## MARINE
+INSprofileformarinevessels.Enactschangesto
+disablestaticbehaviorandmakethemarine
+solutionmorerobust.
+DisableZeroVelocityUpdates
+## Disableturn-onbiasestimation
+EnablesHeavealgorithms
+FIXEDWINGINSprofileforfixedwingaircraftNone
+FOOTINSprofileforwalkingorbackpackapplicationsNone
+## VTOL
+INS profileforVerticalTakeOffandLandingaircraft
+## (helicopter,quadcopter,etc.)
+## None
+Table8:OEM7INSProfiles
+
+Chapter2  NewforOEM7–firmware
+OEM6toOEM7IntegrationGuidev229
+ProfileDescriptionEnhancedProfilesettings
+RAILINSprofileforrailwayapplications
+## Enablesintelligentvehicledynamics
+modelingforrailvehicles(Dead
+## Reckoning)
+## Enablecourseovergroundattitude
+updates
+## Enabledirectiondetectiononkinematic
+alignmentroutine
+AGRICULTUREINSprofileforagricultureapplications
+## Enablesdirectiondetectionon
+kinematicalignmentroutine
+## Enablescourseovergroundattitude
+updates
+## Enablesintelligentvehicledynamics
+modelingforagriculturalvehicles
+(DeadReckoning)
+## Use
+TouseanINSProfile,sendtheSETINSPROFILEcommandatstartup(orsavetoNVM)toactivatethemode.
+## Forexample:
+## SETINSPROFILELAND
+Thetypeofprofileactivated,basicorenhanced,isdeterminedbytheSPANmodel.
+ThecurrentlyselectedprofileoptionisavailableintheINSCONFIGlog.
+RBVcalibration
+Fortheprofilestoprovidethegreatestbenefit,therotationoffsetoftheIMUbodytothevehicleframe(RBV)
+shouldbeknownasaccuratelyaspossible.Sinceconstraintshappenatthevehiclelevel,anyerrorinthe
+offsetwilltranslateintoworseperformance.Theseparametersareestimatedinthebackgroundwhenthe
+systemisfullyconverged,howeveritisalwaysbettertohavethismeasuredaspreciselyaspossiblebefore
+missioncriticaldataiscollected.
+TheINSCALIBRATERBVfunctionalitycanbeusedtoestimateandsavetheseoffsetstoNVMinacontrolled
+manner.
+2.4.9Multi-linebodytovehicleframerotationcalibrationroutine
+ThesinglepassBodytoVehicleframeoffsetcalibrationfeatureassumesflatgroundwhenestimatingtheroll
+offsetsbetweentheIMUBodyandVehicleframes,asthiscomponentoftherotationaloffsetisdifficultto
+observethroughtypicalgroundvehiclemotion.Inpracticethiscanresultinanoutstandingrolloffseterroras
+highasseveraldegrees.Forapplicationswherevehiclerollmustbewellknown,orpass-to-passaccuracyofa
+highlyoffsetpositionisespeciallyimportant,theMulti-LineIMUBodytoVehicleframeoffsetcalibrationroutine
+offershighercalibratedaccuracyinroll.Thisisdonebyrunningindependentcalibrationsoverthesame
+groundpathinoppositedirections;averagingtheresultscancelsouttheeffectofanyterraininducedroll.A
+minimumoftwoiterationsarerequired.Additionaliterationpairscanbeexecutedforincreasedreliability.
+
+Chapter2  NewforOEM7–firmware
+OEM6toOEM7IntegrationGuidev230
+Figure1:Multi-lineIMUbodytovehiclecalibration
+## Thestepsforthecalibrationroutineare:
+1.ApplypowertothereceiverandIMU.
+2.ConfiguretheSPANsystem.
+3.Ensurethatanaccurateleverarmhasbeenenteredintothesystem.
+4.PerformaninitialsystemalignmentusingoneofthemethodsdescribedinSystemStart-Upand
+AlignmentTechniquesintheOEM7SPANInstallationandOperationUserManual.Ensurethesystem
+reachesSolutionGood.
+5.EnableanewcalibrationusingtheINSCALIBRATEcommand,withtheoptionalstandarddeviation
+targetomitted:
+## INSCALIBRATERBVNEW
+6.Starttomovethevehicle.Driveastraightcourse,atavehiclespeedgreaterthan5m/s(18km/hr).A
+distanceofapproximately250metresisrecommended.
+Tomonitorthecalibration,logINSCALSTATUSusingtheONCHANGEDtrigger.
+7.Whentheendoftheavailabledistanceisreached,stopthevehicle.Halttheongoingcalibrationby
+sendingtheINSCALIBRATEcommandagain:
+## INSCALIBRATERBVSTOP
+8.AtthispointINSCALSTATUSwillreportasourcestatusofCALIBRATED.Turnthevehiclearoundand
+cometoastoponthefinishingpointofthepreviousline.
+
+Chapter2  NewforOEM7–firmware
+OEM6toOEM7IntegrationGuidev231
+9.InitiatethesecondpassofthecalibrationbyissuingtheINSCALIBRATEcommandwiththeADD
+parameter:
+## INSCALIBRATERBVADD
+10.Drivethevehiclebackalongtheoriginalcourse,untilyoureachthestartingpointforthefirstpass.Stop
+thevehicle,andre-issuetheINSCALIBRATEcommand,withtheSTOPparameter.INSCALSTATUS
+willagainindicateasourcestatusofCALIBRATED.
+AtthispointtheMulti-Linecalibrationcanbeconsideredcomplete,butmoreiterationscanberepeated
+untilthedesiredaccuracylevelisreached.
+Atanypointduringanactivecalibrationline,theINSCALIBRATEcommand,withtheRESET
+parametercanbeusedtoresetthecalibration.Thiswillensurethattheresultsoftheactivelinearenot
+addedtotheMulti-Linecalibration.TheINSCALSTATUSlogwillrestoretheprevioussourcestatus
+andcalibrationvalues.
+11.Whenthecalibrationiscomplete,thecalibratedoffsetvaluecanbeviewedineitherthe
+INSCALSTATUSlogortheINSCONFIGlog.
+Tosaveacalibratedrotationforsubsequentstartups,issuetheSAVECONFIGcommandaftercalibrationis
+complete.EachtimetheIMUisre-mountedthiscalibrationshouldbeperformedagain.
+DonotstartINSCalibrations(NEWorADD)untiltheinertialalignmentiscompletedand
+systemhasconverged.
+Forinformationaboutthelogsandcommandsusedinthisprocedure,refertotheOEM7Commands
+andLogsReferenceManual.
+2.4.10INS Seed/FastINSinitialization
+TheINSSeedfunctionalityisanalignmentmethodwherebyINSalignmentinformationfromaprevious
+powerupcanbeinjectedintothesystematstartuptoachieveanINSalignmentmorequickly.Thisis
+especiallyusefulforsystemsthatpreviouslyrequiredakinematicalignment.
+WhenINSSeedisenabled,alignmentdataisautomaticallysavedwhenappropriate,withnospecificaction
+requiredfromtheuser.Duringsubsequentpowerups,thesavedsolutioniscomparedtothecurrentposition
+ofthesystem,andifvalid,thesavedsolutionisusedtoimmediatelyinitializetheinertialfilter,makingitready
+foruse.
+Errormodelinformationisalsosavedwiththeseeddata.Eveniffullalignmentcannotbeachieved,this
+informationwillstillbeusedtoaidfilterconvergence,althoughanothermethodofalignmentwillberequired.
+ThisfeatureisenabledviatheINSSEEDcommand.ThiscommandsettingmustbesavedtoNVMviathe
+SAVECONFIGcommandtobeuseduponnextsystemboot-up.
+WhentheINSSeedfunctionalityisenabled,itwillmostoftenbethefirstavailablealignmentmethod
+andthereforetheusedalignmentmethod.IfDualAntennaAlignmentisdesired,considerdisabling
+## INSSEED.
+## Criteria
+FortheINSseedfunctionalitytobeenabled,theINSSEEDENABLEcommandmustbesent.
+
+Chapter2  NewforOEM7–firmware
+OEM6toOEM7IntegrationGuidev232
+## Saving
+ThefollowingcriteriamustbemetforvalidalignmentdatatobesavedintoreceiverNVM.
+l
+TheINSsolutionstatusmustbeconverged,asindicatedbytheINSsolutionconvergenceflaginthe
+inertialExtendedSolutionStatus.
+l
+## Thesystemvelocityislessthan0.2m/s.
+Whentheseconditionsaremet,therequiredinformationisautomaticallysavedtoNVM.Iftheseconditions
+ceasetobemet,thesavedalignmentdataisautomaticallydiscarded.Ifthealignmentdataisdiscarded,error
+modelinformationisautomaticallyretainedasappropriate.
+## Useatboot-up
+Uponboot,severalchecksaredonetoverifythatanyseeddataexistinginNVMisappropriateforuse.These
+checksrequireaGNSSpositiontobecomputed,soanNVMseedwillneverbeinjectedpriortoachievinga
+GNSSposition.Thefollowingcriteriamustbemetinordertouseaseed:
+l
+SeeddatafromNVMmustbevalid
+l
+## Thesystemmustbestationary
+l
+Thesystemmustnothavemovedsignificantlyfromtheseedposition:lessthan10metresinposition
+and10degreesinheading
+IfavaliderrormodelispresentintheseeddatafromNVM,thiswillalwaysbeused,evenifthesystemisnot
+stationaryorexceededthemovementthresholds.
+INJECTOption(AdvancedUsersOnly)
+## Thereisanadvancedoptionavailabletoskipthesecondandthirdvalidationsteps
+describedintheboot-upsectionabove.ThiscanbeusedifGNSSisnotavailableonpower-
+uporifspeedtoachieveanalignmentisimperative.
+Thisoptionisforadvancedusersonly.ForcinganinjectionofanNVMseedwithoutthe
+validationcheckscancauseanunstableINSsolutionifthevehiclehasmoved.
+## Apartfrominjectingtheseedatstart-upwithoutvalidation,thiswillalsoremovesome
+requirementstypicallyassertedtoallowthefiltertoconverge.Thiswillallowthesystemto
+runwithoutGNSSadequatelyatstart-up.
+## Exampleusage
+EnablingfunctionalityafterFRESET:
+1.Sendthefollowingcommand.
+## INSSEEDENABLEVALIDATE
+2.Sendthefollowingcommand.
+## SAVECONFIG
+SavingvalidINSinformation:
+1.Operatethesystemasnormal,untilthefiltercompletesconvergence.
+2.Bringthesystemtoacompletestopbeforepoweringofforresetting.
+UsingvalidINSinformationonstart-up:
+
+Chapter2  NewforOEM7–firmware
+OEM6toOEM7IntegrationGuidev233
+1.Remainstaticwhileinitializing.
+2.WaitforthesystemtoreceiveavalidpositionfromGNSS.
+3.Ifvalid,alignmentdatawillbeinjected.
+## Systemindicators
+TheINSSEEDSTATUSlogreportstheseedinjectionstatusforthecurrentpowerupandinformationon
+currentseedvalidity.RefertheOEM7CommandsandLogsReferenceManualformoreinformationaboutthe
+INSSEEDSTATUSlog.
+TheExtendedSolutionStatusfieldintheINSPVAXloghasbitsthatindicateifthealignmentdirectionis
+verified,theAlignmenttypethatoccurredandNVMseedinjectionstatus.
+Alignmentdirectionverified:Bit25
+Thisbitindicateswhetherthealignmentisverifiedornot.Whentheseedisinjectedandkinematicvalidationis
+finished,bit25issetto1.Notethatthisbitwillnotbesetuntilthekinematicvalidationcompletes.Whenthe
+INJECToptionisused,validationisskippedandthisbitwillnotbeset.
+Alignmenttype:Bits26-28
+ThesebitsindicatehowtheINSsystemreachedINS_ALIGNMENT_COMPLETE.WhentheINSsystem
+alignsusingsavedINSsolutiondatafromNVM,bits26-28willbesetto101
+NVMseedstatus:Bits29-31
+Thesebitsindicatethecurrentstatusoftheseedingprocessatstart-up,asdescribedinthetablebelow:
+## Bit31-
+## 29
+values
+## 1
+## Hex
+value
+NVMseedtype
+0000x00INSSeedhasnotbeeninjectedintothesolution
+0010x01ValidINSSeedwasnotfoundinnon-volatilememory
+0100x02INSSeedhasfailedvalidationandhasbeendiscarded
+0110x03INSSeedisawaitingvalidation
+1000x04INSSeedalignmentdatahassuccessfullybeeninjected(includingerrormodeldata)
+## 1010x05
+INSSeedexists,buthasbeenignoredduetoausercommandedfilterreset/restartor
+configurationchange
+1100x06INSSeederrormodeldatahassuccessfullybeeninjected
+Table9:NVMseedindication
+1.ThevaluesfromlefttorightareBit31,Bit30andBit29.
+
+OEM6toOEM7IntegrationGuidev234
+Chapter3OEM6toOEM7–hardware
+ThefollowingOEM7GNSSreceiversarediscussedinthefollowingsections.
+l
+## OEM719
+l
+## OEM729
+3.1Physicalchanges
+TwooftheOEM7receiversareformfactorreplacementsforOEM6receivers.TheOEM719replacesthe
+OEM615andtheOEM729replacestheOEM628.FormfactorreplacementmeansthattheOEM7receivers:
+l
+havethesamephysicaldimensionsastheOEM6receivers
+l
+havethesamekeep-outzonesastheOEM6receivers
+l
+usethesamelocationsforthemountingholesastheOEM6receivers
+l
+usethesameconnectorsastheOEM6receivers
+l
+usethesamelocationsfortheconnectorsastheOEM6receivers
+ThephysicaldifferencesbetweentheOEM7andOEM6receiversaredescribedinthefollowingsections.
+3.1.1Shielding
+TheOEM719andOEM729haveanadditionalshieldcomparedtotheOEM615andOEM628.However,allof
+theshieldsontheOEM719arewithinthekeep-outzonedefinedfortheOEM615andalloftheshieldsonthe
+OEM729arewithinthekeep-outzonedefinedfortheOEM628.Designsthatrespectedthekeep-outzonesfor
+theOEM6receiverswillnotbeaffectedbytheshieldsontheOEM719andOEM729.
+ForinformationabouttheOEM615andOEM628keep-outzones,seetheOEM6FamilyInstallationand
+OperationUserManual(OM-20000128).ForinformationabouttheOEM719andOEM729,seetheOEM7
+InstallationandOperationUserManual.
+3.1.2Mounting
+TheOEM719andOEM729canbemountedusingstandoffsorbossesthathavethesamespacingrequired
+forOEM6receivers.SeetheOEM7InstallationandOperationUserManualfortheexactspacing.
+OEM7receiversalsohaveanareaontheedgeofthecardstoallowtheuseofmountingrails.Thisisthearea
+outsideofthekeep-outzone.OntheOEM719,thisareais1.75mmwide.OntheOEM729,thisareais2.5 mm
+wide.
+UsingrailstomounttheOEM7receiverimprovesthethermalandvibrationperformanceofthereceiver.
+SecuringtheOEM7receivertomountingrailsusingclampingbarsprovidesthemostsecureconfigurationfor
+aggressivethermalandvibrationusecases.
+FormoredetailsaboutmountingOEM7receivercards,refertotheOEM7ReceiverCardMechanical
+IntegrationApplicationNote(D19021).
+3.1.3Weight
+TheOEM7receiversareslightlyheavierthantheOEM6receiverstheyreplace.
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev235
+ReceiverWeightReceiverWeight
+OEM61524gOEM62837g
+OEM71931gOEM72948g
+3.2Electricalchanges
+3.2.1COMportdatarate
+ThemaximumdatarateforCOMportshaschanged.OnOEM6receivers,themaximumdataratewas
+921,600bps.OnOEM7receivers,themaximumdatarateis460,800bps.
+3.2.2Powersupply
+ThepowerconsumptionofOEM7receiversisdependentonreceiverconfigurationandfeatureuse.Enabling
+morefeatures(e.g.interferencedetection)willincreasethepowerrequired.
+l
+TheOEM719powerconsumptionisapproximately10%higherthanasimilarlyconfiguredOEM615.
+l
+TheOEM729powerconsumptionisapproximately10%lowerthanasimilarlyconfiguredOEM628.
+Amonotonicriseofthesupplyvoltageinputisrequiredtoguaranteeaproperpower-onresetsequence.The
+maximumrisetimeis100ms.
+Bulksupplybypassing(approx10μF)andhigh-frequencybypassing(0.1μFand220pF)nearthesupplypin
+isrecommendedforoptimalperformance.
+OntheOEM7receivercards,thereisanapproximateeffectiveinputbulkcapacitanceof100μFatroom
+temperature.Thisismadeupofceramiccapacitorswithavoltageratingof6.3VDCandtoleranceof20%.
+OEM7receiversmonitorthesupplyvoltage.Ifthesupplyvoltagefallsoutsideofthenormaloperatingrange,a
+warningorerrorisprovidedintheRXSTATUSlog.SeetheRXSTATUSlogformoreinformation.
+## Inrushcurrent
+TheinrushcurrentbehavioroftheOEM7receiversisdifferentthantheOEM6receivers.
+OEM6receiverInrushcurrent(typical)
+OEM6156.0Aforlessthan60μs
+OEM6176.0Aforlessthan60μs
+OEM617D6.0Aforlessthan60μs
+OEM6286.6Aforlessthan60μs
+OEM63812.0Aforlessthan60μs
+Table10:OEM6receiverinrushcurrent
+OEM7receiverInrushcurrent(typical)
+OEM7191.71Aforlessthan1.5ms
+Table11:OEM7receiverinrushcurrent
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev236
+OEM7receiverInrushcurrent(typical)
+OEM7292.0Aforlessthan1.8ms
+## OEM7500
+1.7Aforlessthan1.5ms(3.3VDC)
+Noinrushcurrentfor1.2VDC
+OEM76002.0Aforlessthan1.8ms
+OEM77002.0Aforlessthan1.8ms
+OEM77202.0Aforlessthan1.8ms
+3.2.3USBinterfaces
+ThelayoutguidelinesareidenticaltothoseprovidedforOEM6,buttherecommendedcommon-modechokevalue
+haschanged.
+TheOEM719andOEM729USBinterfacesoperateat12Mb/s("Full-Speed")operationforbackwards-
+compatibilityreasons.
+3.2.4Inputandoutputlines
+ThevoltagelimitsanddrivecurrentsontheinputandoutputlinesoftheOEM7receiversaredifferentthanthe
+levelsontheOEM6receivers.
+3.2.5LNApower
+## Ifashortcircuitorotherproblemcausesanoverloadofthecurrentsuppliedtotheantenna,
+thereceiverhardwareshutsdownthepowersuppliedtotheantenna.Torestorepower,
+powercyclethereceiver.TheReceiverStatusword,availableintheRXSTATUSlog,provides
+moreinformationaboutthecauseoftheproblem.
+## OEM719
+OnOEM615receivers,LNApowerisprovidedbyanexternalpowersupplyconnectedtopin1ofthemain
+connector.
+OnOEM719receivers,LNApowerisgeneratedonthereceiverandpin1ofthemainconnectorhasno
+electricalconnectionontheboard.TheOEM719providesupto200mAofcurrentat+5 VDC.TheLNAis
+generatedfromthe3.3Vsupply;thereforetheOEM719willdrawmorepoweronthe3.3Vrailthanasimilarly
+configuredOEM615.
+ThetypicalcurrentdrawforaNovAtelactiveantennais<40mA.Foratypicalantenna,thismayincreasethe
+powerdrawnfromthe3.3Vsupplybyasmuchas70mA(astheLNAsupplyisapproximately85-90%
+efficient).
+## OEM729
+OnOEM628receivers,thevoltageprovidedtotheLNAcouldbechangedfromthedefaultof+5VDCto
++3.3 VDCusingtheANTENNAPOWERcommand.
+ThevoltagefortheLNApowerisnotselectableonOEM729receivers,buttheOEM729canprovidemore
+currenttotheLNA.TheOEM729providesupto200mAofcurrentat+5 VDC.
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev237
+3.3Environmentalchanges
+3.3.1Thermaldissipation
+Toensurefunctionalityandreliability,theOEM7receivercardsmustoperatewithinthespecifiedambientair
+temperaturelimits(-40°Cto+85°C).
+TheOEM7receivershavebeendesignedtoefficientlytransferheatfromthereceivercomponentsintothe
+printedcircuitboard.MountingtheOEM7receiveronrails,orattachingheatsinkstothemountingareas,will
+transfertheheatfromthereceivercardtoadjacentcircuitboards,theenclosureortheair.
+## Themountingareaistheareaonthesidesofthereceiverthatareoutsideofthekeep-outzone.
+Thebestthermalmitigationcomesfromsinkingheatthroughthemountingrails.Thisprovidesmore
+effectivethermalreliefthanattachingaheatsinktotheMINOS.
+Formoreinformationaboutthermaldissipation,refertotheOEM7ReceiverCardMechanical
+IntegrationApplicationNote(D19021).
+3.3.2Vibration
+OnOEM6receivers,therandomvibrationspecificationisdependentonthereceivervariant.StandardOEM6
+receiverswereratedto7.7gRMS(MIL-STD-810GMethod514.6,Category24).HighvibrationOEM6
+receiverswereratedto20gRMS(MIL-STD-810GMethod514.6,Category24).
+AllOEM7receiversareratedto20gRMS(MIL-STD-810GMethod514.6E-1,Category24).However,forhigh
+vibrationinstallations,specialconsiderationsarerequired.
+Formoreinformationaboutvibrationconsiderations,refertotheOEM7ReceiverCardMechanical
+IntegrationApplicationNote(D19021).
+3.4Interference
+TypicalGNSSsignallevelsareintheorderof-130dBm.Spuriousemissionsfromdigitallogic(especiallya
+microprocessor)oranearbyradiotransmittercaneasilymeettheappropriateEUorFCCemissionlimitsand
+stillbeseveralordersofmagnitudeabovetheleveloftheGNSSsignals.
+TheseemissionsmaydesensitizetheGNSSreceiverandleadtoperformancedegradation(lowcarrierto
+noiseratios,positionaccuracy,orlossoflockinextremecases).
+## Therearetwobandsofinterest:
+l
+LowBand(1164MHzto1300MHz):containsGPSL2,GPSL5,GLONASSL2,BeiDouB2,BeiDou B3,
+GalileoE5a,GalileoE5b,GalileoE5andGalileoE6.
+l
+HighBand(1525MHzto1610MHz):containsGPSL1,GLONASSL1,BeiDouB1,GalileoE1,and
+L-Band.
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev238
+OEM7receiversaredesignedtomitigateRFinterferenceontheGNSScarditself.However,ifanemission
+(fundamentalorharmonic)fromequipmentco-locatedwiththeGNSSreceiverorantennafallsintooneof
+thesebands,thereareafewthingsthatcanbedonetoensuregoodsystemperformance:
+l
+PlaceradiotransmittersandtheirassociatedantennasasfarawayfromtheGNSSantennaandOEM7
+cardaspossible(forexample,acellularradioantenna).
+l
+ProvisionforRFshieldingoverallhigh-speeddigitallogiccircuitry(evenifthedesignmeetsthe
+requiredemissionsregulations).ACPUoperatingat400MHzwillproduceanemissionat1200MHz
+(3rdharmonic)andanotherat1600MHz(4thharmonic)–theemissionsmaybestrongenoughtoaffect
+theGNSSsystemperformance.SimilarprovisionsshouldbemadeforanyRFcircuitryneartheGNSS
+receiverorantenna.
+l
+RuntheOEM7antennacoaxialcableawayfromhigh-speeddigitallogic,otherradiosectionsandhigh-
+currentnets(asinswitchingpowersupplies).
+3.4.1Interferencefromco-locatedLNA
+OftenaGNSSreceiverisplacedinthesameenclosureasaGNSSantennaandLNAtocreateanallinone
+GNSSreceiverproduct(alsoreferredtoasasmartantenna).
+Thecloseproximityofahigh-gainamplifiertotheGNSSreceivermaycausesomelow-levelnear-fieldenergy
+fromthereceivertobeamplifiedandfedbackintothereceiver,causingC/Nodegradationtooneormore
+constellations.
+Itisstronglyadvisedinasmartantennadesignthatthereceiverbeenclosedinashieldtopreventthisnear-
+fieldenergyfromcouplingintotheantenna.ThisincludesconnectingtheGNSSreceiverinputgroundtothe
+shieldsurroundingthereceiver,similartothefollowingimage.Itisalsostronglyadvisedtousemountingrail
+forreceivercardsusedinthisconfiguration.
+Figure2:SMARTantennainterferenceexample
+## Thepreviousfigureshowsonemethodofshieldingthereceiver.
+Therailmountingprovisionontheedgesofthereceivercardcanalsousedtoattachentireboard
+shielding.
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev239
+3.1Receivercardinterfaceexamples
+TheOEM7receivercardsprovideanumberof3.3VCMOS-levelI/Opinsforstatusindicationandtiming:
+l
+COMx:CMOS-levelUARTports
+l
+Ethernet:10/100Ethernetport
+l
+CAN1andCAN2:CMOS-levelCANports(externalCANtransceiversrequired)
+l
+PPS:Outputpulseprovidingtimereferencesignal(softwareconfigurableoutputrate,defaultsto1
+PulsePerSecond)
+l
+EVENTx_OUT:VariableFrequencyoutput(asoftware-configurableclockoutputsimilartoPPS,offby
+default).(TheEVENT1_OUTsignalmayalsobereferredtoasanVARF.)
+l
+PV:PositionValid(Thissignaldriveshighwhenthereceiverhascalculatedavalidposition)
+l
+EVENTx_IN:Eventinputs(withconfigurablepolarity)
+l
+USERIO:Auserdefinedgeneralpurposeinputoroutput(OEM729only)
+TheseI/OrequireadditionalESDprotectioniftheyaretoberoutedtoenclosureconnectors.Aprotection
+circuitsimilartothefollowingexamplesmustbeusedonanyOEM7CMOS-levelsignalsthatwillberoutedto
+anenclosureconnector.Theferritebeadandsmall-valuecapacitorprovidesomeimmunitytoelectrostatic
+dischargeevents,butalsoservetoreduceradiatedandconductedemissionsfromtheenclosure.
+3.4.2EVENT_IN,EVENT_OUTandPPSsignalprotection
+ThefollowingschematicshowsappropriatesignalconditioningforEVENT_IN(MKI),EVENT_OUT(VARF)
+andPPS(TIMEMARK)signals.
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev240
+Figure3:ProtectionandbufferingforEVENT_IN,PPSandEVENT_OUTsignals
+Thebuffers(U1,U2)arechosentoprovideadditionaldrivestrengthforlongcables.Theseriesterminations
+(R1,R2,R3,R4)arepresenttoallowforsignalintegrityadjustments(toreduceovershoot/undershoot,etc.).
+## Thepassivecomponentvaluesmayrequiretuning,dependingontheapplication.
+TheTVS(U3)providesprotectionfromESD/EFTeventsandsomeinducedpowerlinesurges.Therearetwo
+implementationsshownfortheEVENT_INsignals.EVENT_IN1isshownwithbasicESD/EFTprotection,
+whileEVENT_IN2isshownwithadditionalsurgeprotectionforharshenvironments(seeD1,R7,D2,D3and
+R9).Iftheadditionalsurgeprotectionistobeusedonadesign,thebuffermustbeincludedaswell.This
+designhasbeenusedtoprotectEVENT_INsignalsfromEN61000-4-5inducedsurgesupto2kVonseveral
+NovAtelenclosureproducts.Ifnanosecond-leveltimingiscriticaltotheapplication,thisprotectioncircuitmay
+beunsuitable,asitcausesatimingshiftofafewmicrosecondstotheEVENTsignal(heavilydependenton
+temperature).
+The10kΩpullups(R5,R6)arerequiredifthebuffersareusedontheEVENT_INlines.Ifthebuffersarenot
+used,theOEM7cardshavebuilt-in10kΩpullupresistors–externalpullresistorsarenotrequired.
+## OEM719OEM729OEM7600OEM7700OEM7720
+ConnectorP1701P1802P1701P2001P1901
+Table12:EVENT_IN,EVENT_OUTandPPSpindesignation
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev241
+## OEM719OEM729OEM7600OEM7700OEM7720
+## EVENT_IN19
+## 1
+## 8303030
+## EVENT_IN27
+## 2
+## 7
+## 3
+## 292929
+## EVENT_IN3––323232
+## EVENT_IN4––313131
+## PPS194242424
+## EVENT_OUT1/VARF6
+## 4
+## 3171717
+## EVENT_OUT2––262626
+## EVENT_OUT3––232323
+## EVENT_OUT4––252525
+DesignatorManufacturerManufacturerpartnumber
+D1OnSemiconductorMMSZ5227BT1G
+D2ComchipTechnologyCDBU00340
+U1,U2FairchildSemiconductorNC7WZ241L8X
+U3SemtechSRV05-4A.TCT
+Table13:Billofmaterials(criticalcomponents)
+3.4.3PositionValid(PV)LEDdriver
+ThePVsignalmaybeusedtoindicatethatthereceivercardhascomputedavalidposition.ManyNovAtel
+enclosureproductsuseittodriveagreenLEDontheenclosure.Itmayalsobeusedtomonitorthestatusof
+thereceiverwithanexternalmicrocontroller.
+IftheLEDrequireslessthan6mAtodrive,andcanbeoperatedfroma3.3Vsupply,thePVpinmaybeused
+todrivetheLEDdirectly(withanappropriatecurrent-limitingresistor).IftheLEDmustbedrivenfroma
+differentsupplyvoltageorrequiresmorethan6mA,abuffermustbeused.
+Asimplebuffer–suitablefordrivingahigh-brightnessLEDfroma5Vsupply–isshownbelow.Thevaluefor
+R2wasselectedtolimittheLEDcurrentto10mA(assumingV
+CE(Q1,sat)
+## =0.25V,V
+## FWD(D1)
+=3.4V).Thiscircuit
+willnotcompensatefortheforwardvoltagechangeovertemperature(andtheresultingbrightnesschanges).
+1.ThispinismultiplexedwiththeCOM3transmitsignalandisnotavailableifCOM3isenabled.
+2.ThispinismultiplexedwiththeCAN1transmitsignalandisnotavailableifCAN1isenabled.
+3.ThispinismultiplexedwiththeCOM3receivesignalandisnotavailablewhenCOM3isenabled.
+4.ThispinismultiplexedwiththeCAN1receivesignalandisnotavailableifCAN1isenabled.
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev242
+Figure4:OEM7bufferfordrivinghigh-brightnessLEDsfromPV
+## OEM719OEM729OEM7600OEM7700OEM7720
+ConnectorP1701P1802P1701P2001P1901
+## PV1710222222
+Table14:PVpindesignation
+DesignatorManufacturerManufacturerpartnumber
+## Q1
+ONSemiconductor
+FairchildSemiconductor
+DiodesInc
+## MMBTA06LT3G
+## MMBTA06LT1G
+## MMBTA06-7-F
+## D1OSRAMLTL29S-N1R2-25-Z
+Table15:PVLEDdriverbillofmaterials(criticalcomponents)
+3.4.4Communicationports
+TheCOMportsonOEM7receivers(exceptCOM1ontheOEM729)areCMOS-levelI/Opinsonly.These
+portsrequiretheadditionofanRS-232orRS-422transceivertoprovideappropriatesignallevels.MostRS-
+232orRS-422transceiverswillprovidesomeESDprotection(forharshenvironments,additionalprotection
+mayberequired).
+COM1ontheOEM729usesRS-232protocolbydefault.ThisportcanbechangedtoRS-422protocol
+usingtheSERIALPROTOCOLcommand.
+Acombinationofaseriesferritebeadandsmall-valueshuntcapacitorisrecommendedonanyRS-232/R-
+S422linesthatleavetheenclosure(similartothearrangementusedontheI/OportsandCANinterfaces).
+ManyoftheavailabletransceiversprovideprotectionforESDeventsto±15kV–ifadditionalprotectionis
+required,anexternalTVSwithaworkingvoltageof±15Vto±25Vwillberequired.
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev243
+3.4.5CANcontrollerports
+OEM7receiversprovide3.3VCMOS-levelCANcontrollerports.AnexternalCANtransceiverisrequired.The
+followingfigureshowsatypicalCANtransceiverimplementation.
+Thecombinationofferritebeadsandsmall-valuecapacitorsarenotnecessarilyrequiredbutmayprovide
+improvedEMIperformance.Alow-capacitanceTVSdeviceisshownontheschematictoprovideESD
+protection.
+Figure5:OEM7CANtransceiverexample
+## OEM719OEM729OEM7600OEM7700OEM7720
+ConnectorP1701
+## 1
+## P1803P1701P2001P1901
+## CAN1TX710363636
+## CAN1RX611383838
+## CAN2TX2012373737
+## CAN2RX813353535
+Table16:CANtransceiverpindesignation
+The120ΩterminationresistorshouldonlybeusedwhentheCANdeviceisusedatoneendoftheCANbus.
+MultipleterminationsalongthelengthoftheCANbuswilldegradeperformanceforallCANdevicesonthat
+bus.
+Theslewrateadjustmentresistor(R2)valueshownsetstheslewrateforapplicationsforSAEJ1939
+agriculturalapplications.Otherapplicationsmayrequireadifferentslewrate.Refertothetransceiverdata
+sheetformoreinformation.
+DesignatorManufacturerManufacturerpartnumber
+## FB1,FB2TDKMMZ1005B800C
+U1TexasInstrumentsSN65HVD231QD
+U2BournsCDNBS08-PLC03-6
+Table17:CANtransceiverexamplebillofmaterials(critical
+components)
+1.Pins6and7aremultiplexedwithothersignalsandmaynotbeavailablewhencertainfeaturesareenabled.
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev244
+3.4.6USBinterface
+ThissectiondescribestheinterfacerequirementsforanOEM7receivercardUSBport.Forgeneral
+informationabouttheOEM7receivercardUSBports.
+OEM7receiversincludeanUSB2.0deviceinterfacesettoeitherFull-Speed(12Mb/s)orHigh-Speed(480
+Mb/s)transferrate.OntheOEM719andOEM729receivers,thetransferratefortheUSBDeviceportisFull-
+Speed(12Mb/s).TheUSBdeviceinterfaceontheOEM7600,OEM7700andOEM7720receiversusethe
+High-Speed(480Mb/s)transferrate.Thedeviceinterfacewillnotauto-negotiatethespeedwiththeHost
+computer.
+ItisimperativeforsignalintegrityandEMIreasonsthatthedifferentialdatatracesberoutedasa90Ω
+differentialpair.Useofasmall-valuecommon-modechoke(asshowninFigure6:OEM7USBdeviceinterface
+examplebelow)mayimprovetheradiatedemissionsperformance(butshouldnotbenecessary).
+Anystubsonthetracesmustbekeptasshortaspossibleanditisstronglyrecommendednottochange
+referenceplanes.MatchtheUSBdifferentialpair(D+andD-tracelengths)towithin3mmorless.
+Thecommon-modechokeandESDprotectionshouldbeplacedascloseaspossibletotheUSBconnector
+## (J1).
+Figure6:OEM7USBdeviceinterfaceexample
+## OEM719OEM729OEM7600OEM7700OEM7720
+ConnectorP1701P1802P1803P1701P2001P1901
+## USB0_D-321-505050
+Table18:USBdeviceinterfacepindesignation
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev245
+## OEM719OEM729OEM7600OEM7700OEM7720
+## USB0_D+4
+## 1
+## 22-484848
+## USB1_D----474747
+## USB1_D+---494949
+## USB_VBUS--15525252
+## UID--14515151
+DesignatorManufacturerManufacturerpartnumber
+D1OnSemiconductorESD7L5.0DT5G
+D2OnSemiconductorESD5Z6.0T1G
+## FB1TDKMMZ1005B800C
+L1WurthElectronics744230900
+## J1FCI10104110-0001LF
+Table19:USBdeviceinterfaceexamplebillofmaterials
+Figure7:OEM7USBhostinterfaceexample
+1.ThispinismultiplexedwiththeCOM3receivesignalandisnotavailablewhenCOM3isenabled.
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev246
+## OEM719OEM729OEM7600OEM7700OEM7720
+ConnectorP1701P1802P1803P1701P2001P1901
+## USB0_D-321-505050
+## USB0_D+4
+## 1
+## 22-484848
+## USB1_D----474747
+## USB1_D+---494949
+## USB_VBUS--15525252
+## UID--14515151
+Table20:USBhostinterfacepindesignation
+DesignatorManufacturerManufacturerpartnumber
+D1OnSemiconductorESD7L5.0DT5G
+D2LittelfuseV5.5MLA0402NR
+## FB1TDKMMZ1005B800C
+J1Molex0482040001
+L1WurthElectronics744230450
+Table21:USBhostinterfaceexamplebillofmaterials
+3.4.7Ethernetport
+OEM7receivers,excepttheOEM719,providea10/100Ethernetportwithauto-negotiation.TheEthernet
+interfaceisdisabledbydefaultandmustbeconfigured.SeetheEthernetConfigurationOEM7User
+DocumentationPortal(docs.novatel.com/OEM7)forinstructionsonEthernetdeviceconfiguration.ThePHY
+layerisbasedontheTexasInstrumentsTLK106EthernetPHY.
+PHYterminationsareprovidedontheOEM7receivercardanda3.3VoutputispresentedtobiastheEthernet
+magnetics.The3.3VpowersuppliedbytheOEM7receivercardisnottobeusedforanypurposesotherthan
+biasingtheEthernetmagnetics.
+AreferenceschematicisshowninFigure8:Ethernetreferenceschematiconthenextpage.Theferritebead
+isincludedasanEMIde-riskcontingencyandmaynotbenecessary.
+1.ThispinismultiplexedwiththeCOM3receivesignalandisnotavailablewhenCOM3isenabled.
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev247
+Figure8:Ethernetreferenceschematic
+## OEM729OEM7600OEM7700OEM7720
+ConnectorP1803P1701P2001P1901
+## ETH_BIAS
+## Receive:3
+## Transmit:6
+## 565656
+## ETH_TD+4585858
+## ETH_TD-5606060
+## ETH_RD+2575757
+## ETH_RD-1595959
+Table22:Ethernetpindesignation
+Run100Ωdifferentialpairsoverunbrokenreferenceplanesdirectlytothejack.Ensuretheintegrated
+magneticsinthejackmeetthespecificationsinTable23:Ethernettransformercharacteristicsbelow.Ensure
+thatthejackisnomorethan15cm(6inches)fromtheOEM7connector.Shorterrunsarebetter.
+ParameterValueTestcondition
+Turnsratio1CT:1CT
+Open-CCTinductance(minimum)350μH100mV,100kHz,8mA
+Leakageinductance(maximum)0.4μH1MHz(minimum)
+Inter-windingcapacitance(minimum)12pF
+DCresistance(maximum)0.9Ω
+Insertionloss(maximum)1.0dB0MHz-65MHz
+HIPOT(minimum)1500Vrms
+Table23:Ethernettransformercharacteristics
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev248
+DesignatorManufacturerManufacturerpartnumber
+## FB1TDKMMZ1005B800C
+D1,D2OnSemiconductorESD7L5.0DT5G
+J1WurthElectronics7499211121A
+## Q1
+OnSemiconductor
+FairchildSemiconductor
+## MMBT2907ALT1G
+## MMBT2907A
+Table24:Billofmaterials(criticalcomponents)
+3.5DifferencesbetweenPwrPak7andOEM6enclosures
+ThefollowingtablescomparethespecificationsandfeaturesofthePwrPak7withthespecificationsand
+featuresofOEM6enclosures.
+PwrPak7-E1
+PwrPak7D-E1
+PwrPak7
+PwrPak7D
+FlexPak6FlexPak6DProPak6
+## Dimensions
+## 147x125x55
+mm
+## 147x125x55
+mm
+## 147x113x45
+mm
+## 147x113x45
+mm
+## 190x185x75
+mm
+## Weight510g500g337g315g1.79kg
+Table25:Physicalspecifications
+PwrPak7
+## (allmodels)
+FlexPak6FlexPak6DProPak6
+Inputvoltage9to36VDC6to36VDC6to36VDC9to36VDC
+Powerconsumption1.8W1.8W1.9W3.5W
+Table26:Powerrequirements
+PwrPak7
+PwrPak7-E1
+PwrPak7D
+PwrPak7D-E1
+FlexPak6FlexPak6DProPak6
+## GPS
+## L1C/AYYYYY
+## L1CYY–––
+## L2CYYYYY
+## L2PYYYYY
+## L5YYY–Y
+Table27:Signalstracked
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev249
+PwrPak7
+PwrPak7-E1
+PwrPak7D
+PwrPak7D-E1
+FlexPak6FlexPak6DProPak6
+## GLONASS
+## L1C/AYYYYY
+## L2C/AYYYYY
+## L2PYYY–Y
+## L3YY–––
+## Galileo
+## E1YYYYY
+E5aYYY–Y
+E5bYYYYY
+E5 AltBOCYYYY
+## E6Y––––
+BeiDou
+## B1IYYYYY
+## B1CYY–––
+## B2IYYYYY
+B2aYY–––
+B2bYY–––
+## B3IY––––
+## QZSS
+## L1C/AYYYYY
+## L1CYY–––
+## L2CYYYYY
+## L5YYY–Y
+## L6Y––––
+NavICL5YY–––
+## SBAS
+## L1YYYYY
+## L5YY–––
+L-Band5channels5channels1channel–1channel
+PwrPak7
+(all models)
+FlexPak6FlexPak6DProPak6
+SinglepointL11.5m1.5m1.5m1.5m
+SinglepointL1/L21.2m1.2m1.2m1.2m
+Table28:Horizontalpositionaccuracy(RMS)
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev250
+PwrPak7
+(all models)
+FlexPak6FlexPak6DProPak6
+SBAS60cm60cm60cm60cm
+DGPS40cm40cm40cm40cm
+TerraStar-L40cm40cm––
+TerraStar-C–4cm–4cm
+TerraStar-CPRO2.0cm–––
+RTK1cm+1ppm1cm+1ppm1cm+1ppm1cm+1ppm
+## RTKASSISTYY––
+## RTKASSISTPROY–––
+PwrPak7
+## (allmodels)
+FlexPak6FlexPak6DProPak6
+## Serialports
+## COM1RS-232/RS-422RS-232/RS-422RS-232/RS-422RS-232/RS-422
+## COM2RS-232/RS-422RS-232/RS-422RS-232/RS-422RS-232/RS-422
+## COM3RS-232––RS-232/RS-422
+## COM7
+## 1
+## –––RS-232*
+## COM8
+## 1
+## –––RS-232*
+## COM9
+## 1
+## –––RS-232*
+## COM10
+## 1
+## –––RS-232*
+USBports
+## Device1111
+## Host1––1
+CANbusports11–2
+## Ethernetport
+## (10BASE-T/100BASE-TX)
+## 11–1
+Wi-Fi
+AccessPoint1––1
+## Client–––1
+## Cellular
+(CDMAor
+## GSM/GPRS/HSDPA)
+## –––1
+## Bluetooth–––1
+1.OnlyavailablewhenusingtheProPak6Expansioncable.TheProPak6ExpansioncablemultiplexesfourserialCOM
+portsontoasingleUSB port.
+Table29:Communicationsports
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev251
+PwrPak7
+PwrPak7-E1
+PwrPak7D
+PwrPak7D-E1
+FlexPak6FlexPak6D
+ProPak6
+dualantenna
+ProPak6
+## GNSS
+antenna
+connector
+PrimaryTNCSMATNCSMATNCTNC
+Secondary–SMA–SMATNC–
+## LNA
+## Primary
+## +5VDC±5%;
+200mA
+## +5VDC±5%;
+200mA
+## +5VDC±5%;
+100mA
+## +5VDC±5%;
+100mA
+## +5VDC±5%;
+200mA
+## +5VDC±5%;
+200mA
+## Secondary–
+## +5VDC±5%;
+200mA
+## –
+## +5VDC±5%;
+100mA
+## +5VDC±5%;
+100mA
+## –
+## Externaloscillator
+connector
+## –––––BNC
+## Cellularantenna
+connector
+## ––––TNCTNC
+Table30:RFinput
+PwrPak7
+## (allmodels)
+FlexPak6FlexPak6DProPak6
+EventIn3224
+EventOut3113
+## PPS1111
+## ERROR–1–*
+PositionValid(PV)–11*
+## Wheelsensor1–––
+*TheProPak6I/OstrobescanbeconfiguredtochangeanEventlinetothissignal.
+Table31:I/Ostrobes
+PwrPak7-E1
+PwrPak7D-E1
+PwrPak7
+PwrPak7D
+FlexPak6FlexPak6DProPak6
+## Datarates
+## GNSS
+measurements
+20Hz100Hz100Hz20Hz100Hz
+GNSSposition20Hz100Hz100Hz20Hz100Hz
+INSposition/
+attitude
+200Hz**–*
+INSrawcata125Hz**–*
+SPANcompatibleYYY–Y
+IntegratedIMUY––––
+Table32:Features
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev252
+PwrPak7-E1
+PwrPak7D-E1
+PwrPak7
+PwrPak7D
+FlexPak6FlexPak6DProPak6
+## Compatible
+## UI
+NovAtel
+ApplicationSuite
+## YY
+## Y
+## (version
+## 1.1.5.0or
+earlier)
+## Y
+## (version
+## 1.1.5.0or
+earlier)
+## Y
+## (version
+## 1.1.5.0or
+earlier)
+ManageWebYY–––
+Onboardmemory16GB16GB––4GB
+*INSdataratesvarydependingontheexternalIMUconnectedtothereceiver.
+3.6DifferencesbetweenSMART7andSMART6
+ThefollowingtablescomparethespecificationsandfeaturesoftheSMART7withthespecificationsand
+featuresoftheSMART6andSMART6-L.
+## SMART7
+## (allmodels)
+## SMART6SMART6-L
+## Dimensions220x192x66mm155(diameter)x81mm155(diameter)x81mm
+## Weight<1.1kg<520g<570g
+Table33:Physicalspecifications
+## SMART7
+## (allmodels)
+## SMART6SMART6-L
+Inputvoltage+7to+30VDC+8to+36VDC+8to+36VDC
+Powerconsumption(typical)4W3.5W2.9W
+Table34:Powerrequirements
+## SMART7
+## (allmodels)
+## SMART6SMART6-L
+## GPS
+## L1C/AYYY
+## L1CY––
+## L2CYYY
+## L2PYYY
+## L5Y––
+Table35:Signalstracked
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev253
+## SMART7
+## (allmodels)
+## SMART6SMART6-L
+## GLONASS
+## L1C/AYYY
+## L2C/AYYY
+## L2PY––
+## L3Y––
+## Galileo
+## E1YYY
+E5aY––
+E5bY––
+E5AltBOCY––
+BeiDou
+## B1IYYY
+## B1CY––
+## B2IY––
+B2aY––
+B2bY––
+## QZSS
+## L1C/AY––
+## L1CY––
+## L2CY––
+## L5Y––
+## SBAS
+## L1YYY
+## L5Y––
+L-Band5channels–Y
+## SMART7
+## (allmodels)
+## SMART6SMART6-L
+SinglepointL11.5m1.5m1.5m
+SinglepointL1/L21.2m1.2m1.2m
+SBAS60cm60cm60cm
+DGPS40cm40cm40cm
+TerraStar-L40cm–40cm
+TerraStar-C––4cm
+Table36:Horizontalpositionaccuracy
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev254
+## SMART7
+## (allmodels)
+## SMART6SMART6-L
+TerraStar-CPRO2.0cm––
+RTK1cm+1ppm1cm+1ppm1cm+1ppm
+## RTKASSIST––Y
+## RTKASSISTPROY––
+## SMART7
+## SMART7-S
+## SMART7-I
+## SMART7-
+## W
+## SMART6SMART6-L
+## Serialports
+## COM1RS-232RS-232RS-232RS-232RS-232
+## COM2RS-232RS-232RS-232RS-232RS-232
+## COM3RS-232RS-232RS-232RS-232RS-232
+CANbusports11111
+## Ethernetport
+## 10BASE-T/100BASE-TX
+## –1–––
+Wi-Fi
+AccessPoint–YY––
+Client–YY––
+Bluetooth–––Y–
+Table37:Communicationsports
+## SMART7
+## (allmodels)
+## SMART6SMART6-L
+EventIn–11
+## PPS111
+EmulatedRadar111
+Table38:I/Ostrobes
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev255
+## SMART7
+## SMART7-I
+## SMART7-
+## W
+## SMART7-SSMART6SMART6-L
+## Datarates
+## GNSS
+measurements
+20Hz20Hz20Hz20Hz50Hz
+GNSSposition20Hz20Hz20Hz20Hz50Hz
+INSposition/
+attitude
+**200Hz–*
+INSrawdata**125Hz–*
+SPANcompatibleYYY–Y
+IntegratedIMU––Y––
+## Compatible
+## UI
+NovAtel
+ApplicationSuite
+## YY
+## Y
+## (version1.1.5.0
+orearlier)
+## Y
+## (version1.1.5.0
+orearlier)
+## Y
+## (version1.1.5.0
+orearlier)
+ManageWeb–Y–––
+*INSdataratesvarydependingontheexternalIMUconnectedtothereceiver.
+Table39:Features
+3.7DifferencesbetweenRELAY7andRELAY
+ThefollowingtablescomparethespecificationsandfeaturesoftheRELAY7withthespecificationsand
+featuresoftheRELAY(fortheSMART6-L).
+## RELAY7RELAY
+## Dimensions186.5x199.5x76.4mm290x275x80mm
+## Weight<850g2.0kg
+Table40:Physicalspecifications
+## RELAY7RELAY
+Inputvoltage+7to+30VDC+9to+36VDC
+Powerconsumption(typical)2W
+10.5W–UHF400MHzradio
+8.5W–UHF900MHzradio
+5.5W–HSPAradio
+Table41:Powerrequirements
+
+Chapter3  OEM6toOEM7–hardware
+OEM6toOEM7IntegrationGuidev256
+## RELAY7RELAY
+400MHzYY
+900MHzYY
+## HSPA–Y
+Wi-Fi–Y
+TheRELAY7willhaveeithera400MHzor900MHzradio.
+TheRELAYwillhaveWi-Fiandeithera400MHz,900MHzorHSPAradio.
+Table42:Supportedradios
+
+OEM6toOEM7IntegrationGuidev257
+Chapter4Receivertechnicalspecifications
+RefertothefollowingdocumentsforthetechnicalspecificationsofOEM7receivers.
+l
+OEM7InstallationandOperationUserManual–OEM719,OEM729,OEM7600,OEM7700and
+## OEM7720
+l
+PwrPak7InstallationandOperationUserManual–PwrPak7,PwrPak7D,PwrPak7-E1,PwrPak7D-E1,
+PwrPak7-E2andPwrPak7D-E2
+l
+CPT7InstallationandOperationUserManual–CPT7andCPT7700
+l
+SMART7InstallationandOperationUserManual–SMART7andSMART7-S
+l
+SMART2InstallationandOperationUserManual–SMART2
+
+OEM6toOEM7IntegrationGuidev258

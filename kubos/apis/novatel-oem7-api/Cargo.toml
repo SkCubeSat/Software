@@ -1,0 +1,15 @@
+[package]
+name = "novatel-oem7-api"
+version = "0.1.0"
+edition = "2021"
+description = "Low-level API for communicating with NovAtel OEM7 GNSS receivers using ASCII commands and binary data"
+
+[dependencies]
+bitflags = "1.0"
+byteorder = "1.2"
+log = "0.4"
+serialport = { version = "4", default-features = false }
+thiserror = "1.0"
+
+[package.metadata.release]
+release = false
