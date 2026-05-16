@@ -61,8 +61,10 @@ members = [
     "kubos/services/isis-ants-service",
     "kubos/test/integration/linux/isis-ants",
     "services/payload-services/star-risc",
-    "services/hardware-services/mram-service",
     "services/payload-services/dosimeter",
+    "services/payload-services/snn-service",
+    "services/hardware-services/mram-service",
+    "services/hardware-services/fram-service"
 ]
 
 exclude = ["kubos/apis/nosengine-rust", "kubos/test/integration/nosengine-rust"]
@@ -117,6 +119,7 @@ default-members = [
     "kubos/utils",
     "services/simulator-services/clyde-3g-eps-simulator",
     "services/hardware-services/mram-service",
+    "services/hardware-services/fram-service",
 ]
 
 [workspace.package]
