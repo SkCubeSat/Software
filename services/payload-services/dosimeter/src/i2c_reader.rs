@@ -6,8 +6,6 @@ use std::time::Duration;
 pub const DOSIMETER_RESPONSE_LENGTH: usize = 2;
 pub const DOSIMETER_RESPONSE_HIGH_BYTE_MASK: u8 = 0x0F;
 
-pub const DOSIMETER_I2C_DELAY_MS: u64 = 0;
-
 pub const RETRIES: usize = 3;
 pub const RETRY_BACKOFF_MS: u64 = 10;
 
@@ -29,18 +27,15 @@ pub fn parse_adc_12bit(msb: u8, lsb: u8) -> u16 {
 }
 
 pub fn read_sensor_adc(conn: &Connection, sensor_code: u8) -> io::Result<u16> {
-    let delay = Duration::from_millis(DOSIMETER_I2C_DELAY_MS);
-
     let mut last_err: Option<io::Error> = None;
 
     for attempt in 1..=RETRIES {
-        match conn.transfer(
+        match conn.read(
             Command {
                 cmd: sensor_code,
                 data: vec![],
             },
             DOSIMETER_RESPONSE_LENGTH,
-            delay,
         ) {
             Ok(data) if data.len() == 2 => {
                 let adc = parse_adc_12bit(data[0], data[1]);
@@ -65,13 +60,13 @@ pub fn read_sensor_adc(conn: &Connection, sensor_code: u8) -> io::Result<u16> {
 
 pub fn chip_name_map() -> HashMap<u8, &'static str> {
     HashMap::from([
-        (0x84, "u1"),
-        (0xC4, "u2"),
-        (0x94, "u3"),
-        (0xD4, "u4"),
-        (0xA4, "u5"),
-        (0xE4, "radfet"),
-        (0xB4, "u7"),
-        (0xF4, "temp"),
+        (0x8C, "u1"),
+        (0xCC, "u2"),
+        (0x9C, "u3"),
+        (0xDC, "u4"),
+        (0xAC, "u5"),
+        (0xEC, "radfet"),
+        (0xBC, "u7"),
+        (0xFC, "temp"),
     ])
 }

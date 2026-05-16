@@ -5,8 +5,8 @@ use std::time::Duration;
 use crate::i2c_reader::{read_sensor_adc, chip_name_map, to_mv, mv_to_temp_c};
 use rust_i2c::Connection;
 
-const DOSIMETER_LIST: [u8; 7] = [0x84, 0xC4, 0x94, 0xD4, 0xA4, 0xE4, 0xB4];
-const TEMP_SENSOR: u8 = 0xF4;
+const DOSIMETER_LIST: [u8; 7] = [0x8C, 0xCC, 0x9C, 0xDC, 0xAC, 0xEC, 0xBC];
+const TEMP_SENSOR: u8 = 0xFC;
 const TIMER_DELAY_MS: u64 = 100;
 
 #[derive(Clone)]

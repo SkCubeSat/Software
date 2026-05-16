@@ -29,7 +29,7 @@ fn main() {
     let device_addr = config
         .get("device_addr")
         .and_then(|v| v.as_integer())
-        .unwrap_or(0x4A) as u16;
+        .unwrap_or(0x48) as u16;
 
     log::info!("Connecting to I2C bus: {} at address: 0x{:02X}", &i2c_bus, device_addr);
 
