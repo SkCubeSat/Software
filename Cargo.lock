@@ -1271,9 +1271,13 @@ dependencies = [
  "async-graphql-axum",
  "axum",
  "chrono",
+ "env_logger 0.11.8",
  "kubos-service",
  "log 0.4.29",
+ "reqwest 0.12.28",
  "rust-i2c",
+ "serde_json",
+ "tempfile",
  "tokio 1.49.0",
 ]
 
