@@ -1,0 +1,20 @@
+[cnn-service]
+# UART bus path the CNN payload board is wired to.
+uart_bus = "/dev/ttyS2"
+uart_baud = 115200
+
+# Timeout for reading a single <<marker>> from the payload (milliseconds).
+marker_timeout_ms = 5000
+
+# Wall-clock timeout for the full <<run>> pipeline (capture + CNN + transfer).
+pipeline_timeout_ms = 30000
+
+# Timeout for raw image byte transfer after <<ack>>.
+image_transfer_timeout_ms = 15000
+
+# Timeout for file transfer during <<recv>> (OBC → ESP32).
+file_transfer_timeout_ms = 30000
+
+[cnn-service.addr]
+ip = "127.0.0.1"
+port = 8093

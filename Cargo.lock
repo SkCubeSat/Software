@@ -762,6 +762,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "cnn-service"
+version = "0.1.0"
+dependencies = [
+ "async-graphql",
+ "async-graphql-axum",
+ "base64 0.22.1",
+ "kubos-service",
+ "log 0.4.29",
+ "rust-uart",
+ "serde_json",
+ "serial",
+ "thiserror 2.0.18",
+ "tokio 1.49.0",
+]
+
+[[package]]
 name = "colorchoice"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -63,6 +63,7 @@ members = [
     "services/payload-services/star-risc",
     "services/payload-services/dosimeter",
     "services/payload-services/snn-service",
+    "services/payload-services/cnn-service",
     "services/hardware-services/mram-service",
     "services/hardware-services/fram-service"
 ]
