@@ -37,6 +37,30 @@ pub enum Error {
 
     #[error("CSP transaction timed out")]
     TransactionTimedOut,
+
+    #[cfg(feature = "i2c")]
+    #[error("invalid CSP I2C config: {0}")]
+    InvalidI2cConfig(String),
+
+    #[cfg(feature = "i2c")]
+    #[error("CSP I2C interface registration failed with status {status}")]
+    I2cInterfaceRegistration { status: i32 },
+
+    #[cfg(feature = "i2c")]
+    #[error("I2C driver error: {0}")]
+    I2cDriver(String),
+
+    #[cfg(feature = "i2c")]
+    #[error("invalid Linux I2C address 0x{addr:02X}; expected a 7-bit address")]
+    InvalidI2cAddress { addr: u8 },
+
+    #[cfg(feature = "i2c")]
+    #[error("I2C CSP frame length {len} exceeds maximum {max}")]
+    I2cFrameTooLarge { len: usize, max: usize },
+
+    #[cfg(feature = "i2c")]
+    #[error("CSP I2C route registration failed with status {status}")]
+    I2cRouteRegistration { status: i32 },
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -220,6 +244,308 @@ fn validate_payload_len(len: usize) -> Result<()> {
     }
     Ok(())
 }
+
+#[cfg(feature = "i2c")]
+pub mod i2c {
+    use std::{
+        ffi::c_void,
+        ffi::CString,
+        ptr,
+        sync::{Arc, Mutex},
+    };
+
+    use embedded_hal::i2c::I2c;
+    use libcsp::ffi;
+    use linux_embedded_hal::I2cdev;
+
+    use super::*;
+
+    const CSP_ERR_NONE: i32 = 0;
+    const CSP_ERR_INVAL: i32 = -2;
+    const CSP_ERR_TX: i32 = -10;
+    const CSP_NO_VIA_ADDRESS: u16 = 0xFFFF;
+    const MAX_LINUX_I2C_ADDR: u8 = 0x7F;
+
+    #[repr(C)]
+    struct CspI2cInterfaceData {
+        tx_func: Option<
+            unsafe extern "C" fn(
+                driver_data: *mut c_void,
+                frame: *mut ffi::csp_packet_t,
+            ) -> std::ffi::c_int,
+        >,
+    }
+
+    unsafe extern "C" {
+        fn csp_i2c_add_interface(iface: *mut ffi::csp_iface_t) -> std::ffi::c_int;
+        fn csp_i2c_rx(
+            iface: *mut ffi::csp_iface_t,
+            frame: *mut ffi::csp_packet_t,
+            px_task_woken: *mut c_void,
+        );
+        fn csp_id_setup_rx(packet: *mut ffi::csp_packet_t) -> std::ffi::c_int;
+        fn csp_iflist_remove(ifc: *mut ffi::csp_iface_t);
+        fn csp_rtable_set(
+            dest_address: u16,
+            netmask: std::ffi::c_int,
+            ifc: *mut ffi::csp_iface_t,
+            via: u16,
+        ) -> std::ffi::c_int;
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct I2cInterfaceConfig {
+        pub bus: String,
+        pub local_addr: u16,
+        pub name: String,
+        pub is_default: bool,
+        pub netmask: u16,
+    }
+
+    impl I2cInterfaceConfig {
+        pub fn new(bus: impl Into<String>, local_addr: u16) -> Self {
+            Self {
+                bus: bus.into(),
+                local_addr,
+                name: "I2C".to_string(),
+                is_default: true,
+                netmask: 0,
+            }
+        }
+
+        pub fn with_name(mut self, name: impl Into<String>) -> Self {
+            self.name = name.into();
+            self
+        }
+
+        pub fn with_default_route(mut self, is_default: bool) -> Self {
+            self.is_default = is_default;
+            self
+        }
+
+        pub fn with_netmask(mut self, netmask: u16) -> Self {
+            self.netmask = netmask;
+            self
+        }
+    }
+
+    struct LinuxI2cDriverData {
+        bus: Mutex<I2cdev>,
+    }
+
+    impl LinuxI2cDriverData {
+        fn write_frame(&self, addr: u8, frame: &[u8]) -> Result<()> {
+            let mut bus = self
+                .bus
+                .lock()
+                .map_err(|err| Error::I2cDriver(format!("I2C bus lock poisoned: {err}")))?;
+            bus.write(addr, frame)
+                .map_err(|err| Error::I2cDriver(err.to_string()))
+        }
+
+        fn read_frame(&self, addr: u8, frame: &mut [u8]) -> Result<()> {
+            let mut bus = self
+                .bus
+                .lock()
+                .map_err(|err| Error::I2cDriver(format!("I2C bus lock poisoned: {err}")))?;
+            bus.read(addr, frame)
+                .map_err(|err| Error::I2cDriver(err.to_string()))
+        }
+    }
+
+    pub struct LinuxI2cCspInterface {
+        iface: Box<ffi::csp_iface_t>,
+        _ifdata: Box<CspI2cInterfaceData>,
+        driver_data: Arc<LinuxI2cDriverData>,
+        _name: CString,
+    }
+
+    // SAFETY: The registered libcsp pointers reference heap allocations owned by this
+    // struct, and the Linux I2C device is protected by a mutex.
+    unsafe impl Send for LinuxI2cCspInterface {}
+
+    impl LinuxI2cCspInterface {
+        pub fn open(config: I2cInterfaceConfig) -> Result<Self> {
+            initialize();
+
+            let name = CString::new(config.name.clone()).map_err(|_| {
+                Error::InvalidI2cConfig("I2C interface name cannot contain NUL bytes".to_string())
+            })?;
+            let i2c = I2cdev::new(&config.bus).map_err(|err| Error::I2cDriver(err.to_string()))?;
+            let driver_data = Arc::new(LinuxI2cDriverData {
+                bus: Mutex::new(i2c),
+            });
+            let mut ifdata = Box::new(CspI2cInterfaceData {
+                tx_func: Some(linux_i2c_tx),
+            });
+            let mut iface = Box::new(ffi::csp_iface_t::default());
+
+            iface.addr = config.local_addr;
+            iface.netmask = config.netmask;
+            iface.name = name.as_ptr();
+            iface.interface_data = (&mut *ifdata as *mut CspI2cInterfaceData).cast::<c_void>();
+            iface.driver_data = Arc::as_ptr(&driver_data).cast_mut().cast::<c_void>();
+            iface.is_default = u8::from(config.is_default);
+
+            let status = unsafe { csp_i2c_add_interface(&mut *iface) };
+            if status != CSP_ERR_NONE {
+                return Err(Error::I2cInterfaceRegistration { status });
+            }
+
+            Ok(Self {
+                iface,
+                _ifdata: ifdata,
+                driver_data,
+                _name: name,
+            })
+        }
+
+        pub fn open_default(bus: impl Into<String>, local_addr: u16) -> Result<Self> {
+            Self::open(I2cInterfaceConfig::new(bus, local_addr))
+        }
+
+        pub fn route_node_via_i2c_addr(&mut self, csp_node: u16, i2c_addr: u8) -> Result<()> {
+            self.set_route(csp_node, -1, Some(i2c_addr))
+        }
+
+        pub fn set_route(
+            &mut self,
+            destination: u16,
+            netmask: i32,
+            via_i2c_addr: Option<u8>,
+        ) -> Result<()> {
+            let via = match via_i2c_addr {
+                Some(addr) => {
+                    validate_linux_i2c_addr(addr)?;
+                    u16::from(addr)
+                }
+                None => CSP_NO_VIA_ADDRESS,
+            };
+
+            let status = unsafe { csp_rtable_set(destination, netmask, &mut *self.iface, via) };
+            if status != CSP_ERR_NONE {
+                return Err(Error::I2cRouteRegistration { status });
+            }
+
+            Ok(())
+        }
+
+        pub fn inject_received_frame(&mut self, frame: &[u8]) -> Result<()> {
+            let packet = unsafe { ffi::csp_buffer_get(0) };
+            if packet.is_null() {
+                return Err(Error::NoPacketBuffer);
+            }
+
+            let header_len = unsafe { csp_id_setup_rx(packet) };
+            let max = ffi::CSP_BUFFER_SIZE + header_len as usize;
+            if frame.len() > max {
+                unsafe {
+                    ffi::csp_buffer_free(packet.cast::<c_void>());
+                }
+                return Err(Error::I2cFrameTooLarge {
+                    len: frame.len(),
+                    max,
+                });
+            }
+
+            unsafe {
+                let rx_info = &mut (*packet).packet_info.rx_tx_only;
+                ptr::copy_nonoverlapping(frame.as_ptr(), rx_info.frame_begin, frame.len());
+                rx_info.frame_length = frame.len() as u16;
+                csp_i2c_rx(&mut *self.iface, packet, ptr::null_mut());
+            }
+
+            Ok(())
+        }
+
+        pub fn read_frame_from(&mut self, i2c_addr: u8, frame_len: usize) -> Result<()> {
+            validate_linux_i2c_addr(i2c_addr)?;
+
+            let max = ffi::CSP_BUFFER_SIZE + 8;
+            if frame_len > max {
+                return Err(Error::I2cFrameTooLarge {
+                    len: frame_len,
+                    max,
+                });
+            }
+
+            let mut frame = vec![0_u8; frame_len];
+            self.driver_data.read_frame(i2c_addr, &mut frame)?;
+            self.inject_received_frame(&frame)
+        }
+    }
+
+    impl Drop for LinuxI2cCspInterface {
+        fn drop(&mut self) {
+            unsafe {
+                csp_iflist_remove(&mut *self.iface);
+            }
+        }
+    }
+
+    fn validate_linux_i2c_addr(addr: u8) -> Result<()> {
+        if addr <= MAX_LINUX_I2C_ADDR {
+            Ok(())
+        } else {
+            Err(Error::InvalidI2cAddress { addr })
+        }
+    }
+
+    unsafe extern "C" fn linux_i2c_tx(
+        driver_data: *mut c_void,
+        frame: *mut ffi::csp_packet_t,
+    ) -> std::ffi::c_int {
+        if driver_data.is_null() || frame.is_null() {
+            return CSP_ERR_INVAL;
+        }
+
+        let driver_data = unsafe { &*(driver_data.cast::<LinuxI2cDriverData>()) };
+        let tx_info = unsafe { (*frame).packet_info.rx_tx_only };
+        if tx_info.frame_begin.is_null() {
+            return CSP_ERR_INVAL;
+        }
+
+        let i2c_addr = (tx_info.cfpid & 0x7F) as u8;
+        let bytes = unsafe {
+            std::slice::from_raw_parts(tx_info.frame_begin, tx_info.frame_length as usize)
+        };
+
+        match driver_data.write_frame(i2c_addr, bytes) {
+            Ok(()) => {
+                unsafe {
+                    ffi::csp_buffer_free(frame.cast::<c_void>());
+                }
+                CSP_ERR_NONE
+            }
+            Err(_) => CSP_ERR_TX,
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn route_table_symbol_is_linked() {
+            initialize();
+
+            let status = unsafe { csp_rtable_set(1, -1, ptr::null_mut(), CSP_NO_VIA_ADDRESS) };
+
+            assert_eq!(status, CSP_ERR_INVAL);
+        }
+
+        #[test]
+        fn rejects_non_7_bit_linux_i2c_addresses() {
+            assert!(matches!(
+                validate_linux_i2c_addr(0x80),
+                Err(Error::InvalidI2cAddress { addr: 0x80 })
+            ));
+        }
+    }
+}
+
+#[cfg(feature = "i2c")]
+pub use i2c::{I2cInterfaceConfig, LinuxI2cCspInterface};
 
 #[cfg(test)]
 mod tests {

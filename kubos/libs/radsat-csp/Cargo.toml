@@ -8,9 +8,16 @@ license.workspace = true
 edition = "2021"
 build = "build.rs"
 
+[features]
+default = []
+i2c = ["dep:embedded-hal", "dep:linux-embedded-hal"]
+
 [dependencies]
 libcsp = { path = "../../../vendor/libcsp-rust" }
 thiserror = "1.0.69"
+
+embedded-hal = { version = "1.0", optional = true }
+linux-embedded-hal = { version = "0.4", optional = true }
 
 [build-dependencies]
 libcsp-cargo-build = { path = "../../../vendor/libcsp-rust/libcsp-cargo-build" }

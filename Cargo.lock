@@ -4448,8 +4448,10 @@ dependencies = [
 name = "radsat-csp"
 version = "0.1.0"
 dependencies = [
+ "embedded-hal",
  "libcsp",
  "libcsp-cargo-build",
+ "linux-embedded-hal",
  "thiserror 1.0.69",
 ]
 
