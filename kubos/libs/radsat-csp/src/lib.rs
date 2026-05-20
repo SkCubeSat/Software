@@ -65,6 +65,9 @@ pub enum Error {
 
 pub type Result<T> = std::result::Result<T, Error>;
 
+/// Initializes the global libcsp stack. Safe to call multiple times; only the
+/// first call takes effect. [`RouterWorker`] and [`ReservedServiceWorker`]
+/// constructors call this automatically.
 pub fn initialize() {
     CSP_INIT.call_once(|| {
         // SAFETY: csp_init initializes global libcsp state and must be called once per process.
@@ -72,6 +75,8 @@ pub fn initialize() {
     });
 }
 
+/// Sends CSP packets to remote nodes. All instances share the same underlying
+/// libcsp stack. Requires a running [`RouterWorker`] in the same process.
 pub struct CspClient {
     timeout: Duration,
     priority: MsgPriority,
@@ -114,6 +119,11 @@ impl CspClient {
         Ok(())
     }
 
+    /// Sends `request` and waits for a single reply packet into `response`.
+    ///
+    /// For I2C transports, a receive-polling thread must call
+    /// [`LinuxI2cCspInterface::inject_received_frame`] before this times out,
+    /// because I2C devices cannot push replies without being polled.
     pub fn transaction(
         &self,
         node: u16,
@@ -148,6 +158,10 @@ impl CspClient {
     }
 }
 
+/// Routes incoming CSP packets to their bound sockets.
+///
+/// **Must be kept alive** for the lifetime of any CSP activity. When dropped,
+/// the router thread stops and all packet delivery ceases.
 pub struct RouterWorker {
     stop: Arc<AtomicBool>,
     handle: Option<JoinHandle<()>>,
@@ -185,6 +199,10 @@ impl Drop for RouterWorker {
     }
 }
 
+/// Services packets arriving on a CSP port using `csp_service_handler`.
+///
+/// Required for this process to respond to CSP ping requests. Keep alive
+/// alongside [`RouterWorker`].
 pub struct ReservedServiceWorker {
     stop: Arc<AtomicBool>,
     handle: Option<JoinHandle<()>>,
@@ -293,6 +311,7 @@ pub mod i2c {
         ) -> std::ffi::c_int;
     }
 
+    /// Configuration for opening a Linux I2C CSP interface.
     #[derive(Clone, Debug)]
     pub struct I2cInterfaceConfig {
         pub bus: String,
@@ -303,6 +322,8 @@ pub mod i2c {
     }
 
     impl I2cInterfaceConfig {
+        /// `local_addr` is **this node's own CSP address** (the OBC), not the
+        /// remote device address.
         pub fn new(bus: impl Into<String>, local_addr: u16) -> Self {
             Self {
                 bus: bus.into(),
@@ -353,6 +374,10 @@ pub mod i2c {
         }
     }
 
+    /// A Linux I2C bus registered as a libcsp network interface.
+    ///
+    /// **Must be kept alive** while CSP packets are being exchanged over I2C.
+    /// Dropping this deregisters the interface from the libcsp router.
     pub struct LinuxI2cCspInterface {
         iface: Box<ffi::csp_iface_t>,
         _ifdata: Box<CspI2cInterfaceData>,
@@ -404,10 +429,16 @@ pub mod i2c {
             Self::open(I2cInterfaceConfig::new(bus, local_addr))
         }
 
+        /// Routes `csp_node` through this interface via `i2c_addr`.
+        ///
+        /// Only needed when the device's CSP node id differs from its 7-bit I2C
+        /// address. When they are equal, the default route handles delivery.
         pub fn route_node_via_i2c_addr(&mut self, csp_node: u16, i2c_addr: u8) -> Result<()> {
             self.set_route(csp_node, -1, Some(i2c_addr))
         }
 
+        /// Low-level route registration. Prefer [`route_node_via_i2c_addr`] for
+        /// single-node routes.
         pub fn set_route(
             &mut self,
             destination: u16,
@@ -430,6 +461,10 @@ pub mod i2c {
             Ok(())
         }
 
+        /// Feeds a raw CSP frame (header + payload bytes) into the libcsp router.
+        ///
+        /// Call this from a device-specific polling loop after reading the reply
+        /// bytes from the I2C slave. The frame must include the CSP header bytes.
         pub fn inject_received_frame(&mut self, frame: &[u8]) -> Result<()> {
             let packet = unsafe { ffi::csp_buffer_get(0) };
             if packet.is_null() {
@@ -458,6 +493,11 @@ pub mod i2c {
             Ok(())
         }
 
+        /// Reads `frame_len` bytes from `i2c_addr` over I2C and passes them to
+        /// [`inject_received_frame`]. Use when the reply frame length is fixed.
+        ///
+        /// For variable-length replies, read the bytes externally and call
+        /// [`inject_received_frame`] directly.
         pub fn read_frame_from(&mut self, i2c_addr: u8, frame_len: usize) -> Result<()> {
             validate_linux_i2c_addr(i2c_addr)?;
 
@@ -633,6 +673,87 @@ mod tests {
         assert!(matches!(
             client.send(CSP_LOOPBACK, CSP_ANY, &payload),
             Err(Error::PayloadTooLarge { .. })
+        ));
+    }
+
+    #[test]
+    fn transaction_rejects_payload_too_large() {
+        initialize();
+        let client = CspClient::new();
+        let payload = vec![0_u8; libcsp::ffi::CSP_BUFFER_SIZE + 1];
+        let mut response = [0_u8; 32];
+
+        assert!(matches!(
+            client.transaction(CSP_LOOPBACK, ECHO_PORT, &payload, &mut response),
+            Err(Error::PayloadTooLarge { .. })
+        ));
+    }
+
+    #[test]
+    fn transaction_returns_error_when_response_buffer_is_too_small() {
+        const LARGE_REPLY_PORT: u8 = 11;
+        const REPLY_SIZE: usize = 16;
+
+        struct LargeReplyServer {
+            stop: Arc<AtomicBool>,
+            handle: Option<JoinHandle<()>>,
+        }
+
+        impl LargeReplyServer {
+            fn start() -> Self {
+                let stop = Arc::new(AtomicBool::new(false));
+                let thread_stop = Arc::clone(&stop);
+                let handle = thread::spawn(move || {
+                    let mut socket = CspSocket::default();
+                    csp_bind(&mut socket, LARGE_REPLY_PORT);
+                    csp_listen(&mut socket, 10);
+
+                    while !thread_stop.load(Ordering::Relaxed) {
+                        let Some(mut conn) =
+                            csp_accept_guarded(&mut socket, Duration::from_millis(100))
+                        else {
+                            continue;
+                        };
+
+                        while !thread_stop.load(Ordering::Relaxed) {
+                            let Some(_request) =
+                                csp_read_guarded(conn.as_mut(), Duration::from_millis(100))
+                            else {
+                                break;
+                            };
+                            if let Some(mut reply) = csp_buffer_get() {
+                                reply.set_data(&[0xAB_u8; REPLY_SIZE]);
+                                csp_send(conn.as_mut(), reply);
+                            }
+                        }
+                    }
+                });
+
+                Self {
+                    stop,
+                    handle: Some(handle),
+                }
+            }
+        }
+
+        impl Drop for LargeReplyServer {
+            fn drop(&mut self) {
+                self.stop.store(true, Ordering::Relaxed);
+                if let Some(handle) = self.handle.take() {
+                    let _ = handle.join();
+                }
+            }
+        }
+
+        initialize();
+        let _router = RouterWorker::start();
+        let _server = LargeReplyServer::start();
+        let client = CspClient::new().with_timeout(Duration::from_millis(1_000));
+
+        let mut response = [0_u8; 4]; // too small for REPLY_SIZE (16) bytes
+        assert!(matches!(
+            client.transaction(CSP_LOOPBACK, LARGE_REPLY_PORT, b"hi", &mut response),
+            Err(Error::ResponseTooLarge { len: 16, max: 4 })
         ));
     }
 }
