@@ -1,0 +1,19 @@
+[package]
+name = "radsat-csp"
+version.workspace = true
+description.workspace = true
+documentation.workspace = true
+repository.workspace = true
+license.workspace = true
+edition = "2021"
+build = "build.rs"
+
+[dependencies]
+libcsp = { path = "../../../vendor/libcsp-rust" }
+thiserror = "1.0.69"
+
+[build-dependencies]
+libcsp-cargo-build = { path = "../../../vendor/libcsp-rust/libcsp-cargo-build" }
+
+[package.metadata.release]
+release = false

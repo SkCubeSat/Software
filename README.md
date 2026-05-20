@@ -24,11 +24,37 @@ To get started with the RADSAT-SK2 software sub-team, follow these steps:
 
 1. Clone this repository to your local machine using the following command:
 
-   `git clone https://github.com/USST-CUBICS/Software`
+   `git clone --recurse-submodules https://github.com/USST-CUBICS/Software`
+
+   If you already cloned the repository without submodules, initialize them with:
+
+   `git submodule update --init --recursive`
+
+   Apply the local vendor patches required by current Rust toolchains:
+
+   `sh scripts/apply-vendor-patches.sh`
 
 2. Install any required dependencies as specified in the project's main repository.
 3. Familiarize yourself with the project's overall structure, guidelines, and development practices outlined in this documentation.
 4. Explore the available resources and references to enhance your understanding of the project.
+
+### Submodules
+
+This repository uses Git submodules for external source dependencies that need to
+be built from source.
+
+- `vendor/libcsp`: C implementation of the CubeSat Space Protocol stack.
+- `vendor/libcsp-rust`: Rust FFI/build helper crates for `libcsp`.
+
+The `kubos/libs/radsat-csp` crate depends on these submodules. If they are not
+initialized, CSP-related Cargo builds will fail because the vendored paths will
+not exist.
+
+`vendor/libcsp-rust` currently needs the patch in
+`patches/libcsp-rust-dangerous-implicit-autorefs.patch` for the top-level Rust
+wrapper to build with current Rust compilers. Run
+`sh scripts/apply-vendor-patches.sh` after initializing submodules until that
+fix exists upstream or the submodule points at a patched fork/commit.
 
 ## Project Structure
 
@@ -36,6 +62,7 @@ The RADSAT-SK2 software sub-team repository is organized as follows:
 
 - **/src**: Contains our custom source code developed specifically for the RADSAT-SK2 satellite.
 - **/kubos**: A submodule of the Kubos repository, which provides the core flight software framework we're building upon.
+- **/vendor**: Contains Git submodules for external source dependencies, including `libcsp` and `libcsp-rust`.
 - **/radsat-linux**: Contains our Buildroot configuration and customizations for the Linux-based operating system running on the satellite.
 - **/infrastructure**: Contains scripts and configuration files for setting up development environments, deployment processes, and other infrastructure-related tasks.
 - **/docs**: Contains project documentation, including API references, user guides, and technical specifications.
