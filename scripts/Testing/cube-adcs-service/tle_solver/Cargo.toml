@@ -1,0 +1,17 @@
+[package]
+name = "tle_solver"
+edition = "2024"
+version.workspace = true
+description.workspace = true
+documentation.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+csv = "1.3"
+serde = { version = "1.0", features = ["derive"] }
+hifitime = "3.8"
+sgp4 = "1.0" # Make sure this resolves to at least v2.4 in Cargo.lock
+nalgebra = "0.34"
+chrono = "0.4"
+levenberg-marquardt = "0.15" # Replace argmin with this
