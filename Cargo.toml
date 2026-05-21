@@ -65,7 +65,8 @@ members = [
     "services/payload-services/snn-service",
     "services/hardware-services/mram-service",
     "services/hardware-services/fram-service",
-    "services/payload-services/dosimeter",
+    "services/payload-services/dosimeter", 
+    "mission-applications/antenna-deployment",
 ]
 
 exclude = ["kubos/apis/nosengine-rust", "kubos/test/integration/nosengine-rust"]
