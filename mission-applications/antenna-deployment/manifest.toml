@@ -1,0 +1,4 @@
+name = "antenna-deployment"
+version = "0.1.0"
+author = "Maria Catambing <maria.catambing@usask.ca>"
+executable = "antenna-deployment"
