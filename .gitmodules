@@ -1,11 +1,3 @@
-[submodule "vendor/libcsp"]
-	path = vendor/libcsp
-	url = https://github.com/libcsp/libcsp.git
-	branch = develop
-[submodule "vendor/libcsp-rust"]
-	path = vendor/libcsp-rust
-	url = https://egit.irs.uni-stuttgart.de/rust/libcsp-rust.git
-	branch = main
 [submodule "kubos/apis/nxtrx4-api"]
 	path = kubos/apis/nxtrx4-api
 	url = git@github.com:SkCubeSat/NXTRX4.git
