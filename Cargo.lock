@@ -3920,6 +3920,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "nxtrx4-api"
+version = "0.1.0"
+dependencies = [
+ "radsat-csp",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "obc-hs"
 version = "0.1.0"
 dependencies = [
