@@ -15,7 +15,7 @@
 //! The user has to provide the path to a directory containing this `autoconfig.rs` file using the
 //! `CSP_CONFIG_DIR` environmental variable.
 #![no_std]
-#![cfg_attr(docs_rs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![allow(non_upper_case_globals)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]

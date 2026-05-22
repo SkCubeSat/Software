@@ -16,4 +16,4 @@ links = "csp"
 libc = "0.2"
 
 [package.metadata.docs.rs]
-rustdoc-args = ["--cfg", "docs_rs"]
+rustdoc-args = ["--cfg", "docsrs"]
