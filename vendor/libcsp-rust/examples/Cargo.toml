@@ -1,0 +1,12 @@
+[package]
+name = "libcsp-rust-examples"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Must use local verion here, otherwise there will be multiple versions of `libcsp-sys`, and
+# cargo can not deal with this due to the link section.
+libcsp = { version = "0.1", path = ".." }
+
+[build-dependencies]
+libcsp-cargo-build = { version = "0.2", path = "../libcsp-cargo-build" }
