@@ -45,6 +45,14 @@ vendored public source dependencies.
 - `vendor/libcsp-rust`: Squashed subtree from the SkCubeSat `libcsp-rust`
   fork, tracking the patched `radsat-main` branch.
 
+When vendor updates are needed, make Radsat-specific changes in the SkCubeSat
+fork first, then pull the fork branch into this repository:
+
+```sh
+git subtree pull --prefix=vendor/libcsp git@github.com:SkCubeSat/libcsp.git radsat-libcsp-2-1 --squash
+git subtree pull --prefix=vendor/libcsp-rust git@github.com:SkCubeSat/libcsp-rust.git radsat-main --squash
+```
+
 ## Project Structure
 
 The RADSAT-SK2 software sub-team repository is organized as follows:

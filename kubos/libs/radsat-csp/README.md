@@ -26,6 +26,14 @@ upstream `libcsp-2-1`. `vendor/libcsp-rust` tracks the SkCubeSat fork branch
 `radsat-main`, including the Rust compiler compatibility patch for raw-pointer
 slice expressions rejected under `dangerous_implicit_autorefs`.
 
+Make Radsat-specific vendor changes in the SkCubeSat fork branch first, then
+update this repository with:
+
+```sh
+git subtree pull --prefix=vendor/libcsp git@github.com:SkCubeSat/libcsp.git radsat-libcsp-2-1 --squash
+git subtree pull --prefix=vendor/libcsp-rust git@github.com:SkCubeSat/libcsp-rust.git radsat-main --squash
+```
+
 The next integration step is to add the hardware transport needed by the target
 device, then expose the device-specific commands from a crate under
 `kubos/apis`.
