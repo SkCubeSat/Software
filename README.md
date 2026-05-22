@@ -45,9 +45,6 @@ vendored public source dependencies.
 - `vendor/libcsp-rust`: Squashed subtree from the SkCubeSat `libcsp-rust`
   fork, tracking the patched `radsat-main` branch.
 
-The `kubos/libs/radsat-csp` crate depends on the vendored subtree paths directly,
-so no post-clone vendor patch step is required.
-
 ## Project Structure
 
 The RADSAT-SK2 software sub-team repository is organized as follows:
