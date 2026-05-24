@@ -18,6 +18,7 @@ RUN dpkg --add-architecture armhf && \
     gcc-arm-linux-gnueabihf \
     libc6-dev-armhf-cross \
     libudev-dev:armhf \
+    libssl-dev:armhf \
     pkg-config
 
 # bindgen (used by littlefs2-sys) needs a host libclang at build time.
