@@ -93,7 +93,7 @@ async fn uart_reading_task(subsystem: StarRiscSubsystem) {
     // Use one end to write data and the other to read
     
     // Try to open the UART, but don't panic if it fails (for demo purposes)
-    let uart_result = tokio_serial::new("/dev/pts/11", 115200)
+    let uart_result = tokio_serial::new("/dev/ttyS2", 230400)
         .data_bits(tokio_serial::DataBits::Eight)
         .flow_control(tokio_serial::FlowControl::None)
         .parity(tokio_serial::Parity::None)
