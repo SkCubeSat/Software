@@ -50,72 +50,20 @@ pub struct csp_id_t {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct csp_packet_s {
-    pub packet_info: csp_packet_s_anon_union,
-    pub length: u16,
-    pub id: csp_id_t,
-    pub next: *mut csp_packet_s,
-    #[doc = " Additional header bytes, to prepend packed data before transmission\n This must be minimum 6 bytes to accomodate CSP 2.0. But some implementations\n require much more scratch working area for encryption for example.\n\n Ultimately after csp_id_pack() this area will be filled with the CSP header"]
-    pub header: [u8; 8usize],
-    pub packet_data_union: csp_packet_s_data_union,
-}
-
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union csp_packet_s_anon_union {
-    pub rdp_only: csp_packet_s_anon_union_field_rdp_only,
-    pub rx_tx_only: csp_packet_s_anon_union_field_rx_tx_only,
-}
-
-impl Default for csp_packet_s_anon_union {
-    fn default() -> Self {
-        Self {
-            rdp_only: Default::default(),
-        }
-    }
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct csp_packet_s_anon_union_field_rdp_only {
-    pub rdp_quarantine: u32,
     pub timestamp_tx: u32,
-    pub timestamp_rx: u32,
     pub conn: *mut csp_conn_s,
-}
-
-impl Default for csp_packet_s_anon_union_field_rdp_only {
-    fn default() -> Self {
-        Self {
-            rdp_quarantine: Default::default(),
-            timestamp_tx: Default::default(),
-            timestamp_rx: Default::default(),
-            conn: core::ptr::null_mut(),
-        }
-    }
-}
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct csp_packet_s_anon_union_field_rx_tx_only {
     pub rx_count: u16,
     pub remain: u16,
     pub cfpid: u32,
     pub last_used: u32,
     pub frame_begin: *mut u8,
     pub frame_length: u16,
-}
-
-impl Default for csp_packet_s_anon_union_field_rx_tx_only {
-    fn default() -> Self {
-        Self {
-            rx_count: Default::default(),
-            remain: Default::default(),
-            cfpid: Default::default(),
-            last_used: Default::default(),
-            frame_begin: core::ptr::null_mut(),
-            frame_length: Default::default(),
-        }
-    }
+    pub length: u16,
+    pub id: csp_id_t,
+    pub next: *mut csp_packet_s,
+    #[doc = " Additional header bytes, to prepend packed data before transmission\n This must be minimum 6 bytes to accomodate CSP 2.0. But some implementations\n require much more scratch working area for encryption for example.\n\n Ultimately after csp_id_pack() this area will be filled with the CSP header"]
+    pub header: [u8; 8usize],
+    pub packet_data_union: csp_packet_s_data_union,
 }
 
 #[doc = " Data part of packet:"]
@@ -666,163 +614,6 @@ mod tests {
     }
 
     #[test]
-    fn bindgen_test_layout_csp_packet_s__bindgen_ty_1__bindgen_ty_1() {
-        const UNINIT: MaybeUninit<csp_packet_s_anon_union_field_rdp_only> = MaybeUninit::uninit();
-        let ptr = UNINIT.as_ptr();
-        assert_eq!(
-            size_of::<csp_packet_s_anon_union_field_rdp_only>(),
-            24usize,
-            concat!(
-                "Size of: ",
-                stringify!(csp_packet_s__bindgen_ty_1__bindgen_ty_1)
-            )
-        );
-        assert_eq!(
-            align_of::<csp_packet_s_anon_union_field_rdp_only>(),
-            8usize,
-            concat!(
-                "Alignment of ",
-                stringify!(csp_packet_s__bindgen_ty_1__bindgen_ty_1)
-            )
-        );
-        assert_eq!(
-            unsafe { core::ptr::addr_of!((*ptr).rdp_quarantine) as usize - ptr as usize },
-            0usize,
-            concat!(
-                "Offset of field: ",
-                stringify!(csp_packet_s__bindgen_ty_1__bindgen_ty_1),
-                "::",
-                stringify!(rdp_quarantine)
-            )
-        );
-        assert_eq!(
-            unsafe { core::ptr::addr_of!((*ptr).timestamp_tx) as usize - ptr as usize },
-            4usize,
-            concat!(
-                "Offset of field: ",
-                stringify!(csp_packet_s__bindgen_ty_1__bindgen_ty_1),
-                "::",
-                stringify!(timestamp_tx)
-            )
-        );
-        assert_eq!(
-            unsafe { core::ptr::addr_of!((*ptr).timestamp_rx) as usize - ptr as usize },
-            8usize,
-            concat!(
-                "Offset of field: ",
-                stringify!(csp_packet_s__bindgen_ty_1__bindgen_ty_1),
-                "::",
-                stringify!(timestamp_rx)
-            )
-        );
-        assert_eq!(
-            unsafe { core::ptr::addr_of!((*ptr).conn) as usize - ptr as usize },
-            16usize,
-            concat!(
-                "Offset of field: ",
-                stringify!(csp_packet_s__bindgen_ty_1__bindgen_ty_1),
-                "::",
-                stringify!(conn)
-            )
-        );
-    }
-
-    #[test]
-    fn bindgen_test_layout_csp_packet_s__bindgen_ty_1__bindgen_ty_2() {
-        const UNINIT: MaybeUninit<csp_packet_s_anon_union_field_rx_tx_only> = MaybeUninit::uninit();
-        let ptr = UNINIT.as_ptr();
-        assert_eq!(
-            size_of::<csp_packet_s_anon_union_field_rx_tx_only>(),
-            32usize,
-            concat!(
-                "Size of: ",
-                stringify!(csp_packet_s__bindgen_ty_1__bindgen_ty_2)
-            )
-        );
-        assert_eq!(
-            align_of::<csp_packet_s_anon_union_field_rx_tx_only>(),
-            8usize,
-            concat!(
-                "Alignment of ",
-                stringify!(csp_packet_s__bindgen_ty_1__bindgen_ty_2)
-            )
-        );
-        assert_eq!(
-            unsafe { core::ptr::addr_of!((*ptr).rx_count) as usize - ptr as usize },
-            0usize,
-            concat!(
-                "Offset of field: ",
-                stringify!(csp_packet_s__bindgen_ty_1__bindgen_ty_2),
-                "::",
-                stringify!(rx_count)
-            )
-        );
-        assert_eq!(
-            unsafe { core::ptr::addr_of!((*ptr).remain) as usize - ptr as usize },
-            2usize,
-            concat!(
-                "Offset of field: ",
-                stringify!(csp_packet_s__bindgen_ty_1__bindgen_ty_2),
-                "::",
-                stringify!(remain)
-            )
-        );
-        assert_eq!(
-            unsafe { core::ptr::addr_of!((*ptr).cfpid) as usize - ptr as usize },
-            4usize,
-            concat!(
-                "Offset of field: ",
-                stringify!(csp_packet_s__bindgen_ty_1__bindgen_ty_2),
-                "::",
-                stringify!(cfpid)
-            )
-        );
-        assert_eq!(
-            unsafe { core::ptr::addr_of!((*ptr).last_used) as usize - ptr as usize },
-            8usize,
-            concat!(
-                "Offset of field: ",
-                stringify!(csp_packet_s__bindgen_ty_1__bindgen_ty_2),
-                "::",
-                stringify!(last_used)
-            )
-        );
-        assert_eq!(
-            unsafe { core::ptr::addr_of!((*ptr).frame_begin) as usize - ptr as usize },
-            16usize,
-            concat!(
-                "Offset of field: ",
-                stringify!(csp_packet_s__bindgen_ty_1__bindgen_ty_2),
-                "::",
-                stringify!(frame_begin)
-            )
-        );
-        assert_eq!(
-            unsafe { core::ptr::addr_of!((*ptr).frame_length) as usize - ptr as usize },
-            24usize,
-            concat!(
-                "Offset of field: ",
-                stringify!(csp_packet_s__bindgen_ty_1__bindgen_ty_2),
-                "::",
-                stringify!(frame_length)
-            )
-        );
-    }
-    #[test]
-    fn bindgen_test_layout_csp_packet_s__bindgen_ty_1() {
-        assert_eq!(
-            size_of::<csp_packet_s_anon_union>(),
-            32usize,
-            concat!("Size of: ", stringify!(csp_packet_s_anon_union))
-        );
-        assert_eq!(
-            align_of::<csp_packet_s_anon_union>(),
-            8usize,
-            concat!("Alignment of ", stringify!(csp_packet_s_anon_union))
-        );
-    }
-
-    #[test]
     fn bindgen_test_layout_csp_packet_s__bindgen_ty_2() {
         const UNINIT: MaybeUninit<csp_packet_s_data_union> = MaybeUninit::uninit();
         let ptr = UNINIT.as_ptr();
@@ -873,7 +664,7 @@ mod tests {
         let ptr = UNINIT.as_ptr();
         assert_eq!(
             size_of::<csp_packet_s>(),
-            320usize,
+            328usize,
             concat!("Size of: ", stringify!(csp_packet_s))
         );
         assert_eq!(
@@ -882,8 +673,88 @@ mod tests {
             concat!("Alignment of ", stringify!(csp_packet_s))
         );
         assert_eq!(
-            unsafe { core::ptr::addr_of!((*ptr).length) as usize - ptr as usize },
+            unsafe { core::ptr::addr_of!((*ptr).timestamp_tx) as usize - ptr as usize },
+            0usize,
+            concat!(
+                "Offset of field: ",
+                stringify!(csp_packet_s),
+                "::",
+                stringify!(timestamp_tx)
+            )
+        );
+        assert_eq!(
+            unsafe { core::ptr::addr_of!((*ptr).conn) as usize - ptr as usize },
+            8usize,
+            concat!(
+                "Offset of field: ",
+                stringify!(csp_packet_s),
+                "::",
+                stringify!(conn)
+            )
+        );
+        assert_eq!(
+            unsafe { core::ptr::addr_of!((*ptr).rx_count) as usize - ptr as usize },
+            16usize,
+            concat!(
+                "Offset of field: ",
+                stringify!(csp_packet_s),
+                "::",
+                stringify!(rx_count)
+            )
+        );
+        assert_eq!(
+            unsafe { core::ptr::addr_of!((*ptr).remain) as usize - ptr as usize },
+            18usize,
+            concat!(
+                "Offset of field: ",
+                stringify!(csp_packet_s),
+                "::",
+                stringify!(remain)
+            )
+        );
+        assert_eq!(
+            unsafe { core::ptr::addr_of!((*ptr).cfpid) as usize - ptr as usize },
+            20usize,
+            concat!(
+                "Offset of field: ",
+                stringify!(csp_packet_s),
+                "::",
+                stringify!(cfpid)
+            )
+        );
+        assert_eq!(
+            unsafe { core::ptr::addr_of!((*ptr).last_used) as usize - ptr as usize },
+            24usize,
+            concat!(
+                "Offset of field: ",
+                stringify!(csp_packet_s),
+                "::",
+                stringify!(last_used)
+            )
+        );
+        assert_eq!(
+            unsafe { core::ptr::addr_of!((*ptr).frame_begin) as usize - ptr as usize },
             32usize,
+            concat!(
+                "Offset of field: ",
+                stringify!(csp_packet_s),
+                "::",
+                stringify!(frame_begin)
+            )
+        );
+        assert_eq!(
+            unsafe { core::ptr::addr_of!((*ptr).frame_length) as usize - ptr as usize },
+            40usize,
+            concat!(
+                "Offset of field: ",
+                stringify!(csp_packet_s),
+                "::",
+                stringify!(frame_length)
+            )
+        );
+        assert_eq!(
+            unsafe { core::ptr::addr_of!((*ptr).length) as usize - ptr as usize },
+            42usize,
             concat!(
                 "Offset of field: ",
                 stringify!(csp_packet_s),
@@ -893,7 +764,7 @@ mod tests {
         );
         assert_eq!(
             unsafe { core::ptr::addr_of!((*ptr).id) as usize - ptr as usize },
-            34usize,
+            44usize,
             concat!(
                 "Offset of field: ",
                 stringify!(csp_packet_s),
@@ -903,7 +774,7 @@ mod tests {
         );
         assert_eq!(
             unsafe { core::ptr::addr_of!((*ptr).next) as usize - ptr as usize },
-            48usize,
+            56usize,
             concat!(
                 "Offset of field: ",
                 stringify!(csp_packet_s),
@@ -913,7 +784,7 @@ mod tests {
         );
         assert_eq!(
             unsafe { core::ptr::addr_of!((*ptr).header) as usize - ptr as usize },
-            56usize,
+            64usize,
             concat!(
                 "Offset of field: ",
                 stringify!(csp_packet_s),

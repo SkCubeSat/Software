@@ -14,7 +14,8 @@ fn main() {
     csp_builder.cfg.rtable = true;
     csp_builder
         .cc_mut()
-        .file(libcsp_path.join("src/interfaces/csp_if_i2c.c"));
+        .file(libcsp_path.join("src/interfaces/csp_if_i2c.c"))
+        .file(manifest_dir.join("src/capture_iface.c"));
     csp_builder.compile().expect("compiling libcsp failed");
 
     println!("cargo:rerun-if-changed=build.rs");

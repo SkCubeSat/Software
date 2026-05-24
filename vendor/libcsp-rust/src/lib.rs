@@ -227,7 +227,14 @@ impl CspPacket {
 impl Default for CspPacket {
     fn default() -> Self {
         Self(csp_packet_s {
-            packet_info: Default::default(),
+            timestamp_tx: Default::default(),
+            conn: core::ptr::null_mut(),
+            rx_count: Default::default(),
+            remain: Default::default(),
+            cfpid: Default::default(),
+            last_used: Default::default(),
+            frame_begin: core::ptr::null_mut(),
+            frame_length: Default::default(),
             length: Default::default(),
             id: Default::default(),
             next: core::ptr::null_mut(),
