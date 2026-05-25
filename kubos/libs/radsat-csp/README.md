@@ -16,20 +16,23 @@ Current milestone:
 - Route helpers for sending a CSP node through a specific 7-bit I2C address.
 - Loopback smoke test covering ping and an echo transaction.
 
-The crate uses the repository submodules:
+The crate uses the repository vendor subtrees:
 
 - `vendor/libcsp`
 - `vendor/libcsp-rust`
 
-After cloning `Software`, initialize the submodules with:
+`vendor/libcsp` tracks the SkCubeSat fork branch `radsat-libcsp-2-1`, based on
+upstream `libcsp-2-1`. `vendor/libcsp-rust` tracks the SkCubeSat fork branch
+`radsat-main`, including the Rust compiler compatibility patch for raw-pointer
+slice expressions rejected under `dangerous_implicit_autorefs`.
+
+Make Radsat-specific vendor changes in the SkCubeSat fork branch first, then
+update this repository with:
 
 ```sh
-git submodule update --init --recursive
-sh scripts/apply-vendor-patches.sh
+git subtree pull --prefix=vendor/libcsp git@github.com:SkCubeSat/libcsp.git radsat-libcsp-2-1 --squash
+git subtree pull --prefix=vendor/libcsp-rust git@github.com:SkCubeSat/libcsp-rust.git radsat-main --squash
 ```
-
-The vendor patch fixes `libcsp-rust` raw-pointer slice expressions that are
-rejected by current Rust compilers under `dangerous_implicit_autorefs`.
 
 The next integration step is to add the hardware transport needed by the target
 device, then expose the device-specific commands from a crate under

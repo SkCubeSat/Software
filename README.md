@@ -30,39 +30,36 @@ To get started with the RADSAT-SK2 software sub-team, follow these steps:
 
    `git submodule update --init --recursive`
 
-   Apply the local vendor patches required by current Rust toolchains:
-
-   `sh scripts/apply-vendor-patches.sh`
-
 2. Install any required dependencies as specified in the project's main repository.
 3. Familiarize yourself with the project's overall structure, guidelines, and development practices outlined in this documentation.
 4. Explore the available resources and references to enhance your understanding of the project.
 
-### Submodules
+### External Source Dependencies
 
-This repository uses Git submodules for external source dependencies that need to
-be built from source.
+This repository uses a Git submodule for private source and Git subtrees for
+vendored public source dependencies.
 
-- `vendor/libcsp`: C implementation of the CubeSat Space Protocol stack.
-- `vendor/libcsp-rust`: Rust FFI/build helper crates for `libcsp`.
+- `kubos/apis/nxtrx4-api`: Private NXTRX4 API submodule.
+- `vendor/libcsp`: Squashed subtree from the SkCubeSat `libcsp` fork,
+  tracking the `radsat-libcsp-2-1` branch based on upstream `libcsp-2-1`.
+- `vendor/libcsp-rust`: Squashed subtree from the SkCubeSat `libcsp-rust`
+  fork, tracking the patched `radsat-main` branch.
 
-The `kubos/libs/radsat-csp` crate depends on these submodules. If they are not
-initialized, CSP-related Cargo builds will fail because the vendored paths will
-not exist.
+When vendor updates are needed, make Radsat-specific changes in the SkCubeSat
+fork first, then pull the fork branch into this repository:
 
-`vendor/libcsp-rust` currently needs the patch in
-`patches/libcsp-rust-dangerous-implicit-autorefs.patch` for the top-level Rust
-wrapper to build with current Rust compilers. Run
-`sh scripts/apply-vendor-patches.sh` after initializing submodules until that
-fix exists upstream or the submodule points at a patched fork/commit.
+```sh
+git subtree pull --prefix=vendor/libcsp git@github.com:SkCubeSat/libcsp.git radsat-libcsp-2-1 --squash
+git subtree pull --prefix=vendor/libcsp-rust git@github.com:SkCubeSat/libcsp-rust.git radsat-main --squash
+```
 
 ## Project Structure
 
 The RADSAT-SK2 software sub-team repository is organized as follows:
 
 - **/src**: Contains our custom source code developed specifically for the RADSAT-SK2 satellite.
-- **/kubos**: A submodule of the Kubos repository, which provides the core flight software framework we're building upon.
-- **/vendor**: Contains Git submodules for external source dependencies, including `libcsp` and `libcsp-rust`.
+- **/kubos**: Contains KubOS-derived flight software framework code and project APIs/services.
+- **/vendor**: Contains vendored external source dependencies, including `libcsp` and `libcsp-rust`.
 - **/radsat-linux**: Contains our Buildroot configuration and customizations for the Linux-based operating system running on the satellite.
 - **/infrastructure**: Contains scripts and configuration files for setting up development environments, deployment processes, and other infrastructure-related tasks.
 - **/docs**: Contains project documentation, including API references, user guides, and technical specifications.

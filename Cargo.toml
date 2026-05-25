@@ -5,6 +5,7 @@ members = [
     # Pure Rust crates
     "kubos/apis/app-api/rust",
     "kubos/apis/adcs-api",
+    "kubos/apis/nxtrx4-api",
     "kubos/apis/clyde-3g-eps-api",
     "kubos/apis/eps-api",
     "kubos/apis/mai400-api",
