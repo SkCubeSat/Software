@@ -1,6 +1,7 @@
 use failure::Error;
 use log::{error, info};
 use std::time::{SystemTime, UNIX_EPOCH};
+use kubos_app::logging_setup;
 
 mod state;
 
