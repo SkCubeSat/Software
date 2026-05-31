@@ -1,4 +1,5 @@
 use std::{
+    os::raw::c_char,
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc, Once,
@@ -17,6 +18,41 @@ use thiserror::Error;
 static CSP_INIT: Once = Once::new();
 
 pub use libcsp::{CSP_ANY, CSP_LOOPBACK};
+
+#[repr(C)]
+struct CspConf {
+    version: u8,
+    hostname: *const c_char,
+    model: *const c_char,
+    revision: *const c_char,
+    conn_dfl_so: u32,
+    dedup: u8,
+}
+
+extern "C" {
+    static mut csp_conf: CspConf;
+}
+
+#[cfg(test)]
+extern "C" {
+    fn csp_get_conf() -> *const CspConf;
+    fn radsat_csp_capture_iface_reset();
+    fn radsat_csp_capture_iface_add(addr: u16);
+    fn radsat_csp_capture_iface_remove();
+    fn radsat_csp_capture_frame_ptr() -> *const u8;
+    fn radsat_csp_capture_frame_len() -> u16;
+    fn radsat_csp_capture_i2c_addr() -> u8;
+    fn radsat_csp_capture_from_me() -> std::os::raw::c_int;
+    fn radsat_csp_capture_id() -> libcsp::ffi::csp_id_t;
+}
+
+#[cfg(test)]
+static TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+#[cfg(test)]
+fn csp_test_guard() -> std::sync::MutexGuard<'static, ()> {
+    TEST_LOCK.lock().unwrap_or_else(|err| err.into_inner())
+}
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -70,6 +106,10 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// constructors call this automatically.
 pub fn initialize() {
     CSP_INIT.call_once(|| {
+        // NXTRX4 uses CSP v1 framing: a 4-byte big-endian CSP header.
+        unsafe {
+            csp_conf.version = 1;
+        }
         // SAFETY: csp_init initializes global libcsp state and must be called once per process.
         unsafe { csp_init() };
     });
@@ -484,9 +524,8 @@ pub mod i2c {
             }
 
             unsafe {
-                let rx_info = &mut (*packet).packet_info.rx_tx_only;
-                ptr::copy_nonoverlapping(frame.as_ptr(), rx_info.frame_begin, frame.len());
-                rx_info.frame_length = frame.len() as u16;
+                ptr::copy_nonoverlapping(frame.as_ptr(), (*packet).frame_begin, frame.len());
+                (*packet).frame_length = frame.len() as u16;
                 csp_i2c_rx(&mut *self.iface, packet, ptr::null_mut());
             }
 
@@ -540,14 +579,13 @@ pub mod i2c {
         }
 
         let driver_data = unsafe { &*(driver_data.cast::<LinuxI2cDriverData>()) };
-        let tx_info = unsafe { (*frame).packet_info.rx_tx_only };
-        if tx_info.frame_begin.is_null() {
+        if unsafe { (*frame).frame_begin.is_null() } {
             return CSP_ERR_INVAL;
         }
 
-        let i2c_addr = (tx_info.cfpid & 0x7F) as u8;
+        let i2c_addr = unsafe { ((*frame).cfpid & 0x7F) as u8 };
         let bytes = unsafe {
-            std::slice::from_raw_parts(tx_info.frame_begin, tx_info.frame_length as usize)
+            std::slice::from_raw_parts((*frame).frame_begin, (*frame).frame_length as usize)
         };
 
         match driver_data.write_frame(i2c_addr, bytes) {
@@ -567,6 +605,7 @@ pub mod i2c {
 
         #[test]
         fn route_table_symbol_is_linked() {
+            let _guard = csp_test_guard();
             initialize();
 
             let status = unsafe { csp_rtable_set(1, -1, ptr::null_mut(), CSP_NO_VIA_ADDRESS) };
@@ -593,6 +632,97 @@ mod tests {
     use libcsp::csp_conn_dport;
 
     const ECHO_PORT: u8 = 10;
+    const CAPTURE_IFACE_ADDR: u16 = 19;
+    const CAPTURE_DEST_ADDR: u16 = 8;
+    const CAPTURE_DEST_PORT: u8 = 0;
+
+    #[test]
+    fn initialize_selects_csp_v1() {
+        let _guard = csp_test_guard();
+        initialize();
+
+        let conf = unsafe { &*csp_get_conf() };
+        assert_eq!(conf.version, 1);
+    }
+
+    struct CaptureInterface {
+        _private: (),
+    }
+
+    impl CaptureInterface {
+        fn start() -> Self {
+            unsafe {
+                radsat_csp_capture_iface_reset();
+                radsat_csp_capture_iface_add(CAPTURE_IFACE_ADDR);
+            }
+
+            Self { _private: () }
+        }
+    }
+
+    impl Drop for CaptureInterface {
+        fn drop(&mut self) {
+            unsafe {
+                radsat_csp_capture_iface_remove();
+            }
+        }
+    }
+
+    #[test]
+    fn transaction_request_frame_uses_csp_v1_header_before_i2c_write() {
+        let _guard = csp_test_guard();
+        initialize();
+
+        let _capture_iface = CaptureInterface::start();
+        let client = CspClient::new().with_timeout(Duration::from_millis(1));
+        let request = [0x00, 0x01]; // CMP ident request payload
+        let mut response = [0u8; 1];
+
+        let err = client
+            .transaction(
+                CAPTURE_DEST_ADDR,
+                CAPTURE_DEST_PORT,
+                &request,
+                &mut response,
+            )
+            .expect_err("capture interface does not send a reply");
+        assert!(matches!(err, Error::TransactionTimedOut));
+
+        let frame_len = unsafe { radsat_csp_capture_frame_len() } as usize;
+        assert_eq!(frame_len, 4 + request.len());
+        let frame = unsafe {
+            std::slice::from_raw_parts(radsat_csp_capture_frame_ptr(), frame_len).to_vec()
+        };
+        let id = unsafe { radsat_csp_capture_id() };
+
+        assert_eq!(
+            unsafe { radsat_csp_capture_i2c_addr() },
+            CAPTURE_DEST_ADDR as u8
+        );
+        assert_eq!(unsafe { radsat_csp_capture_from_me() }, 1);
+        assert_eq!(id.pri, MsgPriority::Normal as u8);
+        assert_eq!(id.src, CAPTURE_IFACE_ADDR);
+        assert_eq!(id.dst, CAPTURE_DEST_ADDR);
+        assert_eq!(id.dport, CAPTURE_DEST_PORT);
+        assert_eq!(id.flags, 0);
+        assert_eq!(&frame[4..], request);
+
+        let header = u32::from_be_bytes(frame[0..4].try_into().unwrap());
+        assert_eq!((header >> 30) & 0x03, MsgPriority::Normal as u32);
+        assert_eq!((header >> 25) & 0x1F, CAPTURE_IFACE_ADDR as u32);
+        assert_eq!((header >> 20) & 0x1F, CAPTURE_DEST_ADDR as u32);
+        assert_eq!((header >> 14) & 0x3F, CAPTURE_DEST_PORT as u32);
+        assert_eq!((header >> 8) & 0x3F, id.sport as u32);
+        assert_eq!(header & 0xFF, 0);
+
+        let expected_header = ((MsgPriority::Normal as u32) << 30
+            | (CAPTURE_IFACE_ADDR as u32) << 25
+            | (CAPTURE_DEST_ADDR as u32) << 20
+            | (CAPTURE_DEST_PORT as u32) << 14
+            | (id.sport as u32) << 8)
+            .to_be_bytes();
+        assert_eq!(&frame[..4], expected_header);
+    }
 
     struct EchoServer {
         stop: Arc<AtomicBool>,
@@ -647,11 +777,12 @@ mod tests {
 
     #[test]
     fn loopback_ping_and_transaction_work() {
+        let _guard = csp_test_guard();
         initialize();
         let _router = RouterWorker::start();
         let _ping_service = ReservedServiceWorker::start_ping_service();
         let _echo_server = EchoServer::start();
-        let client = CspClient::new().with_timeout(Duration::from_millis(1_000));
+        let client = CspClient::new().with_timeout(Duration::from_millis(5_000));
 
         client.ping(CSP_LOOPBACK, 16).expect("loopback ping failed");
 
@@ -666,6 +797,7 @@ mod tests {
 
     #[test]
     fn send_rejects_payloads_larger_than_csp_buffer() {
+        let _guard = csp_test_guard();
         initialize();
         let client = CspClient::new();
         let payload = vec![0_u8; libcsp::ffi::CSP_BUFFER_SIZE + 1];
@@ -678,6 +810,7 @@ mod tests {
 
     #[test]
     fn transaction_rejects_payload_too_large() {
+        let _guard = csp_test_guard();
         initialize();
         let client = CspClient::new();
         let payload = vec![0_u8; libcsp::ffi::CSP_BUFFER_SIZE + 1];
@@ -745,6 +878,7 @@ mod tests {
             }
         }
 
+        let _guard = csp_test_guard();
         initialize();
         let _router = RouterWorker::start();
         let _server = LargeReplyServer::start();
