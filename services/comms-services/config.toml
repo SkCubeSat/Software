@@ -1,0 +1,40 @@
+[comms-services.addr]
+ip = "0.0.0.0"
+port = 8150
+
+[comms-services.comms]
+ip = "127.0.0.1"
+timeout = 1500
+max_num_handlers = 50
+downlink_ports = [14011]
+
+[comms-services.csp]
+# Outer CSP routing. Ground uplinks target obc_node plus one of the explicit
+# uplink ports below. SpacePacket sequencing stays unsegmented; large logical
+# payloads use the SFP port so libcsp can fragment/reassemble CSP packets.
+obc_node = 1
+uplink_packet_csp_port = 10
+uplink_sfp_csp_port = 12
+ground_node = 2
+ground_packet_csp_port = 11
+ground_sfp_csp_port = 13
+uplink_crypto = "none"
+sfp_mtu = 240
+sfp_use_rdp = true
+sfp_max_space_packet_bytes = 65541
+poll_interval_ms = 100
+max_frame_bytes = 260
+
+[comms-services.radios.uplink]
+# Uplink radio: polled over I2C for inbound CSP frames from RF.
+bus = "/dev/i2c-1"
+csp_node = 8
+i2c_addr = 8
+command_timeout_ms = 1000
+
+[comms-services.radios.downlink]
+# Downlink radio: route used when sending CSP packets to ground_node.
+bus = "/dev/i2c-2"
+csp_node = 9
+i2c_addr = 9
+command_timeout_ms = 1000

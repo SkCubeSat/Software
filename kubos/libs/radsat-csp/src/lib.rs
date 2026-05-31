@@ -1,17 +1,20 @@
 use std::{
+    ffi::c_void,
     os::raw::c_char,
+    ptr,
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc, Once,
     },
     thread::{self, JoinHandle},
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 use libcsp::{
-    csp_accept_guarded, csp_bind, csp_buffer_get, csp_connect_guarded, csp_init, csp_listen,
-    csp_ping, csp_read_guarded, csp_route_work, csp_send, csp_service_handler, ConnectOpts,
-    CspError, CspSocket, MsgPriority, ReservedPort, SocketFlags,
+    csp_accept_guarded, csp_bind, csp_buffer_get, csp_conn_dport, csp_conn_dst, csp_conn_sport,
+    csp_conn_src, csp_connect_guarded, csp_init, csp_listen, csp_ping, csp_read_guarded,
+    csp_route_work, csp_send, csp_service_handler, ConnectOpts, CspError, CspSocket, MsgPriority,
+    ReservedPort, SocketFlags,
 };
 use thiserror::Error;
 
@@ -31,7 +34,25 @@ struct CspConf {
 
 extern "C" {
     static mut csp_conf: CspConf;
+    fn csp_sfp_send_own_memcpy(
+        conn: *mut libcsp::ffi::csp_conn_t,
+        data: *const c_void,
+        datasize: u32,
+        mtu: u32,
+        timeout: u32,
+        memcpyfcn: CspMemcpyFn,
+    ) -> i32;
 }
+
+type CspMemPtr = *mut c_void;
+type CspConstMemPtr = *const c_void;
+type CspMemcpyFn = Option<unsafe extern "C" fn(CspMemPtr, CspConstMemPtr, usize) -> CspMemPtr>;
+
+const CSP_ERR_NONE: i32 = 0;
+const SFP_HEADER_LEN: usize = 8;
+const RDP_HEADER_LEN: usize = 5;
+const CSP_FFRAG: u8 = 0x10;
+const CSP_ERR_TIMEDOUT: i32 = -3;
 
 #[cfg(test)]
 extern "C" {
@@ -73,6 +94,18 @@ pub enum Error {
 
     #[error("CSP transaction timed out")]
     TransactionTimedOut,
+
+    #[error("CSP listener timed out")]
+    ListenerTimedOut,
+
+    #[error("CSP SFP transfer failed with status {status}")]
+    Sfp { status: i32 },
+
+    #[error("CSP SFP MTU {mtu} is invalid; expected 1..={max}")]
+    InvalidSfpMtu { mtu: usize, max: usize },
+
+    #[error("CSP SFP payload length {len} exceeds maximum {max}")]
+    SfpPayloadTooLarge { len: usize, max: usize },
 
     #[cfg(feature = "i2c")]
     #[error("invalid CSP I2C config: {0}")]
@@ -143,6 +176,11 @@ impl CspClient {
         self
     }
 
+    pub fn with_rdp(mut self) -> Self {
+        self.opts |= ConnectOpts::RDP;
+        self
+    }
+
     pub fn ping(&self, node: u16, size: usize) -> Result<Duration> {
         csp_ping(node, self.timeout, size, SocketFlags::NONE).map_err(|_| Error::PingFailed)
     }
@@ -156,6 +194,45 @@ impl CspClient {
         packet.set_data(payload);
 
         csp_send(conn.as_mut(), packet);
+        Ok(())
+    }
+
+    /// Sends one logical payload using libcsp's Small Fragmentation Protocol.
+    ///
+    /// The receiver must use [`CspListener::receive_sfp`] on the same CSP
+    /// connection. SFP splits the payload into multiple CSP packets, so this
+    /// is the path to use when the SpacePacket cannot fit in one CSP packet.
+    pub fn send_sfp(&self, node: u16, port: u8, payload: &[u8], mtu: usize) -> Result<()> {
+        validate_sfp_mtu(mtu)?;
+        if payload.len() > u32::MAX as usize {
+            return Err(Error::SfpPayloadTooLarge {
+                len: payload.len(),
+                max: u32::MAX as usize,
+            });
+        }
+
+        let mut conn = csp_connect_guarded(self.priority, node, port, self.timeout, self.opts())
+            .ok_or(Error::ConnectFailed { node, port })?;
+        let conn_ptr = conn
+            .as_mut()
+            .inner_mut()
+            .map(|conn| conn as *mut libcsp::ffi::csp_conn_t)
+            .ok_or(Error::ConnectFailed { node, port })?;
+
+        let status = unsafe {
+            csp_sfp_send_own_memcpy(
+                conn_ptr,
+                payload.as_ptr().cast::<c_void>(),
+                payload.len() as u32,
+                mtu as u32,
+                self.timeout.as_millis() as u32,
+                Some(sfp_memcpy),
+            )
+        };
+        if status != CSP_ERR_NONE {
+            return Err(Error::Sfp { status });
+        }
+
         Ok(())
     }
 
@@ -195,6 +272,221 @@ impl CspClient {
 
     fn opts(&self) -> ConnectOpts {
         ConnectOpts::from_bits_truncate(self.opts.bits())
+    }
+}
+
+/// Payload and connection metadata received by a [`CspListener`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ReceivedPacket {
+    pub source: u16,
+    pub source_port: u8,
+    pub destination: u16,
+    pub destination_port: u8,
+    pub payload: Vec<u8>,
+}
+
+/// A blocking CSP server-side listener bound to one local CSP port.
+///
+/// This is intended for services that need to receive payloads routed into the
+/// process by [`RouterWorker`]. Keep the listener alive for as long as packets
+/// should be accepted on the bound port.
+pub struct CspListener {
+    socket: CspSocket,
+    accept_timeout: Duration,
+    read_timeout: Duration,
+}
+
+// SAFETY: The socket is only accessed through `&mut self`, and service users
+// wrap the listener in synchronization before moving it across threads.
+unsafe impl Send for CspListener {}
+
+impl CspListener {
+    pub fn bind(port: u8, backlog: usize) -> Self {
+        initialize();
+
+        let mut socket = CspSocket::default();
+        csp_bind(&mut socket, port);
+        csp_listen(&mut socket, backlog);
+
+        Self {
+            socket,
+            accept_timeout: Duration::from_millis(100),
+            read_timeout: Duration::from_millis(100),
+        }
+    }
+
+    pub fn with_accept_timeout(mut self, timeout: Duration) -> Self {
+        self.accept_timeout = timeout;
+        self
+    }
+
+    pub fn with_read_timeout(mut self, timeout: Duration) -> Self {
+        self.read_timeout = timeout;
+        self
+    }
+
+    pub fn receive(&mut self) -> Result<ReceivedPacket> {
+        loop {
+            if let Some(packet) = self.receive_once(self.accept_timeout, self.read_timeout) {
+                return Ok(packet);
+            }
+        }
+    }
+
+    pub fn receive_sfp(&mut self, max_payload_len: usize) -> Result<ReceivedPacket> {
+        loop {
+            if let Some(packet) =
+                self.receive_sfp_once(self.accept_timeout, self.read_timeout, max_payload_len)
+            {
+                return packet;
+            }
+        }
+    }
+
+    pub fn receive_sfp_timeout(
+        &mut self,
+        timeout: Duration,
+        max_payload_len: usize,
+    ) -> Result<Option<ReceivedPacket>> {
+        let start = Instant::now();
+
+        loop {
+            let elapsed = start.elapsed();
+            if elapsed >= timeout {
+                return Ok(None);
+            }
+
+            let remaining = timeout - elapsed;
+            let accept_timeout = remaining.min(self.accept_timeout);
+            if let Some(packet) =
+                self.receive_sfp_once(accept_timeout, self.read_timeout, max_payload_len)
+            {
+                return packet.map(Some);
+            }
+        }
+    }
+
+    pub fn receive_timeout(&mut self, timeout: Duration) -> Result<Option<ReceivedPacket>> {
+        let start = Instant::now();
+
+        loop {
+            let elapsed = start.elapsed();
+            if elapsed >= timeout {
+                return Ok(None);
+            }
+
+            let remaining = timeout - elapsed;
+            let accept_timeout = remaining.min(self.accept_timeout);
+            let read_timeout = remaining.min(self.read_timeout);
+
+            if let Some(packet) = self.receive_once(accept_timeout, read_timeout) {
+                return Ok(Some(packet));
+            }
+        }
+    }
+
+    fn receive_once(
+        &mut self,
+        accept_timeout: Duration,
+        read_timeout: Duration,
+    ) -> Option<ReceivedPacket> {
+        let mut conn = csp_accept_guarded(&mut self.socket, accept_timeout)?;
+        let source = csp_conn_src(conn.as_ref()) as u16;
+        let source_port = csp_conn_sport(conn.as_ref()) as u8;
+        let destination = csp_conn_dst(conn.as_ref()) as u16;
+        let destination_port = csp_conn_dport(conn.as_ref()) as u8;
+        let packet = csp_read_guarded(conn.as_mut(), read_timeout)?;
+        let payload = packet.as_ref().packet_data().to_vec();
+
+        Some(ReceivedPacket {
+            source,
+            source_port,
+            destination,
+            destination_port,
+            payload,
+        })
+    }
+
+    fn receive_sfp_once(
+        &mut self,
+        accept_timeout: Duration,
+        read_timeout: Duration,
+        max_payload_len: usize,
+    ) -> Option<Result<ReceivedPacket>> {
+        let mut conn = csp_accept_guarded(&mut self.socket, accept_timeout)?;
+        let source = csp_conn_src(conn.as_ref()) as u16;
+        let source_port = csp_conn_sport(conn.as_ref()) as u8;
+        let destination = csp_conn_dst(conn.as_ref()) as u16;
+        let destination_port = csp_conn_dport(conn.as_ref()) as u8;
+
+        let mut payload = Vec::new();
+        let mut expected_total = None;
+
+        loop {
+            let Some(packet) = csp_read_guarded(conn.as_mut(), read_timeout) else {
+                return Some(Err(Error::Sfp {
+                    status: CSP_ERR_TIMEDOUT,
+                }));
+            };
+            let flags = unsafe { (*packet.as_ref().inner()).id.flags };
+            if flags & CSP_FFRAG == 0 {
+                return Some(Err(Error::Sfp { status: -103 }));
+            }
+
+            let data = packet.as_ref().packet_data();
+            if data.len() < SFP_HEADER_LEN {
+                return Some(Err(Error::Sfp { status: -103 }));
+            }
+
+            let chunk_len = data.len() - SFP_HEADER_LEN;
+            let offset = u32::from_be_bytes([
+                data[chunk_len],
+                data[chunk_len + 1],
+                data[chunk_len + 2],
+                data[chunk_len + 3],
+            ]) as usize;
+            let total = u32::from_be_bytes([
+                data[chunk_len + 4],
+                data[chunk_len + 5],
+                data[chunk_len + 6],
+                data[chunk_len + 7],
+            ]) as usize;
+
+            if total > max_payload_len {
+                return Some(Err(Error::SfpPayloadTooLarge {
+                    len: total,
+                    max: max_payload_len,
+                }));
+            }
+
+            match expected_total {
+                Some(expected) if expected != total => {
+                    return Some(Err(Error::Sfp { status: -103 }));
+                }
+                None => {
+                    expected_total = Some(total);
+                    payload.reserve(total);
+                }
+                _ => {}
+            }
+
+            if offset != payload.len() || payload.len() + chunk_len > total {
+                return Some(Err(Error::Sfp { status: -103 }));
+            }
+
+            payload.extend_from_slice(&data[..chunk_len]);
+            if payload.len() == total {
+                break;
+            }
+        }
+
+        Some(Ok(ReceivedPacket {
+            source,
+            source_port,
+            destination,
+            destination_port,
+            payload,
+        }))
     }
 }
 
@@ -301,6 +593,21 @@ fn validate_payload_len(len: usize) -> Result<()> {
         return Err(Error::PayloadTooLarge { len, max });
     }
     Ok(())
+}
+
+fn validate_sfp_mtu(mtu: usize) -> Result<()> {
+    let max = libcsp::ffi::CSP_BUFFER_SIZE.saturating_sub(SFP_HEADER_LEN + RDP_HEADER_LEN);
+    if mtu == 0 || mtu > max {
+        return Err(Error::InvalidSfpMtu { mtu, max });
+    }
+    Ok(())
+}
+
+unsafe extern "C" fn sfp_memcpy(dst: CspMemPtr, src: CspConstMemPtr, len: usize) -> CspMemPtr {
+    unsafe {
+        ptr::copy_nonoverlapping(src.cast::<u8>(), dst.cast::<u8>(), len);
+    }
+    dst
 }
 
 #[cfg(feature = "i2c")]
@@ -784,7 +1091,15 @@ mod tests {
         let _echo_server = EchoServer::start();
         let client = CspClient::new().with_timeout(Duration::from_millis(5_000));
 
-        client.ping(CSP_LOOPBACK, 16).expect("loopback ping failed");
+        let mut ping_ok = false;
+        for _ in 0..20 {
+            if client.ping(CSP_LOOPBACK, 16).is_ok() {
+                ping_ok = true;
+                break;
+            }
+            thread::sleep(Duration::from_millis(25));
+        }
+        assert!(ping_ok, "loopback ping failed");
 
         let request = b"hello-csp";
         let mut response = [0_u8; 32];
