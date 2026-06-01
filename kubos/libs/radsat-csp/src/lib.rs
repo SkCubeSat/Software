@@ -238,9 +238,10 @@ impl CspClient {
 
     /// Sends `request` and waits for a single reply packet into `response`.
     ///
-    /// For I2C transports, a receive-polling thread must call
-    /// [`LinuxI2cCspInterface::inject_received_frame`] before this times out,
-    /// because I2C devices cannot push replies without being polled.
+    /// For I2C transports, the bus-specific receive path must call
+    /// [`LinuxI2cCspInterface::inject_received_frame`] before this times out.
+    /// On NXTRX4 hardware that receive path is an I2C slave backend which
+    /// delivers radio master-write transactions to userspace.
     pub fn transaction(
         &self,
         node: u16,
@@ -810,8 +811,8 @@ pub mod i2c {
 
         /// Feeds a raw CSP frame (header + payload bytes) into the libcsp router.
         ///
-        /// Call this from a device-specific polling loop after reading the reply
-        /// bytes from the I2C slave. The frame must include the CSP header bytes.
+        /// Call this from the bus-specific receive path after reading one raw
+        /// CSP-over-I2C frame. The frame must include the CSP header bytes.
         pub fn inject_received_frame(&mut self, frame: &[u8]) -> Result<()> {
             let packet = unsafe { ffi::csp_buffer_get(0) };
             if packet.is_null() {

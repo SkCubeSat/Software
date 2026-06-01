@@ -6,7 +6,8 @@ satellite.
 
 The service uses one process for both radios:
 
-- the uplink radio is polled over I2C for inbound CSP frames from RF
+- the uplink radio returns inbound RF frames by writing CSP-over-I2C frames to
+  the OBC's I2C slave address
 - the downlink radio is used for outbound CSP frames to the ground station
 - both radios are still exposed for basic health queries through this service's
   GraphQL API
@@ -88,6 +89,55 @@ bytes, which allows about 65525 bytes of GraphQL JSON body or UDP payload after
 the SpacePacket header. `sfp_mtu` is the per-fragment payload size used by SFP;
 the default leaves room in the CSP buffer for SFP and RDP headers.
 
+`max_frame_bytes` is also the buffer size used when reading one CSP frame from
+the I2C slave frame-queue backend. It only needs to hold one CSP frame, not an
+entire SFP transfer.
+
+## I2C Slave Receive Backend
+
+The NXTRX4 CSP-over-I2C interface is multi-master. The OBC writes commands to
+the radio as I2C master, but the radio returns received RF frames by becoming
+I2C master and writing to the OBC's configured I2C slave address.
+
+The comms service therefore expects an external kernel/BSP backend to expose
+those slave writes as a frame stream. The backend contract is:
+
+```text
+one I2C master-write transaction from the radio
+  -> one read() from slave_rx_device
+  -> one raw CSP-over-I2C frame, including CSP header bytes
+```
+
+The backend must not parse CSP, add length prefixes, pad frames, split one I2C
+write across multiple reads, or combine multiple writes into one read. CSP and
+CSP SFP reassembly stay in libcsp after the frame is injected.
+
+This repo includes a reference kernel patch:
+
+```text
+patches/0001-i2c-add-slave-frameq-backend.patch
+```
+
+The OMAP bus driver still needs slave support, such as the external
+`i2c: omap: add slave support` patch, and the kernel must report
+`I2C_FUNC_SLAVE: yes` on the NXTRX4 bus. Example backend setup for bus 1 and
+OBC slave address `0x01`:
+
+```sh
+modprobe i2c-slave-frameq max_frame_bytes=260 queue_depth=32
+echo slave-frameq 0x1001 > /sys/bus/i2c/devices/i2c-1/new_device
+```
+
+The service config then points the uplink radio at the resulting device:
+
+```toml
+[comms-services.radios.uplink]
+bus = "/dev/i2c-1"
+csp_node = 8
+i2c_addr = 8
+slave_rx_device = "/dev/i2c-slave-frameq-1-01"
+```
+
 ## Startup
 
 Startup happens in `src/main.rs`:
@@ -99,8 +149,10 @@ Startup happens in `src/main.rs`:
    - SFP uplink listener
 4. Register the configured I2C buses as CSP interfaces.
 5. Install CSP routes for the uplink radio, downlink radio, and ground node.
-6. Start `kubos-comms`, passing it read/write callbacks backed by NXTRX4/CSP.
-7. Start this service's GraphQL API for telemetry and radio health.
+6. Open the configured uplink `slave_rx_device` and start the frame injection
+   worker.
+7. Start `kubos-comms`, passing it read/write callbacks backed by NXTRX4/CSP.
+8. Start this service's GraphQL API for telemetry and radio health.
 
 ## Routing
 
@@ -124,7 +176,9 @@ Packet-port uplink:
 ground
   -> CSP packet to obc_node:uplink_packet_csp_port
   -> NXTRX4 uplink radio
-  -> OBC I2C poll worker injects CSP frame into libcsp
+  -> NXTRX4 writes one CSP frame to the OBC I2C slave address
+  -> frameq backend returns one frame to the service
+  -> service injects the CSP frame into libcsp
   -> CspListener receives one CSP packet
   -> CSP payload is parsed as one SpacePacket
 ```
@@ -135,7 +189,9 @@ SFP-port uplink:
 ground
   -> CSP SFP transfer to obc_node:uplink_sfp_csp_port
   -> NXTRX4 uplink radio
-  -> OBC I2C poll worker injects CSP frames into libcsp
+  -> NXTRX4 writes each CSP/SFP fragment as a CSP frame
+  -> frameq backend returns one frame per I2C transaction
+  -> service injects each CSP frame into libcsp
   -> CspListener reads multiple CSP packets on one connection
   -> SFP chunks are reassembled into one SpacePacket
 ```
@@ -193,10 +249,9 @@ the GraphQL payloads being forwarded through the radio link.
 
 - AES-128 uplink encryption is not implemented yet. `uplink_crypto` must remain
   `"none"`.
-- The I2C receive path currently polls a configured fixed frame length. Validate
-  this against the NXTRX4 behavior on hardware; if the radio returns
-  variable-length frames, add a length/status read before injecting frames into
-  libcsp.
+- NXTRX4 receive requires a patched kernel/BSP: the OMAP bus driver must support
+  I2C slave mode and a frame-queue backend must expose radio master-write
+  transactions through `slave_rx_device`.
 - SFP behavior has been wired into the service and compiles, but end-to-end SFP
   must be tested with a ground-side CSP/SFP implementation and the real radio
   link.
@@ -216,4 +271,3 @@ cargo test -p comms-services
 cargo test -p kubos-comms spacepacket
 cargo test -p radsat-csp
 ```
-

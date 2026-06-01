@@ -22,14 +22,16 @@ uplink_crypto = "none"
 sfp_mtu = 240
 sfp_use_rdp = true
 sfp_max_space_packet_bytes = 65541
-poll_interval_ms = 100
 max_frame_bytes = 260
 
 [comms-services.radios.uplink]
-# Uplink radio: polled over I2C for inbound CSP frames from RF.
+# Uplink radio: inbound RF frames are returned by the radio as I2C master-write
+# transactions to the OBC slave address. The kernel frameq backend exposes each
+# transaction as one raw CSP frame at slave_rx_device.
 bus = "/dev/i2c-1"
 csp_node = 8
 i2c_addr = 8
+slave_rx_device = "/dev/i2c-slave-frameq-1-01"
 command_timeout_ms = 1000
 
 [comms-services.radios.downlink]

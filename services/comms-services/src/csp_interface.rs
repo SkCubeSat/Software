@@ -1,9 +1,17 @@
-use std::{collections::HashMap, thread};
+use std::{
+    collections::HashMap,
+    fs::File,
+    io::{self, Read},
+    thread,
+    time::Duration,
+};
 
 use radsat_csp::{I2cInterfaceConfig, LinuxI2cCspInterface};
 use thiserror::Error;
 
 use crate::config::{CspSettings, RadioConfig, RadioSettings};
+
+const RECEIVE_ERROR_RETRY_DELAY: Duration = Duration::from_millis(100);
 
 #[derive(Debug, Error)]
 pub enum InterfaceError {
@@ -18,13 +26,17 @@ pub enum InterfaceError {
         i2c_addr: u8,
         source: radsat_csp::Error,
     },
+    #[error("uplink radio must configure `slave_rx_device` for NXTRX4 I2C slave receive")]
+    MissingUplinkSlaveRxDevice,
+    #[error("failed to open I2C slave frame device {path}: {source}")]
+    OpenSlaveRxDevice { path: String, source: io::Error },
 }
 
 #[derive(Debug, Clone)]
 struct InterfacePlan {
     bus: String,
     routes: Vec<RoutePlan>,
-    poll: Option<PollPlan>,
+    rx_source: Option<FrameSourcePlan>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -33,15 +45,20 @@ struct RoutePlan {
     i2c_addr: u8,
 }
 
-#[derive(Debug, Clone, Copy)]
-struct PollPlan {
-    i2c_addr: u8,
-    frame_len: usize,
-    interval: std::time::Duration,
+#[derive(Debug, Clone)]
+struct FrameSourcePlan {
+    path: String,
+    max_frame_bytes: usize,
+}
+
+struct SlaveFrameReceiver {
+    path: String,
+    file: File,
+    buffer: Vec<u8>,
 }
 
 pub fn spawn_i2c_workers(csp: &CspSettings, radios: &RadioSettings) -> Result<(), InterfaceError> {
-    let mut plans = build_plans(csp, radios);
+    let mut plans = build_plans(csp, radios)?;
 
     for (index, plan) in plans.drain(..).enumerate() {
         // Each Linux I2C bus becomes one libcsp interface owned by this
@@ -67,13 +84,18 @@ pub fn spawn_i2c_workers(csp: &CspSettings, radios: &RadioSettings) -> Result<()
                 })?;
         }
 
-        thread::spawn(move || run_interface_worker(interface, plan.poll));
+        let receiver = plan.rx_source.map(SlaveFrameReceiver::open).transpose()?;
+
+        thread::spawn(move || run_interface_worker(interface, receiver));
     }
 
     Ok(())
 }
 
-fn build_plans(csp: &CspSettings, radios: &RadioSettings) -> Vec<InterfacePlan> {
+fn build_plans(
+    csp: &CspSettings,
+    radios: &RadioSettings,
+) -> Result<Vec<InterfacePlan>, InterfaceError> {
     let mut by_bus: HashMap<String, InterfacePlan> = HashMap::new();
 
     add_radio_route(&mut by_bus, &radios.uplink);
@@ -91,16 +113,21 @@ fn build_plans(csp: &CspSettings, radios: &RadioSettings) -> Vec<InterfacePlan> 
     );
 
     if let Some(plan) = by_bus.get_mut(&radios.uplink.bus) {
-        // I2C devices cannot push frames to us, so the uplink radio is polled.
-        // A successful read injects the raw CSP frame into libcsp routing.
-        plan.poll = Some(PollPlan {
-            i2c_addr: radios.uplink.i2c_addr,
-            frame_len: csp.max_frame_bytes,
-            interval: csp.poll_interval,
+        let path = radios
+            .uplink
+            .slave_rx_device
+            .clone()
+            .ok_or(InterfaceError::MissingUplinkSlaveRxDevice)?;
+
+        // The NXTRX4 writes received RF frames back to the OBC as I2C master.
+        // The external slave backend preserves each I2C write as one CSP frame.
+        plan.rx_source = Some(FrameSourcePlan {
+            path,
+            max_frame_bytes: csp.max_frame_bytes,
         });
     }
 
-    by_bus.into_values().collect()
+    Ok(by_bus.into_values().collect())
 }
 
 fn add_radio_route(by_bus: &mut HashMap<String, InterfacePlan>, radio: &RadioConfig) {
@@ -120,7 +147,7 @@ fn add_route(by_bus: &mut HashMap<String, InterfacePlan>, bus: &str, route: Rout
         .or_insert_with(|| InterfacePlan {
             bus: bus.to_string(),
             routes: Vec::new(),
-            poll: None,
+            rx_source: None,
         });
 
     if !plan
@@ -132,17 +159,56 @@ fn add_route(by_bus: &mut HashMap<String, InterfacePlan>, bus: &str, route: Rout
     }
 }
 
-fn run_interface_worker(mut interface: LinuxI2cCspInterface, poll: Option<PollPlan>) {
-    loop {
-        match poll {
-            Some(poll) => {
-                // This reads a complete CSP frame from the radio. libcsp then
-                // strips the CSP header before the comms listener sees it.
-                if let Err(err) = interface.read_frame_from(poll.i2c_addr, poll.frame_len) {
-                    log::debug!("NXTRX4 I2C poll did not inject a frame: {err}");
+impl SlaveFrameReceiver {
+    fn open(plan: FrameSourcePlan) -> Result<Self, InterfaceError> {
+        let file = File::open(&plan.path).map_err(|source| InterfaceError::OpenSlaveRxDevice {
+            path: plan.path.clone(),
+            source,
+        })?;
+
+        Ok(Self {
+            path: plan.path,
+            file,
+            buffer: vec![0; plan.max_frame_bytes],
+        })
+    }
+
+    fn read_frame(&mut self) -> io::Result<&[u8]> {
+        loop {
+            match self.file.read(&mut self.buffer) {
+                Ok(0) => {
+                    return Err(io::Error::new(
+                        io::ErrorKind::UnexpectedEof,
+                        format!("{} returned EOF", self.path),
+                    ));
                 }
-                thread::sleep(poll.interval);
+                Ok(len) => return Ok(&self.buffer[..len]),
+                Err(err) if err.kind() == io::ErrorKind::Interrupted => continue,
+                Err(err) => return Err(err),
             }
+        }
+    }
+}
+
+fn run_interface_worker(
+    mut interface: LinuxI2cCspInterface,
+    mut receiver: Option<SlaveFrameReceiver>,
+) {
+    loop {
+        match receiver.as_mut() {
+            Some(receiver) => match receiver.read_frame() {
+                Ok(frame) => {
+                    // The backend returns raw CSP-over-I2C bytes. libcsp then
+                    // strips the CSP header before the comms listener sees it.
+                    if let Err(err) = interface.inject_received_frame(frame) {
+                        log::warn!("failed to inject NXTRX4 CSP frame: {err}");
+                    }
+                }
+                Err(err) => {
+                    log::warn!("failed to read NXTRX4 I2C slave frame: {err}");
+                    thread::sleep(RECEIVE_ERROR_RETRY_DELAY);
+                }
+            },
             None => thread::park(),
         }
     }
@@ -168,7 +234,6 @@ mod tests {
             sfp_mtu: 240,
             sfp_max_space_packet_bytes: 4096,
             sfp_use_rdp: true,
-            poll_interval: Duration::from_millis(100),
             uplink_crypto: UplinkCrypto::None,
         }
     }
@@ -180,21 +245,29 @@ mod tests {
                 bus: "/dev/i2c-1".to_string(),
                 csp_node: 8,
                 i2c_addr: 8,
+                slave_rx_device: Some("/dev/i2c-slave-frameq-1-01".to_string()),
                 command_timeout: Duration::from_secs(1),
             },
             downlink: RadioConfig {
                 bus: "/dev/i2c-1".to_string(),
                 csp_node: 9,
                 i2c_addr: 9,
+                slave_rx_device: None,
                 command_timeout: Duration::from_secs(1),
             },
         };
 
-        let plans = build_plans(&csp(), &radios);
+        let plans = build_plans(&csp(), &radios).unwrap();
 
         assert_eq!(plans.len(), 1);
         assert_eq!(plans[0].routes.len(), 3);
-        assert!(plans[0].poll.is_some());
+        assert_eq!(
+            plans[0]
+                .rx_source
+                .as_ref()
+                .map(|source| source.path.as_str()),
+            Some("/dev/i2c-slave-frameq-1-01")
+        );
     }
 
     #[test]
@@ -204,19 +277,49 @@ mod tests {
                 bus: "/dev/i2c-1".to_string(),
                 csp_node: 8,
                 i2c_addr: 8,
+                slave_rx_device: Some("/dev/i2c-slave-frameq-1-01".to_string()),
                 command_timeout: Duration::from_secs(1),
             },
             downlink: RadioConfig {
                 bus: "/dev/i2c-2".to_string(),
                 csp_node: 9,
                 i2c_addr: 9,
+                slave_rx_device: None,
                 command_timeout: Duration::from_secs(1),
             },
         };
 
-        let plans = build_plans(&csp(), &radios);
+        let plans = build_plans(&csp(), &radios).unwrap();
 
         assert_eq!(plans.len(), 2);
-        assert_eq!(plans.iter().filter(|plan| plan.poll.is_some()).count(), 1);
+        assert_eq!(
+            plans.iter().filter(|plan| plan.rx_source.is_some()).count(),
+            1
+        );
+    }
+
+    #[test]
+    fn requires_uplink_slave_rx_device() {
+        let radios = RadioSettings {
+            uplink: RadioConfig {
+                bus: "/dev/i2c-1".to_string(),
+                csp_node: 8,
+                i2c_addr: 8,
+                slave_rx_device: None,
+                command_timeout: Duration::from_secs(1),
+            },
+            downlink: RadioConfig {
+                bus: "/dev/i2c-2".to_string(),
+                csp_node: 9,
+                i2c_addr: 9,
+                slave_rx_device: None,
+                command_timeout: Duration::from_secs(1),
+            },
+        };
+
+        assert!(matches!(
+            build_plans(&csp(), &radios),
+            Err(InterfaceError::MissingUplinkSlaveRxDevice)
+        ));
     }
 }

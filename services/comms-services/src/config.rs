@@ -13,7 +13,6 @@ const DEFAULT_MAX_FRAME_BYTES: usize = 260;
 const DEFAULT_SFP_MAX_SPACE_PACKET_BYTES: usize = u16::MAX as usize + 6;
 const DEFAULT_SFP_MTU: usize = 240;
 const MAX_SFP_MTU_WITH_RDP: usize = 243;
-const DEFAULT_POLL_INTERVAL_MS: u64 = 100;
 
 #[derive(Debug, Error)]
 pub enum ConfigError {
@@ -47,7 +46,6 @@ pub struct CspSettings {
     pub sfp_mtu: usize,
     pub sfp_max_space_packet_bytes: usize,
     pub sfp_use_rdp: bool,
-    pub poll_interval: Duration,
     pub uplink_crypto: UplinkCrypto,
 }
 
@@ -67,6 +65,7 @@ pub struct RadioConfig {
     pub bus: String,
     pub csp_node: u16,
     pub i2c_addr: u8,
+    pub slave_rx_device: Option<String>,
     pub command_timeout: Duration,
 }
 
@@ -128,8 +127,6 @@ impl CspSettings {
             });
         }
         let sfp_use_rdp = optional_bool(&table, "csp.sfp_use_rdp", true)?;
-        let poll_interval_ms =
-            optional_u64(&table, "csp.poll_interval_ms", DEFAULT_POLL_INTERVAL_MS)?;
         let uplink_crypto = match optional_str(&table, "csp.uplink_crypto", "none")? {
             "none" => UplinkCrypto::None,
             value => {
@@ -154,7 +151,6 @@ impl CspSettings {
             sfp_mtu,
             sfp_max_space_packet_bytes,
             sfp_use_rdp,
-            poll_interval: Duration::from_millis(poll_interval_ms),
             uplink_crypto,
         })
     }
@@ -192,6 +188,7 @@ fn radio_config(radios: &Value, role: &str) -> Result<RadioConfig, ConfigError> 
     let bus = required_str(table, &format!("{prefix}.bus"))?.to_string();
     let csp_node = required_u16(table, &format!("{prefix}.csp_node"))?;
     let i2c_addr = required_u8(table, &format!("{prefix}.i2c_addr"))?;
+    let slave_rx_device = optional_string(table, &format!("{prefix}.slave_rx_device"))?;
     let command_timeout_ms = optional_u64(
         table,
         &format!("{prefix}.command_timeout_ms"),
@@ -202,6 +199,7 @@ fn radio_config(radios: &Value, role: &str) -> Result<RadioConfig, ConfigError> 
         bus,
         csp_node,
         i2c_addr,
+        slave_rx_device,
         command_timeout: Duration::from_millis(command_timeout_ms),
     })
 }
@@ -248,6 +246,19 @@ fn optional_str<'a>(table: &'a Value, key: &str, default: &'a str) -> Result<&'a
             message: "expected string".to_string(),
         }),
         None => Ok(default),
+    }
+}
+
+fn optional_string(table: &Value, key: &str) -> Result<Option<String>, ConfigError> {
+    match table.get(key.rsplit('.').next().unwrap()) {
+        Some(value) => value
+            .as_str()
+            .map(|value| Some(value.to_string()))
+            .ok_or_else(|| ConfigError::InvalidValue {
+                key: key.to_string(),
+                message: "expected string".to_string(),
+            }),
+        None => Ok(None),
     }
 }
 
@@ -359,6 +370,7 @@ mod tests {
             bus = "/dev/i2c-1"
             csp_node = 8
             i2c_addr = 8
+            slave_rx_device = "/dev/i2c-slave-frameq-1-01"
 
             [comms-services.radios.downlink]
             bus = "/dev/i2c-2"
@@ -376,6 +388,10 @@ mod tests {
         assert!(settings.csp.sfp_use_rdp);
         assert_eq!(settings.csp.uplink_crypto, UplinkCrypto::None);
         assert_eq!(settings.radios.uplink.bus, "/dev/i2c-1");
+        assert_eq!(
+            settings.radios.uplink.slave_rx_device.as_deref(),
+            Some("/dev/i2c-slave-frameq-1-01")
+        );
         assert_eq!(settings.radios.downlink.bus, "/dev/i2c-2");
     }
 
