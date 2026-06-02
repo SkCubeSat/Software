@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+# -----------------------------------------------------------------------------#
+# Script to test Cube ADCS connected to OBC, without service usage. 
+# Script sends a command to set the control mode on the ADCS.
+# -----------------------------------------------------------------------------#
+
 import socket
 import struct
 import sys
@@ -13,16 +18,27 @@ MSG_TYPE_TC               = 1
 MSG_TYPE_TC_ACK           = 2
 MSG_TYPE_TC_NACK          = 3
 
-TC_ID = 58
-
-SRC_ADDRESS = 1
-DST_ADDRESS = 4
-
 CAN_EFF_FLAG = 0x80000000
 CAN_EFF_MASK = 0x1FFFFFFF
 
 CAN_FRAME_FORMAT = "=IB3x8s"
 CAN_FRAME_SIZE = struct.calcsize(CAN_FRAME_FORMAT)
+
+# ============================================================
+# Telecommand Configuration
+# ============================================================
+
+TC_ID = 58
+
+SRC_ADDRESS = 1
+DST_ADDRESS = 4
+
+# Safe initial test value
+CONTROL_MODE = 0
+
+# Seconds before ADCS exits this mode
+# Should set to 0 if you want to set the control mode permanently 
+CONTROL_TIMEOUT = 0
 
 # ============================================================
 
@@ -50,28 +66,8 @@ def decode_can_id(can_id):
 
 def main():
 
-    if len(sys.argv) < 2:
-
-        print("")
-        print("Usage:")
-        print("  ./set_mode.py <control_mode> [timeout]")
-        print("")
-        print("Examples:")
-        print("  ./set_mode.py 0")
-        print("  ./set_mode.py 3")
-        print("  ./set_mode.py 50 120")
-        print("")
-        sys.exit(1)
-
-    CONTROL_MODE = int(sys.argv[1])
-
-    if len(sys.argv) >= 3:
-        CONTROL_TIMEOUT = int(sys.argv[2])
-    else:
-        CONTROL_TIMEOUT = 30
-
     # --------------------------------------------------------
-    # Open CAN
+    # Open CAN socket
     # --------------------------------------------------------
 
     try:
@@ -84,11 +80,11 @@ def main():
 
     except OSError as e:
 
-        print("Failed to open CAN:", e)
+        print("Failed to open CAN socket:", e)
         sys.exit(1)
 
     # --------------------------------------------------------
-    # Build payload
+    # Build telecommand payload
     # --------------------------------------------------------
 
     payload = struct.pack(
@@ -102,7 +98,7 @@ def main():
     payload_padded = payload.ljust(8, b'\x00')
 
     # --------------------------------------------------------
-    # Build CAN frame
+    # Build CAN ID
     # --------------------------------------------------------
 
     can_id = build_can_id(
@@ -122,23 +118,30 @@ def main():
     )
 
     # --------------------------------------------------------
-    # Print info
+    # Print TX info
     # --------------------------------------------------------
 
-    print("")
-    print("Sending Control Mode Command")
-    print("----------------------------")
-    print("Control Mode :", CONTROL_MODE)
-    print("Timeout      :", CONTROL_TIMEOUT)
-    print("CAN ID       : 0x%08X" % can_id)
-    print("Payload      :", payload.hex())
-    print("")
+    print("\nSending Control Mode Telecommand")
+    print("--------------------------------")
+    print("TC ID          :", TC_ID)
+    print("Control Mode   :", CONTROL_MODE)
+    print("Timeout        :", CONTROL_TIMEOUT)
+    print("CAN ID         : 0x%08X" % can_id)
+    print("Payload        :", payload.hex())
+    print("--------------------------------\n")
 
     # --------------------------------------------------------
     # Send
     # --------------------------------------------------------
 
-    s.send(frame)
+    try:
+
+        s.send(frame)
+
+    except OSError as e:
+
+        print("Send failed:", e)
+        sys.exit(1)
 
     # --------------------------------------------------------
     # Wait for ACK/NACK
@@ -165,49 +168,44 @@ def main():
 
             payload = data[:dlc]
 
-            # ------------------------------------------------
-            # Filter
-            # ------------------------------------------------
+            print("--------------------------------")
+            print("RX CAN ID : 0x%08X" % can_id)
+            print("MSG TYPE : %d" % fields["msg_type"])
+            print("TCTLM ID : %d" % fields["tctlm_id"])
+            print("SRC ADDR : %d" % fields["src_addr"])
+            print("DST ADDR : %d" % fields["dst_addr"])
+            print("DLC      : %d" % dlc)
+            print("DATA     :", payload.hex())
+            print("--------------------------------")
 
+            # Verify message is from ADCS
             if (
                 fields["src_addr"] != DST_ADDRESS or
                 fields["dst_addr"] != SRC_ADDRESS
             ):
                 continue
 
-            print("--------------------------------")
-            print("RX CAN ID : 0x%08X" % can_id)
-            print("MSG TYPE : %d" % fields["msg_type"])
-            print("TCTLM ID : %d" % fields["tctlm_id"])
-            print("DATA     :", payload.hex())
-            print("--------------------------------")
-
-            # ------------------------------------------------
             # ACK
-            # ------------------------------------------------
-
             if fields["msg_type"] == MSG_TYPE_TC_ACK:
 
                 print("\nTELECOMMAND ACKNOWLEDGED\n")
                 return
 
-            # ------------------------------------------------
             # NACK
-            # ------------------------------------------------
-
             elif fields["msg_type"] == MSG_TYPE_TC_NACK:
 
-                print("\nTELECOMMAND REJECTED")
-
                 if dlc > 0:
+                    print("\nTELECOMMAND REJECTED")
                     print("Error Code:", payload[0])
+                else:
+                    print("\nTELECOMMAND REJECTED")
 
                 return
 
         except socket.timeout:
             continue
 
-    print("\nTimeout waiting for ACK/NACK\n")
+    print("\nTIMEOUT waiting for ACK/NACK\n")
 
 # ============================================================
 

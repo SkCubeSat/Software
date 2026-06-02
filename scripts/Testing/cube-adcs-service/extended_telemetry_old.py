@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+# -----------------------------------------------------------------------------#
+# Script to test Cube ADCS connected to OBC, without service usage. 
+# Script sends specified tctlm command and reads response from ADCS.
+# Script will read several frames until the expected length is received.
+# -----------------------------------------------------------------------------#
+
 import socket
 import struct
 import time
@@ -11,6 +17,16 @@ import sys
 
 MSG_TYPE_TLM_REQ          = 4
 MSG_TYPE_TLM_RESP_EXT     = 8
+
+# ============================================================
+
+# Modify below values based on command you want to send.
+
+# TCTLM_ID : Type of telemetry requested
+# EXPECTED_LENGTH : Expected length of telemetry in bytes
+TCTLM_ID = 170
+EXPECTED_LENGTH = 33
+
 
 SRC_ADDRESS = 1
 DST_ADDRESS = 4
@@ -44,42 +60,85 @@ def decode_can_id(can_id):
     }
 
 # ============================================================
+# Decode Raw CubeSense Sun Telemetry
+# ============================================================
+
+def decode_tlm_170(data):
+
+    print("\n=========== TLM 170 ===========")
+
+    if len(data) != 33:
+
+        print("Unexpected telemetry length:", len(data))
+        return
+
+    # --------------------------------------------------------
+    # Timestamp
+    # --------------------------------------------------------
+
+    sec, nsec = struct.unpack_from("<II", data, 0)
+
+    print("Unix Seconds :", sec)
+    print("Nanoseconds  :", nsec)
+
+    # --------------------------------------------------------
+    # FSS Data
+    # --------------------------------------------------------
+
+    offset = 8
+
+    for i in range(4):
+
+        alpha, beta = struct.unpack_from("<hh", data, offset)
+
+        capture = data[offset + 4]
+        detect  = data[offset + 5]
+
+        alpha_deg = alpha * 0.01
+        beta_deg  = beta * 0.01
+
+        print("")
+        print("FSS%d" % i)
+        print("-------------------")
+        print("Alpha Angle :", alpha_deg)
+        print("Beta Angle  :", beta_deg)
+        print("Capture     :", capture)
+        print("Detection   :", detect)
+
+        offset += 6
+
+    # --------------------------------------------------------
+    # Valid Flags
+    # --------------------------------------------------------
+
+    flags = data[32]
+
+    print("")
+    print("Validity Flags")
+    print("-------------------")
+    print("FSS0 :", bool(flags & (1 << 0)))
+    print("FSS1 :", bool(flags & (1 << 1)))
+    print("FSS2 :", bool(flags & (1 << 2)))
+    print("FSS3 :", bool(flags & (1 << 3)))
+
+    print("================================\n")
+
+# ============================================================
 
 def main():
-
-    if len(sys.argv) != 3:
-
-        print("")
-        print("Usage:")
-        print("  ./ext_tlm.py <tctlm_id> <expected_length>")
-        print("")
-        print("Example:")
-        print("  ./ext_tlm.py 170 33")
-        print("")
-        sys.exit(1)
-
-    TCTLM_ID = int(sys.argv[1])
-    EXPECTED_LENGTH = int(sys.argv[2])
 
     # --------------------------------------------------------
     # Open CAN
     # --------------------------------------------------------
 
-    try:
+    s = socket.socket(socket.AF_CAN, socket.SOCK_RAW, socket.CAN_RAW)
 
-        s = socket.socket(socket.AF_CAN, socket.SOCK_RAW, socket.CAN_RAW)
+    s.bind(("can0",))
 
-        s.bind(("can0",))
-
-        s.settimeout(2.0)
-
-    except OSError as e:
-
-        print("Failed to open CAN:", e)
-        sys.exit(1)
+    s.settimeout(2.0)
 
     # --------------------------------------------------------
-    # Build request
+    # Send telemetry request
     # --------------------------------------------------------
 
     can_id = build_can_id(
@@ -98,18 +157,12 @@ def main():
         b'\x00' * 8
     )
 
-    print("")
-    print("Requesting telemetry")
-    print("--------------------")
-    print("TCTLM ID       :", TCTLM_ID)
-    print("Expected Bytes :", EXPECTED_LENGTH)
-    print("CAN ID         : 0x%08X" % can_id)
-    print("")
+    print("\nRequesting telemetry 170...\n")
 
     s.send(frame)
 
     # --------------------------------------------------------
-    # Receive segmented telemetry
+    # Reassemble telemetry
     # --------------------------------------------------------
 
     full_payload = bytearray()
@@ -139,7 +192,7 @@ def main():
             payload = data[:dlc]
 
             # ------------------------------------------------
-            # Filter
+            # Filter frames
             # ------------------------------------------------
 
             if (
@@ -151,13 +204,13 @@ def main():
                 continue
 
             # ------------------------------------------------
-            # Append
+            # Append data
             # ------------------------------------------------
 
             full_payload.extend(payload)
 
             print(
-                "Frame received: %d bytes "
+                "Received frame: %d bytes "
                 "(total %d/%d)"
                 % (
                     dlc,
@@ -175,11 +228,10 @@ def main():
 
     full_payload = full_payload[:EXPECTED_LENGTH]
 
-    print("")
-    print("FULL PAYLOAD")
-    print("------------")
+    print("\nFULL TELEMETRY:")
     print(full_payload.hex())
-    print("")
+
+    decode_tlm_170(full_payload)
 
 # ============================================================
 
