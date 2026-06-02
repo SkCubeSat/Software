@@ -112,16 +112,16 @@ The backend must not parse CSP, add length prefixes, pad frames, split one I2C
 write across multiple reads, or combine multiple writes into one read. CSP and
 CSP SFP reassembly stay in libcsp after the frame is injected.
 
-This repo includes a reference kernel patch:
+This repo includes reference kernel patches:
 
 ```text
-patches/0001-i2c-add-slave-frameq-backend.patch
+../radsat-linux/common/patches/linux/0003-i2c-omap-add-slave-support-linux-4.4.patch
+../radsat-linux/common/patches/linux/0004-i2c-add-slave-frameq-backend.patch
 ```
 
-The OMAP bus driver still needs slave support, such as the external
-`i2c: omap: add slave support` patch, and the kernel must report
-`I2C_FUNC_SLAVE: yes` on the NXTRX4 bus. Example backend setup for bus 1 and
-OBC slave address `0x01`:
+Apply the OMAP bus-driver patch first, then the frame queue backend patch. The
+kernel must report `I2C_FUNC_SLAVE: yes` on the NXTRX4 bus before the backend
+can be used. Example backend setup for bus 1 and OBC slave address `0x01`:
 
 ```sh
 modprobe i2c-slave-frameq max_frame_bytes=260 queue_depth=32
@@ -241,9 +241,63 @@ Useful queries include:
 - `health`: configured CSP nodes, ports, SFP settings, and max packet sizes
 - `radioHealth(role: UPLINK | DOWNLINK)`: basic NXTRX4 uptime, radio status, and
   radio interface counters
+- `radioPing(role: UPLINK | DOWNLINK, payloadSize: 0)`: CSP ping round-trip to a
+  radio
+- `radioUptime(role: UPLINK | DOWNLINK)`: radio uptime in seconds
+- `radioStatus(role: UPLINK | DOWNLINK)`: free space in the radio TX input
+  buffer
+- `radioIdent(role: UPLINK | DOWNLINK)`: CMP identity strings
+- `radioInterfaceStats(role: UPLINK | DOWNLINK, interface: RADIO | CSP | I2C0 |
+  I2C2 | RS485)`: CMP interface counters
+- `radioSystemStats(role: UPLINK | DOWNLINK)`: decoded NXTRX4 system, reset, and
+  ADC statistics
 
 This GraphQL API is for observing the comms service itself. It is separate from
 the GraphQL payloads being forwarded through the radio link.
+
+Testing mutations include:
+
+- `radioSendTextInMorse(role, sourceIdentification, text)`
+- `radioSendCompressedMorse(role, sourceIdentification, num1, num2, num3, num4,
+  num5, num6)`
+- `radioSendAx25Message(role, data, format: TEXT | HEX)`
+- `radioReboot(role)`
+
+`sourceIdentification` must be exactly four ASCII bytes. AX.25 `TEXT` payloads
+are sent as the UTF-8 bytes of `data`; `HEX` payloads accept separators such as
+spaces, dashes, underscores, or colons.
+
+Example query:
+
+```graphql
+{
+  radioPing(role: UPLINK, payloadSize: 8) {
+    role
+    payloadSize
+    roundTripMs
+  }
+  radioIdent(role: UPLINK) {
+    hostname
+    model
+    revision
+    buildDate
+    buildTime
+  }
+}
+```
+
+Example mutation:
+
+```graphql
+mutation {
+  radioSendAx25Message(role: DOWNLINK, data: "43 51 20 52 41 44 53 41 54", format: HEX) {
+    success
+    message
+    verbalResponseText
+    verbalResponseHex
+  }
+}
+```
 
 ## Current Limitations
 

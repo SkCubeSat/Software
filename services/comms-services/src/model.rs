@@ -2,20 +2,33 @@ use std::sync::{Arc, Mutex};
 
 use async_graphql::{Enum, SimpleObject};
 use kubos_comms::CommsTelemetry;
+use nxtrx4_api::Nxtrx4;
 use nxtrx4_api::cmp::NxtrxInterface;
 
-use crate::{config::ServiceSettings, nxtrx_comms::NxtrxComms};
+use crate::{
+    config::{RadioConfig, ServiceSettings},
+    nxtrx_comms::NxtrxComms,
+};
 
 #[derive(Clone)]
 pub struct Subsystem {
     telemetry: Arc<Mutex<CommsTelemetry>>,
     comms: NxtrxComms,
     settings: ServiceSettings,
+    radio_commands: Arc<Mutex<()>>,
 }
 
+/// Selects which configured NXTRX4 transceiver a GraphQL radio command targets.
+///
+/// `Uplink` maps to `[comms-services.radios.uplink]` and `Downlink` maps to
+/// `[comms-services.radios.downlink]` in the service config. The selected
+/// config determines the CSP node, Linux I2C bus, I2C address, and timeout used
+/// for the command.
 #[derive(Enum, Copy, Clone, Eq, PartialEq)]
 pub enum RadioRole {
+    /// The transceiver configured as the RF receive/uplink radio.
     Uplink,
+    /// The transceiver configured as the RF transmit/downlink radio.
     Downlink,
 }
 
@@ -66,6 +79,7 @@ impl Subsystem {
             telemetry,
             comms,
             settings,
+            radio_commands: Arc::new(Mutex::new(())),
         }
     }
 
@@ -103,43 +117,78 @@ impl Subsystem {
     }
 
     pub fn radio_health(&self, role: RadioRole) -> RadioHealth {
+        let csp_node = self.radio_csp_node(role);
+
+        match self.with_radio(role, |radio, config| {
+            let mut errors = Vec::new();
+            let uptime_seconds = match radio.get_uptime() {
+                Ok(value) => Some(value as i32),
+                Err(err) => {
+                    errors.push(format!("get_uptime: {err}"));
+                    None
+                }
+            };
+            let radio_status = match radio.get_radio_status() {
+                Ok(value) => Some(value),
+                Err(err) => {
+                    errors.push(format!("get_radio_status: {err}"));
+                    None
+                }
+            };
+            let interface = match radio.get_cmp_ifc(NxtrxInterface::Radio) {
+                Ok(value) => Some(value),
+                Err(err) => {
+                    errors.push(format!("get_cmp_ifc(RADIO): {err}"));
+                    None
+                }
+            };
+
+            Ok(RadioHealth {
+                role,
+                csp_node: i32::from(config.csp_node),
+                uptime_seconds,
+                radio_status,
+                radio_tx_packets: interface.map(|value| value.tx_packet_count as i32),
+                radio_rx_packets: interface.map(|value| value.rx_packet_count as i32),
+                radio_rx_overruns: interface.map(|value| value.rx_overrun_count as i32),
+                errors,
+            })
+        }) {
+            Ok(health) => health,
+            Err(err) => RadioHealth {
+                role,
+                csp_node,
+                uptime_seconds: None,
+                radio_status: None,
+                radio_tx_packets: None,
+                radio_rx_packets: None,
+                radio_rx_overruns: None,
+                errors: vec![err],
+            },
+        }
+    }
+
+    pub(crate) fn with_radio<T>(
+        &self,
+        role: RadioRole,
+        action: impl FnOnce(&Nxtrx4, &RadioConfig) -> Result<T, String>,
+    ) -> Result<T, String> {
+        let _guard = self
+            .radio_commands
+            .lock()
+            .map_err(|_| "failed to lock NXTRX4 command path".to_string())?;
         let (radio, config) = match role {
             RadioRole::Uplink => (&self.comms.uplink_radio, &self.settings.radios.uplink),
             RadioRole::Downlink => (&self.comms.downlink_radio, &self.settings.radios.downlink),
         };
 
-        let mut errors = Vec::new();
-        let uptime_seconds = match radio.get_uptime() {
-            Ok(value) => Some(value as i32),
-            Err(err) => {
-                errors.push(format!("get_uptime: {err}"));
-                None
-            }
-        };
-        let radio_status = match radio.get_radio_status() {
-            Ok(value) => Some(value),
-            Err(err) => {
-                errors.push(format!("get_radio_status: {err}"));
-                None
-            }
-        };
-        let interface = match radio.get_cmp_ifc(NxtrxInterface::Radio) {
-            Ok(value) => Some(value),
-            Err(err) => {
-                errors.push(format!("get_cmp_ifc(RADIO): {err}"));
-                None
-            }
-        };
+        action(radio.as_ref(), config)
+    }
 
-        RadioHealth {
-            role,
-            csp_node: i32::from(config.csp_node),
-            uptime_seconds,
-            radio_status,
-            radio_tx_packets: interface.map(|value| value.tx_packet_count as i32),
-            radio_rx_packets: interface.map(|value| value.rx_packet_count as i32),
-            radio_rx_overruns: interface.map(|value| value.rx_overrun_count as i32),
-            errors,
+    fn radio_csp_node(&self, role: RadioRole) -> i32 {
+        match role {
+            RadioRole::Uplink => i32::from(self.settings.radios.uplink.csp_node),
+            RadioRole::Downlink => i32::from(self.settings.radios.downlink.csp_node),
         }
     }
 }
