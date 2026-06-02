@@ -139,6 +139,7 @@ pub struct RadioSystemStats {
 #[derive(SimpleObject)]
 pub struct RadioSystemInfo {
     /// CPU supply voltage in 10 mV units.
+    #[graphql(name = "cpuVoltage10mv")]
     pub cpu_voltage_10mv: i32,
     /// CPU temperature in Kelvin.
     pub cpu_temperature_kelvin: i32,
@@ -173,6 +174,7 @@ pub struct RadioAdcData {
     /// CPU temperature in Kelvin.
     pub cpu_temp_kelvin: i32,
     /// CPU supply voltage in 10 mV units.
+    #[graphql(name = "cpuVoltage10mv")]
     pub cpu_voltage_10mv: i32,
     /// External voltage reading in the radio's native units.
     pub ext_voltage: i32,

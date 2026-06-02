@@ -1,0 +1,1 @@
+{"query":"{ health { uplinkNode downlinkNode groundNode uplinkPacketCspPort uplinkSfpCspPort groundPacketCspPort groundSfpCspPort maxPacketSpacePacketBytes maxSfpSpacePacketBytes sfpMtu sfpUseRdp uplinkCrypto } }"}

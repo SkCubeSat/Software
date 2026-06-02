@@ -325,3 +325,18 @@ cargo test -p comms-services
 cargo test -p kubos-comms spacepacket
 cargo test -p radsat-csp
 ```
+
+## OBC Radio Tests
+
+Hardware-facing GraphQL fixtures and a small radio-control CLI live in:
+
+```text
+services/comms-services/obc-tests
+```
+
+Use these when you need to test the real NXTRX4 radios, CSP/I2C routing, or the
+I2C slave receive backend on the OBC. The folder includes request JSON files,
+`run.sh` for smoke tests and one-off radio commands, and `package.sh` for
+creating a transfer-ready bundle. See
+`services/comms-services/obc-tests/README.md` for the full transfer and command
+workflow.
