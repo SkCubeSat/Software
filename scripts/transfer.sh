@@ -7,8 +7,8 @@ log_user 0
 # ============================================================
 # BeagleBone Black Serial File Transfer Script
 # Usage:
-#   transfer [options] <local-file-or-dir> [local-file-or-dir ...]
-#   transfer -d /home/kubos/bin myfile.bin
+#   transfer -- [options] <local-file-or-dir> [local-file-or-dir ...]
+#   transfer -- -d /home/kubos/bin myfile.bin
 #
 # The final positional argument(s) are always local paths to transfer.
 # Use -d to choose where those paths land on the OBC.
@@ -26,7 +26,7 @@ set staging_dir "/tmp/transfer_staging_[pid]"
 # ---- Parse arguments ----
 proc usage {{status 0}} {
     puts ""
-    puts "Usage: transfer \[options\] <local-file-or-dir> \[local-file-or-dir ...\]"
+    puts "Usage: transfer -- \[options\] <local-file-or-dir> \[local-file-or-dir ...\]"
     puts ""
     puts "The final positional argument(s) are local path(s) to transfer."
     puts "Use -d to set the destination directory on the OBC."
@@ -42,8 +42,8 @@ proc usage {{status 0}} {
     puts ""
     puts "Examples:"
     puts "  transfer myfile.bin"
-    puts "  transfer -d /home/kubos/bin myfile.bin"
-    puts "  transfer -b 921600 -p /dev/ttyUSB1 -d /home/kubos/bin myfile.bin"
+    puts "  transfer -- -d /home/kubos/bin myfile.bin"
+    puts "  transfer -- -b 921600 -p /dev/ttyUSB1 -d /home/kubos/bin myfile.bin"
     puts "  transfer ./mydir"
     puts "  transfer file1.sh file2.sh file3.sh"
     puts ""
@@ -81,6 +81,12 @@ if {[llength $argv] == 0} {
 }
 
 set verbose 0
+
+# When invoked as `expect -f transfer.sh -- ...`, Expect consumes `--`.
+# When invoked directly through the shebang, tolerate the same separator.
+if {[llength $argv] > 0 && [lindex $argv 0] eq "--"} {
+    set argv [lrange $argv 1 end]
+}
 
 set i 0
 set parsing_options 1
@@ -258,6 +264,13 @@ set remote_user_q [shell_quote $user]
 send "mkdir -p $remote_dir_q\r"
 expect "#"
 
+# If the serial shell was already logged in as root, mkdir may create a
+# root-owned destination while rz runs as kubos. Make it writable for rz.
+send "chown -R $remote_user_q $remote_dir_q 2>/dev/null || true\r"
+expect "#"
+send "chmod u+rwx $remote_dir_q 2>/dev/null || true\r"
+expect "#"
+
 # ---- Transfer each file ----
 set count 0
 set total [llength $transfer_files]
@@ -273,7 +286,7 @@ foreach tf $transfer_files {
 
     puts "\n📤 \[$count/$total\] Sending: $basename"
 
-    send "cd $remote_dir_q && start-stop-daemon -S -a /usr/bin/rz -c $remote_user_q -- -b -y\r"
+    send "cd $remote_dir_q && rm -f $basename_q && start-stop-daemon -S -a /usr/bin/rz -c $remote_user_q -- -b -y\r"
 
     expect {
         timeout {
@@ -284,7 +297,14 @@ foreach tf $transfer_files {
         "waiting to receive" {}
     }
 
-    if {[catch {exec sz -b $tf < $serial > $serial} sz_error]} {
+    set send_dir [file dirname $tf]
+    set send_name [file tail $tf]
+    set old_pwd [pwd]
+    cd $send_dir
+    set sz_failed [catch {exec sz -b -y $send_name < $serial > $serial} sz_error]
+    cd $old_pwd
+
+    if {$sz_failed} {
         puts "ERROR: sz failed for $tf: $sz_error"
         set failed 1
         continue

@@ -30,10 +30,12 @@ fi
 cp "$DIR/config/comms-hw.toml" "$OUT/config/"
 cp "$DIR"/requests/*.json "$OUT/requests/"
 cp "$DIR/run.sh" "$OUT/"
+cp "$DIR/scan_csp_addresses.sh" "$OUT/"
 cp "$DIR/README.md" "$OUT/"
 
 chmod +x "$OUT/run.sh"
+chmod +x "$OUT/scan_csp_addresses.sh"
 
 echo "Packaged OBC comms tests at $OUT"
 echo "Transfer with:"
-echo "  transfer -d /home/kubos/comms-tests $OUT"
+echo "  transfer -- -d /home/kubos/comms-tests $OUT"

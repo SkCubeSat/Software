@@ -48,7 +48,7 @@ NO_STRIP=1 services/comms-services/obc-tests/package.sh
 Use the repo transfer helper from the PowerEdge side:
 
 ```sh
-transfer -d /home/kubos/comms-tests target/obc-tests/comms-services
+transfer -- -d /home/kubos/comms-tests target/obc-tests/comms-services
 ```
 
 `transfer.sh` packs directories as tarballs, sends them over the serial link,

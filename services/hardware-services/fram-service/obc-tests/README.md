@@ -73,7 +73,7 @@ target/obc-tests/fram-service
 Transfer it to the OBC using the repo transfer helper:
 
 ```sh
-transfer -d /home/kubos/fram-tests target/obc-tests/fram-service
+transfer -- -d /home/kubos/fram-tests target/obc-tests/fram-service
 ```
 
 The transfer helper unpacks directories under the destination, so the OBC path
