@@ -1,7 +1,6 @@
-#!/usr/bin/env bash
-set -uo pipefail
+#!/bin/sh
 
-DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+DIR="$(CDPATH= cd "$(dirname "$0")" && pwd)"
 cd "$DIR"
 
 CONFIG_FILE="${CONFIG:-config/comms-hw.toml}"
@@ -39,7 +38,10 @@ EOF
 }
 
 is_uint() {
-  [[ "$1" =~ ^[0-9]+$ ]]
+  case "$1" in
+    ''|*[!0123456789]*) return 1 ;;
+    *) return 0 ;;
+  esac
 }
 
 while [ "$#" -gt 0 ]; do
@@ -129,7 +131,7 @@ set_uplink_csp_node() {
     }
 
     in_uplink && /^[[:space:]]*csp_node[[:space:]]*=/ {
-      sub(/[[:space:]]*=[[:space:]]*[0-9]+/, " = " new_node)
+      sub(/[[:space:]]*=[[:space:]]*[0-9][0-9]*/, " = " new_node)
       updated = 1
     }
 
@@ -157,28 +159,38 @@ sleep_ms() {
   if command -v usleep >/dev/null 2>&1; then
     usleep "$((milliseconds * 1000))"
   else
-    sleep "$(awk -v ms="$milliseconds" 'BEGIN { printf "%.3f", ms / 1000 }')"
+    seconds=$((milliseconds / 1000))
+    if [ $((milliseconds % 1000)) -ne 0 ]; then
+      seconds=$((seconds + 1))
+    fi
+    sleep "$seconds"
   fi
 }
 
 is_successful_ping() {
   output="$1"
-  [[ "$output" =~ \"roundTripMs\"[[:space:]]*:[[:space:]]*[0-9]+ ]] &&
-    ! [[ "$output" =~ \"errors\"[[:space:]]*: ]]
+  printf '%s\n' "$output" | grep '"roundTripMs"[[:space:]]*:[[:space:]]*[0-9][0-9]*' >/dev/null 2>&1 || return 1
+  printf '%s\n' "$output" | grep '"errors"[[:space:]]*:' >/dev/null 2>&1 && return 1
+  return 0
 }
 
-successful_addresses=()
+successful_addresses=""
+successful_count=0
 
 echo "Scanning UPLINK CSP node addresses 0 through 31"
 echo "Config: $CONFIG_FILE"
 echo "URL: $URL"
 echo "Delay between runs: ${DELAY_MS}ms"
+if [ "$DELAY_MS" -gt 0 ] && ! command -v usleep >/dev/null 2>&1; then
+  echo "usleep not found; sub-second delays will be rounded up for BusyBox sleep."
+fi
 if [ "$RESTORE_CONFIG" = "1" ]; then
   echo "Config will be restored when the scan exits."
 fi
 echo
 
-for ((address = 0; address <= 31; address++)); do
+address=0
+while [ "$address" -le 31 ]; do
   printf '[%02d] ./run.sh ping UPLINK 2 ... ' "$address"
   set_uplink_csp_node "$address"
 
@@ -189,7 +201,12 @@ for ((address = 0; address <= 31; address++)); do
   fi
 
   if is_successful_ping "$output"; then
-    successful_addresses+=("$address")
+    if [ "$successful_count" -eq 0 ]; then
+      successful_addresses="$address"
+    else
+      successful_addresses="$successful_addresses $address"
+    fi
+    successful_count=$((successful_count + 1))
     printf 'SUCCESS\n'
     printf '%s\n' "$output" | sed 's/^/  /'
   else
@@ -207,11 +224,13 @@ for ((address = 0; address <= 31; address++)); do
   if [ "$address" -lt 31 ]; then
     sleep_ms "$DELAY_MS"
   fi
+
+  address=$((address + 1))
 done
 
 echo
-if [ "${#successful_addresses[@]}" -eq 0 ]; then
+if [ "$successful_count" -eq 0 ]; then
   echo "No CSP address produced a successful UPLINK ping interaction."
 else
-  echo "Successful UPLINK CSP address(es): ${successful_addresses[*]}"
+  echo "Successful UPLINK CSP address(es): $successful_addresses"
 fi
