@@ -11,14 +11,21 @@ DELAY_MS="${DELAY_MS:-1000}"
 RESTORE_CONFIG="${RESTORE_CONFIG:-1}"
 SHOW_OUTPUT="${SHOW_OUTPUT:-0}"
 ALLOW_EXISTING_SERVICE="${ALLOW_EXISTING_SERVICE:-0}"
+CSP_MIN_ADDRESS=0
+CSP_MAX_ADDRESS=31
+START_ADDRESS="${START_ADDRESS:-$CSP_MIN_ADDRESS}"
+END_ADDRESS="${END_ADDRESS:-$CSP_MAX_ADDRESS}"
+CONTROLLER_TIMEOUT_RETRIES="${CONTROLLER_TIMEOUT_RETRIES:-1}"
 
 usage() {
   cat <<'EOF'
 Usage:
   ./scan_csp_addresses.sh [delay-ms]
   ./scan_csp_addresses.sh --delay-ms 250
+  ./scan_csp_addresses.sh --start 4 --end 12
+  ./scan_csp_addresses.sh --range 4-12
 
-Scans CSP node addresses 0 through 31 by rewriting:
+Scans CSP v1 node addresses 0 through 31 by rewriting:
   config/comms-hw.toml -> [comms-services.radios.uplink].csp_node
 
 For each address it runs:
@@ -26,6 +33,12 @@ For each address it runs:
 
 Environment:
   DELAY_MS=1000        Delay between runs, in milliseconds.
+  START_ADDRESS=0      First CSP v1 address to scan.
+  END_ADDRESS=31       Last CSP v1 address to scan.
+  CONTROLLER_TIMEOUT_RETRIES=1
+                       Retry the same address after this many controller timeouts.
+                       If dmesg is unavailable, retry unsuccessful attempts because
+                       controller timeout messages may not be visible to the script.
   CONFIG=path          Config file to rewrite. Defaults to config/comms-hw.toml.
   RUN_SCRIPT=path      Runner to execute. Defaults to ./run.sh.
   URL=url              GraphQL URL used by run.sh. Defaults to port 8150.
@@ -44,6 +57,27 @@ is_uint() {
   esac
 }
 
+normalize_uint() {
+  value="$1"
+  while [ "${value#0}" != "$value" ] && [ "$value" != "0" ]; do
+    value="${value#0}"
+  done
+  printf '%s\n' "$value"
+}
+
+set_address_range() {
+  address_range="$1"
+  case "$address_range" in
+    *-*) ;;
+    *)
+      echo "--range requires START-END" >&2
+      exit 2
+      ;;
+  esac
+  START_ADDRESS="${address_range%-*}"
+  END_ADDRESS="${address_range#*-}"
+}
+
 while [ "$#" -gt 0 ]; do
   case "$1" in
     -h|--help)
@@ -57,6 +91,33 @@ while [ "$#" -gt 0 ]; do
       ;;
     --delay-ms=*)
       DELAY_MS="${1#*=}"
+      shift
+      ;;
+    --start)
+      [ "$#" -ge 2 ] || { echo "--start requires a value" >&2; exit 2; }
+      START_ADDRESS="$2"
+      shift 2
+      ;;
+    --start=*)
+      START_ADDRESS="${1#*=}"
+      shift
+      ;;
+    --end)
+      [ "$#" -ge 2 ] || { echo "--end requires a value" >&2; exit 2; }
+      END_ADDRESS="$2"
+      shift 2
+      ;;
+    --end=*)
+      END_ADDRESS="${1#*=}"
+      shift
+      ;;
+    --range)
+      [ "$#" -ge 2 ] || { echo "--range requires a value" >&2; exit 2; }
+      set_address_range "$2"
+      shift 2
+      ;;
+    --range=*)
+      set_address_range "${1#*=}"
       shift
       ;;
     *)
@@ -75,6 +136,38 @@ if ! is_uint "$DELAY_MS"; then
   echo "delay must be a non-negative integer number of milliseconds: $DELAY_MS" >&2
   exit 2
 fi
+DELAY_MS="$(normalize_uint "$DELAY_MS")"
+
+if ! is_uint "$START_ADDRESS"; then
+  echo "start address must be a CSP v1 address ($CSP_MIN_ADDRESS-$CSP_MAX_ADDRESS): $START_ADDRESS" >&2
+  exit 2
+fi
+START_ADDRESS="$(normalize_uint "$START_ADDRESS")"
+if [ "$START_ADDRESS" -lt "$CSP_MIN_ADDRESS" ] || [ "$START_ADDRESS" -gt "$CSP_MAX_ADDRESS" ]; then
+  echo "start address must be within CSP v1 bounds ($CSP_MIN_ADDRESS-$CSP_MAX_ADDRESS): $START_ADDRESS" >&2
+  exit 2
+fi
+
+if ! is_uint "$END_ADDRESS"; then
+  echo "end address must be a CSP v1 address ($CSP_MIN_ADDRESS-$CSP_MAX_ADDRESS): $END_ADDRESS" >&2
+  exit 2
+fi
+END_ADDRESS="$(normalize_uint "$END_ADDRESS")"
+if [ "$END_ADDRESS" -lt "$CSP_MIN_ADDRESS" ] || [ "$END_ADDRESS" -gt "$CSP_MAX_ADDRESS" ]; then
+  echo "end address must be within CSP v1 bounds ($CSP_MIN_ADDRESS-$CSP_MAX_ADDRESS): $END_ADDRESS" >&2
+  exit 2
+fi
+
+if [ "$START_ADDRESS" -gt "$END_ADDRESS" ]; then
+  echo "start address must be less than or equal to end address: $START_ADDRESS > $END_ADDRESS" >&2
+  exit 2
+fi
+
+if ! is_uint "$CONTROLLER_TIMEOUT_RETRIES"; then
+  echo "controller timeout retries must be a non-negative integer: $CONTROLLER_TIMEOUT_RETRIES" >&2
+  exit 2
+fi
+CONTROLLER_TIMEOUT_RETRIES="$(normalize_uint "$CONTROLLER_TIMEOUT_RETRIES")"
 
 if [ ! -f "$CONFIG_FILE" ]; then
   echo "config file not found: $CONFIG_FILE" >&2
@@ -99,15 +192,28 @@ if [ "$ALLOW_EXISTING_SERVICE" != "1" ] && service_ready; then
   exit 2
 fi
 
-CONFIG_BACKUP="$(mktemp "${TMPDIR:-/tmp}/comms-hw.toml.XXXXXX")" || exit 1
-cp "$CONFIG_FILE" "$CONFIG_BACKUP"
+TMP_ROOT="${TMPDIR:-/tmp}/scan-csp-addresses.$$"
+if ! mkdir "$TMP_ROOT"; then
+  echo "failed to create temporary directory: $TMP_ROOT" >&2
+  exit 1
+fi
+
+CONFIG_BACKUP="$TMP_ROOT/comms-hw.toml.backup"
+CONFIG_TMP="$TMP_ROOT/comms-hw.toml.tmp"
+if ! cp "$CONFIG_FILE" "$CONFIG_BACKUP"; then
+  echo "failed to back up config file: $CONFIG_FILE" >&2
+  rm -f "$CONFIG_BACKUP"
+  rmdir "$TMP_ROOT" 2>/dev/null || true
+  exit 1
+fi
 
 cleanup() {
   status=$?
   if [ "$RESTORE_CONFIG" = "1" ] && [ -f "$CONFIG_BACKUP" ]; then
     cp "$CONFIG_BACKUP" "$CONFIG_FILE"
   fi
-  rm -f "$CONFIG_BACKUP"
+  rm -f "$CONFIG_BACKUP" "$CONFIG_TMP"
+  rmdir "$TMP_ROOT" 2>/dev/null || true
   return "$status"
 }
 trap cleanup EXIT
@@ -116,7 +222,7 @@ trap 'exit 143' TERM
 
 set_uplink_csp_node() {
   address="$1"
-  tmp_file="$(mktemp "${TMPDIR:-/tmp}/comms-hw-scan.XXXXXX")" || exit 1
+  tmp_file="$CONFIG_TMP"
 
   if ! awk -v new_node="$address" '
     /^\[comms-services\.radios\.uplink\][[:space:]]*$/ {
@@ -148,7 +254,11 @@ set_uplink_csp_node() {
     exit 1
   fi
 
-  cp "$tmp_file" "$CONFIG_FILE"
+  if ! cp "$tmp_file" "$CONFIG_FILE"; then
+    rm -f "$tmp_file"
+    echo "failed to write updated config file: $CONFIG_FILE" >&2
+    exit 1
+  fi
   rm -f "$tmp_file"
 }
 
@@ -174,13 +284,39 @@ is_successful_ping() {
   return 0
 }
 
+is_controller_timeout() {
+  output="$1"
+  printf '%s\n' "$output" | grep -i 'controller timed out' >/dev/null 2>&1
+}
+
+can_check_controller_timeout_log() {
+  [ "${CAN_CHECK_CONTROLLER_TIMEOUT_LOG:-0}" = "1" ]
+}
+
+controller_timeout_count() {
+  if can_check_controller_timeout_log; then
+    dmesg 2>/dev/null | grep -i -c 'controller timed out'
+  else
+    printf '0\n'
+  fi
+}
+
 successful_addresses=""
 successful_count=0
 
-echo "Scanning UPLINK CSP node addresses 0 through 31"
+CAN_CHECK_CONTROLLER_TIMEOUT_LOG=0
+if command -v dmesg >/dev/null 2>&1 && dmesg >/dev/null 2>&1; then
+  CAN_CHECK_CONTROLLER_TIMEOUT_LOG=1
+fi
+
+echo "Scanning UPLINK CSP v1 node addresses $START_ADDRESS through $END_ADDRESS"
 echo "Config: $CONFIG_FILE"
 echo "URL: $URL"
 echo "Delay between runs: ${DELAY_MS}ms"
+echo "Controller timeout retries: $CONTROLLER_TIMEOUT_RETRIES"
+if [ "$CONTROLLER_TIMEOUT_RETRIES" -gt 0 ] && ! can_check_controller_timeout_log; then
+  echo "dmesg not found; unsuccessful attempts will be retried because controller timeouts may not be visible."
+fi
 if [ "$DELAY_MS" -gt 0 ] && ! command -v usleep >/dev/null 2>&1; then
   echo "usleep not found; sub-second delays will be rounded up for BusyBox sleep."
 fi
@@ -189,16 +325,54 @@ if [ "$RESTORE_CONFIG" = "1" ]; then
 fi
 echo
 
-address=0
-while [ "$address" -le 31 ]; do
+address="$START_ADDRESS"
+while [ "$address" -le "$END_ADDRESS" ]; do
   printf '[%02d] ./run.sh ping UPLINK 2 ... ' "$address"
   set_uplink_csp_node "$address"
 
-  if output=$(START_SERVICE=1 CONFIG="$CONFIG_FILE" "$RUN_SCRIPT" ping UPLINK 2 2>&1); then
-    run_status=0
-  else
-    run_status=$?
-  fi
+  attempt=0
+  while :; do
+    if [ "$attempt" -gt 0 ]; then
+      printf 'retry %d/%d ... ' "$attempt" "$CONTROLLER_TIMEOUT_RETRIES"
+    fi
+
+    controller_timeout_before="$(controller_timeout_count)"
+    if output=$(START_SERVICE=1 CONFIG="$CONFIG_FILE" "$RUN_SCRIPT" ping UPLINK 2 2>&1); then
+      run_status=0
+    else
+      run_status=$?
+    fi
+    controller_timeout_after="$(controller_timeout_count)"
+    controller_timed_out=0
+    if is_controller_timeout "$output"; then
+      controller_timed_out=1
+    elif [ "$controller_timeout_after" -gt "$controller_timeout_before" ]; then
+      controller_timed_out=1
+    fi
+    retry_after_failure=0
+    if [ "$controller_timed_out" = "1" ] || ! can_check_controller_timeout_log; then
+      retry_after_failure=1
+    fi
+
+    if is_successful_ping "$output"; then
+      break
+    fi
+
+    if [ "$retry_after_failure" = "1" ] && [ "$attempt" -lt "$CONTROLLER_TIMEOUT_RETRIES" ]; then
+      attempt=$((attempt + 1))
+      if [ "$controller_timed_out" = "1" ]; then
+        printf 'controller timed out; '
+      else
+        printf 'retrying unsuccessful attempt; '
+      fi
+      if [ "$DELAY_MS" -gt 0 ]; then
+        sleep_ms "$DELAY_MS"
+      fi
+      continue
+    fi
+
+    break
+  done
 
   if is_successful_ping "$output"; then
     if [ "$successful_count" -eq 0 ]; then
@@ -210,6 +384,9 @@ while [ "$address" -le 31 ]; do
     printf 'SUCCESS\n'
     printf '%s\n' "$output" | sed 's/^/  /'
   else
+    if [ "${controller_timed_out:-0}" = "1" ]; then
+      printf 'controller timed out; '
+    fi
     printf 'no successful interaction'
     if [ "$run_status" -ne 0 ]; then
       printf ' (exit %d)' "$run_status"
@@ -221,7 +398,7 @@ while [ "$address" -le 31 ]; do
     fi
   fi
 
-  if [ "$address" -lt 31 ]; then
+  if [ "$address" -lt "$END_ADDRESS" ]; then
     sleep_ms "$DELAY_MS"
   fi
 
@@ -230,7 +407,7 @@ done
 
 echo
 if [ "$successful_count" -eq 0 ]; then
-  echo "No CSP address produced a successful UPLINK ping interaction."
+  echo "No CSP address in $START_ADDRESS through $END_ADDRESS produced a successful UPLINK ping interaction."
 else
   echo "Successful UPLINK CSP address(es): $successful_addresses"
 fi
