@@ -1,5 +1,8 @@
 #!/bin/sh
 
+LC_ALL=C
+export LC_ALL
+
 DIR="$(CDPATH= cd "$(dirname "$0")" && pwd)"
 cd "$DIR"
 
@@ -16,6 +19,9 @@ CSP_MAX_ADDRESS=31
 START_ADDRESS="${START_ADDRESS:-$CSP_MIN_ADDRESS}"
 END_ADDRESS="${END_ADDRESS:-$CSP_MAX_ADDRESS}"
 CONTROLLER_TIMEOUT_RETRIES="${CONTROLLER_TIMEOUT_RETRIES:-1}"
+SCAN_OPERATION="${SCAN_OPERATION:-ping}"
+MORSE_SOURCE="${MORSE_SOURCE:-SAT1}"
+MORSE_TEXT="${MORSE_TEXT:-sixseven}"
 
 usage() {
   cat <<'EOF'
@@ -47,6 +53,11 @@ Environment:
   SHOW_OUTPUT=1        Print full run.sh output for every address.
   ALLOW_EXISTING_SERVICE=1
                        Skip the guard for an already-running service.
+
+Internal scanner selection:
+  SCAN_OPERATION=ping|morse-text
+                       Defaults to ping. csp_scan_with_morse.sh selects
+                       morse-text and supplies MORSE_SOURCE and MORSE_TEXT.
 EOF
 }
 
@@ -169,6 +180,26 @@ if ! is_uint "$CONTROLLER_TIMEOUT_RETRIES"; then
 fi
 CONTROLLER_TIMEOUT_RETRIES="$(normalize_uint "$CONTROLLER_TIMEOUT_RETRIES")"
 
+case "$SCAN_OPERATION" in
+  ping) ;;
+  morse-text)
+    if [ "${#MORSE_SOURCE}" -ne 4 ] ||
+       ! printf '%s\n' "$MORSE_SOURCE" | grep '^[ -~][ -~][ -~][ -~]$' >/dev/null 2>&1; then
+      echo "Morse source identification must be exactly 4 printable ASCII bytes: $MORSE_SOURCE" >&2
+      exit 2
+    fi
+    if [ "${#MORSE_TEXT}" -gt 20 ] ||
+       ! printf '%s\n' "$MORSE_TEXT" | grep '^[ -~]*$' >/dev/null 2>&1; then
+      echo "Morse text must contain at most 20 printable ASCII bytes" >&2
+      exit 2
+    fi
+    ;;
+  *)
+    echo "unsupported scan operation: $SCAN_OPERATION" >&2
+    exit 2
+    ;;
+esac
+
 if [ ! -f "$CONFIG_FILE" ]; then
   echo "config file not found: $CONFIG_FILE" >&2
   exit 2
@@ -277,11 +308,30 @@ sleep_ms() {
   fi
 }
 
-is_successful_ping() {
+is_successful_interaction() {
   output="$1"
-  printf '%s\n' "$output" | grep '"roundTripMs"[[:space:]]*:[[:space:]]*[0-9][0-9]*' >/dev/null 2>&1 || return 1
   printf '%s\n' "$output" | grep '"errors"[[:space:]]*:' >/dev/null 2>&1 && return 1
-  return 0
+
+  case "$SCAN_OPERATION" in
+    ping)
+      printf '%s\n' "$output" | grep '"roundTripMs"[[:space:]]*:[[:space:]]*[0-9][0-9]*' >/dev/null 2>&1
+      ;;
+    morse-text)
+      printf '%s\n' "$output" | grep '"success"[[:space:]]*:[[:space:]]*true' >/dev/null 2>&1
+      ;;
+  esac
+}
+
+run_scan_command() {
+  case "$SCAN_OPERATION" in
+    ping)
+      START_SERVICE=1 CONFIG="$CONFIG_FILE" "$RUN_SCRIPT" ping UPLINK 2
+      ;;
+    morse-text)
+      START_SERVICE=1 CONFIG="$CONFIG_FILE" "$RUN_SCRIPT" \
+        morse-text UPLINK "$MORSE_SOURCE" "$MORSE_TEXT"
+      ;;
+  esac
 }
 
 is_controller_timeout() {
@@ -312,6 +362,14 @@ fi
 echo "Scanning UPLINK CSP v1 node addresses $START_ADDRESS through $END_ADDRESS"
 echo "Config: $CONFIG_FILE"
 echo "URL: $URL"
+case "$SCAN_OPERATION" in
+  ping)
+    echo "Command: ./run.sh ping UPLINK 2"
+    ;;
+  morse-text)
+    echo "Command: ./run.sh morse-text UPLINK $MORSE_SOURCE \"$MORSE_TEXT\""
+    ;;
+esac
 echo "Delay between runs: ${DELAY_MS}ms"
 echo "Controller timeout retries: $CONTROLLER_TIMEOUT_RETRIES"
 if [ "$CONTROLLER_TIMEOUT_RETRIES" -gt 0 ] && ! can_check_controller_timeout_log; then
@@ -327,7 +385,15 @@ echo
 
 address="$START_ADDRESS"
 while [ "$address" -le "$END_ADDRESS" ]; do
-  printf '[%02d] ./run.sh ping UPLINK 2 ... ' "$address"
+  case "$SCAN_OPERATION" in
+    ping)
+      printf '[%02d] ./run.sh ping UPLINK 2 ... ' "$address"
+      ;;
+    morse-text)
+      printf '[%02d] ./run.sh morse-text UPLINK %s "%s" ... ' \
+        "$address" "$MORSE_SOURCE" "$MORSE_TEXT"
+      ;;
+  esac
   set_uplink_csp_node "$address"
 
   attempt=0
@@ -337,7 +403,7 @@ while [ "$address" -le "$END_ADDRESS" ]; do
     fi
 
     controller_timeout_before="$(controller_timeout_count)"
-    if output=$(START_SERVICE=1 CONFIG="$CONFIG_FILE" "$RUN_SCRIPT" ping UPLINK 2 2>&1); then
+    if output=$(run_scan_command 2>&1); then
       run_status=0
     else
       run_status=$?
@@ -354,7 +420,7 @@ while [ "$address" -le "$END_ADDRESS" ]; do
       retry_after_failure=1
     fi
 
-    if is_successful_ping "$output"; then
+    if is_successful_interaction "$output"; then
       break
     fi
 
@@ -374,7 +440,7 @@ while [ "$address" -le "$END_ADDRESS" ]; do
     break
   done
 
-  if is_successful_ping "$output"; then
+  if is_successful_interaction "$output"; then
     if [ "$successful_count" -eq 0 ]; then
       successful_addresses="$address"
     else
@@ -407,7 +473,21 @@ done
 
 echo
 if [ "$successful_count" -eq 0 ]; then
-  echo "No CSP address in $START_ADDRESS through $END_ADDRESS produced a successful UPLINK ping interaction."
+  case "$SCAN_OPERATION" in
+    ping)
+      echo "No CSP address in $START_ADDRESS through $END_ADDRESS produced a successful UPLINK ping interaction."
+      ;;
+    morse-text)
+      echo "No CSP address in $START_ADDRESS through $END_ADDRESS accepted the UPLINK Morse text command."
+      ;;
+  esac
 else
-  echo "Successful UPLINK CSP address(es): $successful_addresses"
+  case "$SCAN_OPERATION" in
+    ping)
+      echo "Successful UPLINK CSP address(es): $successful_addresses"
+      ;;
+    morse-text)
+      echo "CSP address(es) that accepted the UPLINK Morse text command: $successful_addresses"
+      ;;
+  esac
 fi
