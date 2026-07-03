@@ -1124,9 +1124,13 @@ dependencies = [
  "async-graphql-axum",
  "axum",
  "chrono",
+ "env_logger 0.11.8",
  "kubos-service",
  "log 0.4.29",
+ "reqwest 0.12.28",
  "rust-i2c",
+ "serde_json",
+ "tempfile",
  "tokio 1.49.0",
 ]
 
@@ -1714,6 +1718,28 @@ dependencies = [
 ]
 
 [[package]]
+<<<<<<< HEAD
+=======
+name = "h2"
+version = "0.4.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "171fefbc92fe4a4de27e0698d6a5b392d6a0e333506bc49133760b3bcf948733"
+dependencies = [
+ "atomic-waker",
+ "bytes 1.11.0",
+ "fnv",
+ "futures-core",
+ "futures-sink",
+ "http 1.4.0",
+ "indexmap 2.13.0",
+ "slab",
+ "tokio 1.49.0",
+ "tokio-util",
+ "tracing",
+]
+
+[[package]]
+>>>>>>> origin/main
 name = "handlebars"
 version = "6.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2018,6 +2044,10 @@ dependencies = [
  "bytes 1.11.0",
  "futures-channel",
  "futures-core",
+<<<<<<< HEAD
+=======
+ "h2 0.4.14",
+>>>>>>> origin/main
  "http 1.4.0",
  "http-body 1.0.1",
  "httparse",
@@ -2700,7 +2730,10 @@ checksum = "bcc35a38544a891a5f7c865aca548a982ccb3b8650a5b06d0fd33a10283c56fc"
 [[package]]
 name = "libcsp"
 version = "0.1.3"
+<<<<<<< HEAD
 source = "git+https://egit.irs.uni-stuttgart.de/rust/libcsp-rust.git#de5d29b3e6fe6b2a86eeb1f1c90d11290448d320"
+=======
+>>>>>>> origin/main
 dependencies = [
  "bitflags 2.10.0",
  "libc",
@@ -2711,7 +2744,10 @@ dependencies = [
 [[package]]
 name = "libcsp-cargo-build"
 version = "0.2.0"
+<<<<<<< HEAD
 source = "git+https://egit.irs.uni-stuttgart.de/rust/libcsp-rust.git#de5d29b3e6fe6b2a86eeb1f1c90d11290448d320"
+=======
+>>>>>>> origin/main
 dependencies = [
  "cc",
  "thiserror 1.0.69",
@@ -2720,7 +2756,10 @@ dependencies = [
 [[package]]
 name = "libcsp-sys"
 version = "0.1.1"
+<<<<<<< HEAD
 source = "git+https://egit.irs.uni-stuttgart.de/rust/libcsp-rust.git#de5d29b3e6fe6b2a86eeb1f1c90d11290448d320"
+=======
+>>>>>>> origin/main
 dependencies = [
  "libc",
 ]
@@ -3237,6 +3276,26 @@ dependencies = [
 ]
 
 [[package]]
+<<<<<<< HEAD
+=======
+name = "native-tls"
+version = "0.2.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "465500e14ea162429d264d44189adc38b199b62b1c21eea9f69e4b73cb03bbf2"
+dependencies = [
+ "libc",
+ "log 0.4.29",
+ "openssl",
+ "openssl-probe",
+ "openssl-sys",
+ "schannel",
+ "security-framework",
+ "security-framework-sys",
+ "tempfile",
+]
+
+[[package]]
+>>>>>>> origin/main
 name = "nb"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3514,6 +3573,17 @@ dependencies = [
 ]
 
 [[package]]
+<<<<<<< HEAD
+=======
+name = "nxtrx4-api"
+version = "0.1.0"
+dependencies = [
+ "radsat-csp",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+>>>>>>> origin/main
 name = "obc-hs"
 version = "0.1.0"
 dependencies = [
@@ -3547,6 +3617,52 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2839e79665f131bdb5782e51f2c6c9599c133c6098982a54c794358bf432529c"
 
 [[package]]
+<<<<<<< HEAD
+=======
+name = "openssl"
+version = "0.10.80"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a45fa2aa886c42762255da344f0a0d313e254066c46aad76f300c3d3da62d967"
+dependencies = [
+ "bitflags 2.10.0",
+ "cfg-if 1.0.4",
+ "foreign-types",
+ "libc",
+ "openssl-macros",
+ "openssl-sys",
+]
+
+[[package]]
+name = "openssl-macros"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a948666b637a0f465e8564c73e89d4dde00d72d4d473cc972f390fc3dcee7d9c"
+dependencies = [
+ "proc-macro2 1.0.106",
+ "quote 1.0.40",
+ "syn 2.0.114",
+]
+
+[[package]]
+name = "openssl-probe"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7c87def4c32ab89d880effc9e097653c8da5d6ef28e6b539d313baaacfbafcbe"
+
+[[package]]
+name = "openssl-sys"
+version = "0.9.116"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f28a22dc7140cda5f096e5e7724a6962ca81a7f8bfd2979f9b18c11af56318c4"
+dependencies = [
+ "cc",
+ "libc",
+ "pkg-config",
+ "vcpkg",
+]
+
+[[package]]
+>>>>>>> origin/main
 name = "ordered-float"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4016,6 +4132,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "radsat-csp"
+version = "0.1.0"
+dependencies = [
+ "embedded-hal",
+ "libcsp",
+ "libcsp-cargo-build",
+ "linux-embedded-hal",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "radsat-system"
 version = "0.1.0"
 dependencies = [
@@ -4372,6 +4499,10 @@ dependencies = [
  "futures-channel",
  "futures-core",
  "futures-util",
+<<<<<<< HEAD
+=======
+ "h2 0.4.14",
+>>>>>>> origin/main
  "http 1.4.0",
  "http-body 1.0.1",
  "http-body-util",
@@ -4630,6 +4761,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ef703b7cb59335eae2eb93ceb664c0eb7ea6bf567079d843e09420219668e072"
 
 [[package]]
+<<<<<<< HEAD
+=======
+name = "schannel"
+version = "0.1.29"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "91c1b7e4904c873ef0710c1f407dde2e6287de2bebc1bbbf7d430bb7cbffd939"
+dependencies = [
+ "windows-sys 0.61.2",
+]
+
+[[package]]
+>>>>>>> origin/main
 name = "scheduler-service"
 version = "0.2.0"
 dependencies = [
@@ -4660,6 +4803,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
+<<<<<<< HEAD
 name = "sct"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4667,6 +4811,28 @@ checksum = "b362b83898e0e69f38515b82ee15aa80636befe47c3b6d3d89a911e78fc228ce"
 dependencies = [
  "ring 0.16.20",
  "untrusted 0.7.1",
+=======
+name = "security-framework"
+version = "3.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d17b898a6d6948c3a8ee4372c17cb384f90d2e6e912ef00895b14fd7ab54ec38"
+dependencies = [
+ "bitflags 2.10.0",
+ "core-foundation 0.10.0",
+ "core-foundation-sys",
+ "libc",
+ "security-framework-sys",
+]
+
+[[package]]
+name = "security-framework-sys"
+version = "2.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6ce2691df843ecc5d231c0b14ece2acc3efb62c0a398c7e1d875f3983ce020e3"
+dependencies = [
+ "core-foundation-sys",
+ "libc",
+>>>>>>> origin/main
 ]
 
 [[package]]

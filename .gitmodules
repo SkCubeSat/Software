@@ -1,3 +1,10 @@
+<<<<<<< HEAD
 [submodule "third_party/libcsp"]
 	path = third_party/libcsp
 	url = https://github.com/libcsp/libcsp.git
+=======
+[submodule "kubos/apis/nxtrx4-api"]
+	path = kubos/apis/nxtrx4-api
+	url = git@github.com:SkCubeSat/NXTRX4.git
+	branch = main
+>>>>>>> origin/main

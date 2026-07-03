@@ -1,0 +1,15 @@
+[package]
+name = "libcsp-cargo-build"
+version = "0.2.0"
+edition = "2021"
+description = "Tools to build libcsp using cargo"
+homepage = "https://egit.irs.uni-stuttgart.de/rust/libcsp-rust"
+repository = "https://egit.irs.uni-stuttgart.de/rust/libcsp-rust"
+license = "Apache-2.0"
+keywords = ["no-std", "space", "aerospace", "ffi", "csp"]
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+categories = ["aerospace", "external-ffi-bindings", "no-std", "hardware-support", "embedded"]
+
+[dependencies]
+cc = "1"
+thiserror = "1"

@@ -5,7 +5,11 @@ members = [
     # Pure Rust crates
     "kubos/apis/app-api/rust",
     "kubos/apis/adcs-api",
+<<<<<<< HEAD
     "kubos/apis/cubespace-adcs-api",
+=======
+    "kubos/apis/nxtrx4-api",
+>>>>>>> origin/main
     "kubos/apis/clyde-3g-eps-api",
     "kubos/apis/eps-api",
     "kubos/apis/mai400-api",
@@ -51,6 +55,7 @@ members = [
     "kubos/apis/gomspace-p31u-api",
     "kubos/examples/rust-c-service/extern-lib",
     "kubos/examples/rust-c-service/service",
+    "kubos/libs/radsat-csp",
     "kubos/services/iobc-supervisor-service",
     "kubos/services/isis-ants-service",
     "kubos/test/integration/linux/isis-ants", "services/csp-service",
@@ -60,11 +65,15 @@ members = [
     "services/payload-services/dosimeter",
     "services/payload-services/snn-service",
     "services/hardware-services/mram-service",
-    "services/hardware-services/fram-service",
-    "services/payload-services/dosimeter",
+    "services/hardware-services/fram-service"
 ]
 
-exclude = ["kubos/apis/nosengine-rust", "kubos/test/integration/nosengine-rust"]
+exclude = [
+    "kubos/apis/nosengine-rust",
+    "kubos/test/integration/nosengine-rust",
+    "vendor/libcsp",
+    "vendor/libcsp-rust",
+]
 
 # This contains just pure Rust crates to allow for running
 # cargo commands without C-build dependencies
