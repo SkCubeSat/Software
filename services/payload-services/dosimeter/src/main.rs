@@ -43,7 +43,14 @@ fn read_sensor_adc(conn: &Connection, sensor_code: u8) -> io::Result<u16> {
     for attempt in 1..=RETRIES {
         // closest you can get without raw ops:
         // write cmd (sensor_code), then read 2 bytes
-        match conn.transfer(Command { cmd: sensor_code, data: vec![] }, DOSIMETER_RESPONSE_LENGTH, delay) {
+        match conn.transfer(
+            Command {
+                cmd: sensor_code,
+                data: vec![],
+            },
+            DOSIMETER_RESPONSE_LENGTH,
+            delay,
+        ) {
             Ok(data) if data.len() == 2 => {
                 let adc = parse_adc_12bit(data[0], data[1]);
                 return Ok(adc);
@@ -104,7 +111,10 @@ fn loop_sensors(conn: &Connection, map: &HashMap<u8, &'static str>) {
             Ok(adc) => {
                 let mv = to_mv(adc);
                 let temp = mv_to_temp_c(mv);
-                println!("{}, 0x{:02X}, {}, {}, {}, {}", "timestamp", code, name, adc, mv, temp);
+                println!(
+                    "{}, 0x{:02X}, {}, {}, {}, {}",
+                    "timestamp", code, name, adc, mv, temp
+                );
             }
             Err(e) => {
                 eprintln!("{}, 0x{:02X}, {}, ERROR: {}", "timestamp", code, name, e);

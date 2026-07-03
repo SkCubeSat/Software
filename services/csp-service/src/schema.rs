@@ -1,4 +1,4 @@
-use juniper::{graphql_object, FieldError, FieldResult};
+use juniper::{FieldError, FieldResult, graphql_object};
 type Context = kubos_service::Context<()>;
 use libcsp::*;
 use std::time::Duration;
@@ -7,18 +7,16 @@ use std::time::Duration;
 //     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 // }
 
-
 pub struct QueryRoot;
 
 #[graphql_object(context = Context)]
 impl QueryRoot {
     fn ping() -> FieldResult<String> {
         let node_id: u16 = 1; // CSP node ID
-        if let Err(e) = csp_ping(node_id, Duration::from_millis(1000), 0, SocketFlags::NONE,)
-        {
+        if let Err(e) = csp_ping(node_id, Duration::from_millis(1000), 0, SocketFlags::NONE) {
             println!("ping error: {:?}", e);
         }
-        
+
         Ok("Ping sent!".to_string())
     }
 

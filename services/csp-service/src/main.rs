@@ -1,8 +1,8 @@
-use kubos_service::{Config, Service, Context};
-use juniper::{FieldResult, EmptyMutation};
-use std::ffi::CString;
 use crate::schema::{MutationRoot, QueryRoot};
+use juniper::{EmptyMutation, FieldResult};
+use kubos_service::{Config, Context, Service};
 use libcsp::*;
+use std::ffi::CString;
 
 // mod bindings {
 //     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));

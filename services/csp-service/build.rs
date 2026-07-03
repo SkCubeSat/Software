@@ -1,4 +1,4 @@
-use libcsp_cargo_build::{generate_autoconf_header_file, Builder};
+use libcsp_cargo_build::{Builder, generate_autoconf_header_file};
 use std::{env, path::PathBuf};
 
 fn main() {
@@ -23,17 +23,16 @@ fn main() {
     )
     .expect("copying autoconfig.h failed");
 
-     // This file is required for the compile-time configuration of libcsp-rust.
+    // This file is required for the compile-time configuration of libcsp-rust.
     csp_builder
-     .generate_autoconf_rust_file(manifest_path)
-     .expect("generating autoconfig.rs failed");
+        .generate_autoconf_rust_file(manifest_path)
+        .expect("generating autoconfig.rs failed");
 
     csp_builder.compile().expect("compiling libcsp failed");
 
     // If we change the libcsp build configuration, we need to re-run the build.
     println!("cargo::rerun-if-changed=build.rs");
 }
-
 
 // extern crate bindgen;
 
@@ -45,7 +44,7 @@ fn main() {
 //     let bindings = bindgen::Builder::default()
 //         .header("/usr/local/include/csp/csp.h") // Adjust if libcsp is installed elsewhere
 //         .clang_arg("-I/usr/local/include")
-//         //.raw_line("unsafe extern \"C\" {")  
+//         //.raw_line("unsafe extern \"C\" {")
 //         .generate()
 //         .expect("Unable to generate bindings");
 
@@ -57,7 +56,7 @@ fn main() {
 //         .expect("Couldn't write bindings!");
 
 //     add_unsafe_to_extern_blocks(&bindings_file);
-    
+
 //     println!("cargo:rustc-link-lib=csp"); // Link against libcsp
 // }
 
