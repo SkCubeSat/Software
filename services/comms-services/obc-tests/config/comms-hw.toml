@@ -9,7 +9,7 @@ max_num_handlers = 50
 downlink_ports = [14011]
 
 [comms-services.csp]
-obc_node = 1
+obc_node = 8
 uplink_packet_csp_port = 10
 uplink_sfp_csp_port = 12
 ground_node = 2
@@ -23,9 +23,9 @@ max_frame_bytes = 260
 
 [comms-services.radios.uplink]
 bus = "/dev/i2c-1"
-csp_node = 8
-i2c_addr = 8
-slave_rx_device = "/dev/i2c-slave-frameq-1-01"
+csp_node = 15
+i2c_addr = 15
+slave_rx_device = "/dev/i2c-slave-frameq-1-08"
 command_timeout_ms = 1000
 
 [comms-services.radios.downlink]
