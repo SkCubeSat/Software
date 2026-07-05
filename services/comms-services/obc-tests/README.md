@@ -164,38 +164,56 @@ RUN_REBOOT=1 ./run.sh all
 
 The Clap-based `comms-cli` exposes one subcommand for each of the 49 implemented
 public NMP methods. `run.sh nmp` starts or finds the service and delegates to
-that binary. The positional order is radio role, decimal NMP key, then command.
+that binary. The positional order is radio role, optional key override, then
+command.
+
+Configure the keys in the appropriate radio tables. TOML accepts the
+hexadecimal values supplied with the radios:
+
+```toml
+[comms-services.radios.uplink]
+nmp_user_key = 0x1234ABCD
+nmp_superuser_key = 0xFEDCBA98
+
+[comms-services.radios.downlink]
+nmp_user_key = 0x1234ABCD
+nmp_superuser_key = 0xFEDCBA98
+```
+
+Keep the deployed config readable only by the service account because these
+are operational credentials. Ordinary reads use the configured user key (or
+fall back to superuser); Config 1/2 and mutations use the superuser key.
 
 Read examples:
 
 ```sh
-./run.sh nmp DOWNLINK 0 get-frequency
-./run.sh nmp UPLINK 0 get-route-table
-./run.sh nmp DOWNLINK 0 get-config1
-./run.sh nmp DOWNLINK 0 get-fw-crc
+./run.sh nmp DOWNLINK get-frequency
+./run.sh nmp UPLINK get-route-table
+./run.sh nmp DOWNLINK get-config1
+./run.sh nmp DOWNLINK get-fw-crc
 ```
 
 Protected writes require an unlock first and a key with sufficient privilege:
 
 ```sh
-./run.sh nmp DOWNLINK 123456 unlock
-./run.sh nmp DOWNLINK 123456 set-tx-enable true
-./run.sh nmp DOWNLINK 123456 set-preamble-size 100
-./run.sh nmp DOWNLINK 123456 set-morse-custom-message "RADSAT TEST"
+./run.sh nmp DOWNLINK unlock
+./run.sh nmp DOWNLINK set-tx-enable true
+./run.sh nmp DOWNLINK set-preamble-size 100
+./run.sh nmp DOWNLINK set-morse-custom-message "RADSAT TEST"
 ```
 
 Fixed byte fields default to text and optionally accept hex:
 
 ```sh
-./run.sh nmp DOWNLINK 123456 set-callsign RADSAT
-./run.sh nmp DOWNLINK 123456 set-morse-custom-ident "52 41 44 31" --format hex
-./run.sh nmp DOWNLINK 123456 set-itu-key "01 02 03 04 05" --format hex
+./run.sh nmp DOWNLINK set-callsign RADSAT
+./run.sh nmp DOWNLINK set-morse-custom-ident "52 41 44 31" --format hex
+./run.sh nmp DOWNLINK set-itu-key "01 02 03 04 05" --format hex
 ```
 
 `set-routes` accepts one or more colon-separated route triples:
 
 ```sh
-./run.sh nmp DOWNLINK 123456 set-routes 2:1:2 8:2:8
+./run.sh nmp DOWNLINK set-routes 2:1:2 8:2:8
 ```
 
 That example sends routes `{cspAddress: 2, destinationInterface: 1,

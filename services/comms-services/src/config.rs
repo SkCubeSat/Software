@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{fmt, time::Duration};
 
 use kubos_comms::CommsConfig;
 use kubos_service::Config;
@@ -67,6 +67,23 @@ pub struct RadioConfig {
     pub i2c_addr: u8,
     pub slave_rx_device: Option<String>,
     pub command_timeout: Duration,
+    pub nmp_keys: NmpKeys,
+}
+
+#[derive(Clone, Default, PartialEq, Eq)]
+pub struct NmpKeys {
+    pub user: Option<u32>,
+    pub superuser: Option<u32>,
+}
+
+impl fmt::Debug for NmpKeys {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("NmpKeys")
+            .field("user", &self.user.map(|_| "<redacted>"))
+            .field("superuser", &self.superuser.map(|_| "<redacted>"))
+            .finish()
+    }
 }
 
 impl ServiceSettings {
@@ -194,6 +211,10 @@ fn radio_config(radios: &Value, role: &str) -> Result<RadioConfig, ConfigError> 
         &format!("{prefix}.command_timeout_ms"),
         DEFAULT_COMMAND_TIMEOUT_MS,
     )?;
+    let nmp_keys = NmpKeys {
+        user: optional_u32(table, &format!("{prefix}.nmp_user_key"))?,
+        superuser: optional_u32(table, &format!("{prefix}.nmp_superuser_key"))?,
+    };
 
     Ok(RadioConfig {
         bus,
@@ -201,6 +222,7 @@ fn radio_config(radios: &Value, role: &str) -> Result<RadioConfig, ConfigError> 
         i2c_addr,
         slave_rx_device,
         command_timeout: Duration::from_millis(command_timeout_ms),
+        nmp_keys,
     })
 }
 
@@ -299,6 +321,20 @@ fn optional_u64(table: &Value, key: &str, default: u64) -> Result<u64, ConfigErr
     }
 }
 
+fn optional_u32(table: &Value, key: &str) -> Result<Option<u32>, ConfigError> {
+    match table.get(key.rsplit('.').next().unwrap()) {
+        Some(_) => parse_integer(table, key)
+            .and_then(|value| {
+                u32::try_from(value).map_err(|_| ConfigError::InvalidValue {
+                    key: key.to_string(),
+                    message: "expected integer in range 0..=4294967295".to_string(),
+                })
+            })
+            .map(Some),
+        None => Ok(None),
+    }
+}
+
 fn optional_usize(table: &Value, key: &str, default: usize) -> Result<usize, ConfigError> {
     match table.get(key.rsplit('.').next().unwrap()) {
         Some(_) => {
@@ -371,6 +407,8 @@ mod tests {
             csp_node = 8
             i2c_addr = 8
             slave_rx_device = "/dev/i2c-slave-frameq-1-01"
+            nmp_user_key = 0x1234ABCD
+            nmp_superuser_key = 0xFEDCBA98
 
             [comms-services.radios.downlink]
             bus = "/dev/i2c-2"
@@ -388,11 +426,14 @@ mod tests {
         assert!(settings.csp.sfp_use_rdp);
         assert_eq!(settings.csp.uplink_crypto, UplinkCrypto::None);
         assert_eq!(settings.radios.uplink.bus, "/dev/i2c-1");
+        assert_eq!(settings.radios.uplink.nmp_keys.user, Some(0x1234_ABCD));
+        assert_eq!(settings.radios.uplink.nmp_keys.superuser, Some(0xFEDC_BA98));
         assert_eq!(
             settings.radios.uplink.slave_rx_device.as_deref(),
             Some("/dev/i2c-slave-frameq-1-01")
         );
         assert_eq!(settings.radios.downlink.bus, "/dev/i2c-2");
+        assert_eq!(settings.radios.downlink.nmp_keys, NmpKeys::default());
     }
 
     #[test]

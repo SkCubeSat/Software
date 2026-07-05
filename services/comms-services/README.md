@@ -273,7 +273,7 @@ Every implemented public `nxtrx4-api::nmp` operation is also exposed. Read
 operations are GraphQL queries named `radioNmpGet...`; configuration and action
 operations are mutations named `radioNmpSet...` or after the underlying action,
 such as `radioNmpUnlock`, `radioNmpClearRouteTable`, and
-`radioNmpCopyActiveToFactory`. All take `role` and the NMP `key`.
+`radioNmpCopyActiveToFactory`. All take `role` and an optional NMP `key`.
 
 The API covers CSP addressing and routes, RF/link configuration, interface
 timing, digipeater and Morse configuration, key and profile management, and all
@@ -300,6 +300,20 @@ mutation {
 
 NMP writes must still follow the radio protocol: call `radioNmpUnlock` with a
 key having the required privilege before protected writes.
+
+Optional credentials can be configured independently for each radio. TOML
+hexadecimal integers are accepted:
+
+```toml
+[comms-services.radios.uplink]
+nmp_user_key = 0x1234ABCD
+nmp_superuser_key = 0xFEDCBA98
+```
+
+When a GraphQL operation omits `key`, ordinary reads prefer `nmp_user_key` and
+fall back to `nmp_superuser_key`. Config 1/2 reads and all mutations/actions use
+`nmp_superuser_key`. An explicit GraphQL/CLI key always overrides the configured
+value. Keys are never returned by the GraphQL API.
 
 Example query:
 

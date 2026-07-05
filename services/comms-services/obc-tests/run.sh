@@ -57,7 +57,7 @@ Commands:
   reboot <UPLINK|DOWNLINK>
       Requires CONFIRM_REBOOT=1.
 
-  nmp <UPLINK|DOWNLINK> <KEY> <COMMAND> [args...]
+  nmp <UPLINK|DOWNLINK> [KEY] <COMMAND> [args...]
       Run a typed NMP command through comms-cli. Use `./run.sh nmp --help`.
 
 Environment:
@@ -250,11 +250,20 @@ case "$cmd" in
     usage
     exit 0
     ;;
+  npm)
+    [ -x "$CLI_BIN" ] || { echo "comms CLI not executable: $CLI_BIN" >&2; exit 2; }
+    exec "$CLI_BIN" --url "$URL" npm "$@"
+    ;;
   nmp)
     [ -x "$CLI_BIN" ] || { echo "comms CLI not executable: $CLI_BIN" >&2; exit 2; }
-    if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ] || [ "${1:-}" = "help" ]; then
-      exec "$CLI_BIN" --url "$URL" nmp --help
+    if [ $# -eq 0 ]; then
+      exec "$CLI_BIN" --url "$URL" "$cmd" --help
     fi
+    for arg in "$@"; do
+      case "$arg" in
+        -h|--help|help) exec "$CLI_BIN" --url "$URL" "$cmd" "$@" ;;
+      esac
+    done
     ;;
 esac
 
@@ -341,7 +350,7 @@ case "$cmd" in
     post_graphql "Reboot radio $role" "mutation { radioReboot(role: $role) { role success message verbalResponseText verbalResponseHex } }"
     ;;
   nmp)
-    "$CLI_BIN" --url "$URL" nmp "$@"
+    "$CLI_BIN" --url "$URL" "$cmd" "$@"
     ;;
   *)
     usage

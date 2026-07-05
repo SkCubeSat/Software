@@ -33,6 +33,10 @@ csp_node = 8
 i2c_addr = 8
 slave_rx_device = "/dev/i2c-slave-frameq-1-01"
 command_timeout_ms = 1000
+# Optional NMP credentials. TOML accepts hexadecimal integers. Reads prefer the
+# user key and fall back to the superuser key; writes use the superuser key.
+# nmp_user_key = 0x00000000
+# nmp_superuser_key = 0x00000000
 
 [comms-services.radios.downlink]
 # Downlink radio: route used when sending CSP packets to ground_node.
@@ -40,3 +44,5 @@ bus = "/dev/i2c-2"
 csp_node = 9
 i2c_addr = 9
 command_timeout_ms = 1000
+# nmp_user_key = 0x00000000
+# nmp_superuser_key = 0x00000000

@@ -27,9 +27,14 @@ csp_node = 15
 i2c_addr = 15
 slave_rx_device = "/dev/i2c-slave-frameq-1-08"
 command_timeout_ms = 1000
+# Optional NMP credentials. Replace the example values and uncomment them.
+# nmp_user_key = 0x00000000
+# nmp_superuser_key = 0x00000000
 
 [comms-services.radios.downlink]
 bus = "/dev/i2c-2"
 csp_node = 9
 i2c_addr = 9
 command_timeout_ms = 1000
+# nmp_user_key = 0x00000000
+# nmp_superuser_key = 0x00000000

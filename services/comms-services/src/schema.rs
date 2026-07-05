@@ -1,6 +1,8 @@
 use async_graphql::{Context, Object, Result};
 
-use crate::model::{CommsHealth, RadioHealth, RadioRole, Subsystem, TelemetrySnapshot};
+use crate::model::{
+    CommsHealth, NmpKeyAccess, RadioHealth, RadioRole, Subsystem, TelemetrySnapshot,
+};
 use crate::nmp_control::{
     NmpByteValue, NmpConfig1, NmpConfig2, NmpDataFormat, NmpFirmwareCrc, NmpFsooStatus,
     NmpRadioLinkType, NmpResetStatusBytes, NmpRouteEntry, NmpRouteInput, NmpRssiStatus,
@@ -104,9 +106,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<u8> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Read)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_csp_address(role, key)
@@ -117,9 +123,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<Vec<NmpRouteEntry>> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Read)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_route_table(role, key)
@@ -130,9 +140,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<bool> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Read)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_routing_from_rs485(role, key)
@@ -143,9 +157,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<u32> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Read)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_frequency(role, key)
@@ -156,9 +174,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<NmpRadioLinkType> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Read)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_link_type(role, key)
@@ -169,9 +191,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<bool> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Read)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_tx_enable(role, key)
@@ -182,9 +208,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<u16> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Read)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_preamble_size(role, key)
@@ -195,9 +225,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<bool> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Read)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_normal_power(role, key)
@@ -208,9 +242,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<u16> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Read)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_gs_rx_tx_delay(role, key)
@@ -221,9 +259,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<bool> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Read)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_digipeater_enable(role, key)
@@ -234,9 +276,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<NmpByteValue> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Read)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_callsign(role, key)
@@ -247,9 +293,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<NmpByteValue> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Read)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_morse_custom_message(role, key)
@@ -260,9 +310,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<NmpByteValue> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Read)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_morse_custom_ident(role, key)
@@ -273,9 +327,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<NmpFsooStatus> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Read)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_fsoo(role, key)
@@ -286,9 +344,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<NmpRssiStatus> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Read)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_hk_rssi(role, key)
@@ -299,9 +361,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<u8> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Read)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_rssi_contribution_ratio(role, key)
@@ -312,9 +378,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<NmpConfig1> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_config1(role, key)
@@ -325,9 +395,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<NmpConfig2> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_config2(role, key)
@@ -338,9 +412,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<u16> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Read)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_check_comm_reset_period(role, key)
@@ -351,9 +429,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<NmpTelemetryPeriods> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Read)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_system_status_and_morse_period(role, key)
@@ -364,9 +446,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<NmpFirmwareCrc> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Read)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_fw_crc(role, key)
@@ -377,9 +463,13 @@ impl QueryRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<NmpByteValue> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Read)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_get_hostname(role, key)
@@ -468,8 +558,17 @@ impl MutationRoot {
             .radio_send_ax25_message(role, data, format))
     }
 
-    async fn radio_nmp_unlock(&self, ctx: &Context<'_>, role: RadioRole, key: u32) -> Result<bool> {
+    async fn radio_nmp_unlock(
+        &self,
+        ctx: &Context<'_>,
+        role: RadioRole,
+        key: Option<u32>,
+    ) -> Result<bool> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_unlock(role, key)
@@ -480,10 +579,14 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
         csp_address: u8,
     ) -> Result<u8> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_set_csp_address(role, key, csp_address)
@@ -494,9 +597,13 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<Vec<NmpRouteEntry>> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_clear_route_table(role, key)
@@ -507,10 +614,14 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
         routes: Vec<NmpRouteInput>,
     ) -> Result<Vec<NmpRouteEntry>> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_set_routes(role, key, routes)
@@ -521,10 +632,14 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
         enabled: bool,
     ) -> Result<bool> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_set_routing_from_rs485(role, key, enabled)
@@ -535,10 +650,14 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
         frequency_hz: u32,
     ) -> Result<u32> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_set_frequency(role, key, frequency_hz)
@@ -549,10 +668,14 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
         link_type: NmpRadioLinkType,
     ) -> Result<NmpRadioLinkType> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_set_link_type(role, key, link_type)
@@ -563,10 +686,14 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
         enabled: bool,
     ) -> Result<bool> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_set_tx_enable(role, key, enabled)
@@ -577,10 +704,14 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
         size: u16,
     ) -> Result<u16> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_set_preamble_size(role, key, size)
@@ -591,10 +722,14 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
         normal_power: bool,
     ) -> Result<bool> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_set_normal_power(role, key, normal_power)
@@ -605,10 +740,14 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
         delay_ms: u16,
     ) -> Result<u16> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_set_gs_rx_tx_delay(role, key, delay_ms)
@@ -619,10 +758,14 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
         enabled: bool,
     ) -> Result<bool> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_set_digipeater_enable(role, key, enabled)
@@ -633,11 +776,15 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
         callsign: String,
         format: Option<NmpDataFormat>,
     ) -> Result<NmpByteValue> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_set_callsign(role, key, callsign, format)
@@ -648,10 +795,14 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
         message: String,
     ) -> Result<NmpByteValue> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_set_morse_custom_message(role, key, message)
@@ -662,11 +813,15 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
         ident: String,
         format: Option<NmpDataFormat>,
     ) -> Result<NmpByteValue> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_set_morse_custom_ident(role, key, ident, format)
@@ -677,10 +832,14 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
         new_user_key: u32,
     ) -> Result<bool> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_set_user_key(role, key, new_user_key)
@@ -691,10 +850,14 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
         new_superuser_key: u32,
     ) -> Result<bool> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_set_superuser_key(role, key, new_superuser_key)
@@ -705,11 +868,15 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
         itu_key: String,
         format: Option<NmpDataFormat>,
     ) -> Result<bool> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_set_itu_key(role, key, itu_key, format)
@@ -720,9 +887,13 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<bool> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_copy_factory_to_active(role, key)
@@ -733,9 +904,13 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<bool> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_copy_active_to_factory(role, key)
@@ -746,9 +921,13 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<bool> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_generate_reset_signal(role, key)
@@ -759,11 +938,15 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
         inhibit: bool,
         period_ms: u64,
     ) -> Result<NmpFsooStatus> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_set_fsoo(role, key, inhibit, period_ms)
@@ -774,9 +957,13 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
     ) -> Result<NmpResetStatusBytes> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_reset_status_bytes(role, key)
@@ -787,10 +974,14 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
         ratio: u8,
     ) -> Result<u8> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_set_rssi_contribution_ratio(role, key, ratio)
@@ -801,10 +992,14 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
         hours: u16,
     ) -> Result<u16> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_set_check_comm_reset_period(role, key, hours)
@@ -815,11 +1010,15 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
         ax25_system_status_period_ms: u32,
         morse_task_period_ms: u64,
     ) -> Result<NmpTelemetryPeriods> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_set_system_status_and_morse_period(
@@ -835,11 +1034,15 @@ impl MutationRoot {
         &self,
         ctx: &Context<'_>,
         role: RadioRole,
-        key: u32,
+        key: Option<u32>,
         user_part: String,
         format: Option<NmpDataFormat>,
     ) -> Result<NmpByteValue> {
         let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let key = context
+            .subsystem()
+            .nmp_key(role, key, NmpKeyAccess::Superuser)
+            .map_err(async_graphql::Error::new)?;
         context
             .subsystem()
             .radio_nmp_set_hostname_user_part(role, key, user_part, format)

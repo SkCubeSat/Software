@@ -6,7 +6,7 @@ use nxtrx4_api::Nxtrx4;
 use nxtrx4_api::cmp::NxtrxInterface;
 
 use crate::{
-    config::{RadioConfig, ServiceSettings},
+    config::{NmpKeys, RadioConfig, ServiceSettings},
     nxtrx_comms::NxtrxComms,
 };
 
@@ -30,6 +30,12 @@ pub enum RadioRole {
     Uplink,
     /// The transceiver configured as the RF transmit/downlink radio.
     Downlink,
+}
+
+#[derive(Copy, Clone)]
+pub(crate) enum NmpKeyAccess {
+    Read,
+    Superuser,
 }
 
 #[derive(SimpleObject)]
@@ -185,10 +191,64 @@ impl Subsystem {
         action(radio.as_ref(), config)
     }
 
+    pub(crate) fn nmp_key(
+        &self,
+        role: RadioRole,
+        explicit: Option<u32>,
+        access: NmpKeyAccess,
+    ) -> Result<u32, String> {
+        if let Some(key) = explicit {
+            return Ok(key);
+        }
+
+        let (name, keys) = match role {
+            RadioRole::Uplink => ("uplink", &self.settings.radios.uplink.nmp_keys),
+            RadioRole::Downlink => ("downlink", &self.settings.radios.downlink.nmp_keys),
+        };
+        let key = select_nmp_key(keys, access);
+
+        key.ok_or_else(|| match access {
+            NmpKeyAccess::Read => format!(
+                "no NMP key configured for {name} radio; set nmp_user_key or nmp_superuser_key, or provide key explicitly"
+            ),
+            NmpKeyAccess::Superuser => format!(
+                "no NMP superuser key configured for {name} radio; set nmp_superuser_key or provide key explicitly"
+            ),
+        })
+    }
+
     fn radio_csp_node(&self, role: RadioRole) -> i32 {
         match role {
             RadioRole::Uplink => i32::from(self.settings.radios.uplink.csp_node),
             RadioRole::Downlink => i32::from(self.settings.radios.downlink.csp_node),
         }
+    }
+}
+
+fn select_nmp_key(keys: &NmpKeys, access: NmpKeyAccess) -> Option<u32> {
+    match access {
+        NmpKeyAccess::Read => keys.user.or(keys.superuser),
+        NmpKeyAccess::Superuser => keys.superuser,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn selects_least_privileged_configured_nmp_key() {
+        let keys = NmpKeys {
+            user: Some(1),
+            superuser: Some(2),
+        };
+        assert_eq!(select_nmp_key(&keys, NmpKeyAccess::Read), Some(1));
+        assert_eq!(select_nmp_key(&keys, NmpKeyAccess::Superuser), Some(2));
+
+        let superuser_only = NmpKeys {
+            user: None,
+            superuser: Some(2),
+        };
+        assert_eq!(select_nmp_key(&superuser_only, NmpKeyAccess::Read), Some(2));
     }
 }

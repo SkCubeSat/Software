@@ -247,6 +247,7 @@ mod tests {
                 i2c_addr: 8,
                 slave_rx_device: Some("/dev/i2c-slave-frameq-1-01".to_string()),
                 command_timeout: Duration::from_secs(1),
+                nmp_keys: Default::default(),
             },
             downlink: RadioConfig {
                 bus: "/dev/i2c-1".to_string(),
@@ -254,6 +255,7 @@ mod tests {
                 i2c_addr: 9,
                 slave_rx_device: None,
                 command_timeout: Duration::from_secs(1),
+                nmp_keys: Default::default(),
             },
         };
 
@@ -279,6 +281,7 @@ mod tests {
                 i2c_addr: 8,
                 slave_rx_device: Some("/dev/i2c-slave-frameq-1-01".to_string()),
                 command_timeout: Duration::from_secs(1),
+                nmp_keys: Default::default(),
             },
             downlink: RadioConfig {
                 bus: "/dev/i2c-2".to_string(),
@@ -286,6 +289,7 @@ mod tests {
                 i2c_addr: 9,
                 slave_rx_device: None,
                 command_timeout: Duration::from_secs(1),
+                nmp_keys: Default::default(),
             },
         };
 
@@ -307,6 +311,7 @@ mod tests {
                 i2c_addr: 8,
                 slave_rx_device: None,
                 command_timeout: Duration::from_secs(1),
+                nmp_keys: Default::default(),
             },
             downlink: RadioConfig {
                 bus: "/dev/i2c-2".to_string(),
@@ -314,6 +319,7 @@ mod tests {
                 i2c_addr: 9,
                 slave_rx_device: None,
                 command_timeout: Duration::from_secs(1),
+                nmp_keys: Default::default(),
             },
         };
 
