@@ -14,9 +14,6 @@
 // limitations under the License.
 //
 
-#[macro_use]
-extern crate failure;
-
 mod util;
 
 use kubos_comms::*;

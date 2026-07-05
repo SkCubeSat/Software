@@ -8,9 +8,16 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-async-graphql = "7.0.16"
+async-graphql = "7.0.17"
 async-graphql-axum = "7.0.17"
-thiserror = "1.0"
-
 log = "^0.4.0"
-rust-i2c = { path = "../../kubos/hal/rust-hal/rust-i2c" }
+thiserror = "2.0"
+toml = "0.4.10"
+
+kubos-comms = { path = "../../kubos/libs/kubos-comms" }
+kubos-service = { path = "../../kubos/services/kubos-service" }
+nxtrx4-api = { path = "../../kubos/apis/nxtrx4-api" }
+radsat-csp = { path = "../../kubos/libs/radsat-csp", features = ["i2c"] }
+
+[dev-dependencies]
+tempfile = "3"

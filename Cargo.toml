@@ -66,7 +66,8 @@ members = [
     "services/payload-services/dosimeter",
     "services/payload-services/snn-service",
     "services/hardware-services/mram-service",
-    "services/hardware-services/fram-service"
+    "services/hardware-services/fram-service",
+    "services/comms-services"
 ]
 
 exclude = [
@@ -127,6 +128,7 @@ default-members = [
     "services/simulator-services/clyde-3g-eps-simulator",
     "services/hardware-services/mram-service",
     "services/hardware-services/fram-service",
+    "services/comms-services",
 ]
 
 [workspace.package]

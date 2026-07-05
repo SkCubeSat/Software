@@ -1,0 +1,1 @@
+{"query":"{ radioIdent(role: DOWNLINK) { role hostname model revision buildDate buildTime } }"}

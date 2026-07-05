@@ -232,6 +232,8 @@ fn read_thread<Connection: Clone + Send + 'static, Packet: LinkPacket + Send + '
                 });
             }
             PayloadType::GraphQL => {
+                // The SpacePacket destination is an internal service port.
+                // The handler posts the GraphQL body to http://ip:port/.
                 if let Ok(mut num_handlers) = num_handlers.lock() {
                     if *num_handlers >= comms.max_num_handlers {
                         log_error(data, CommsServiceError::NoAvailablePorts.to_string()).unwrap();
@@ -286,6 +288,8 @@ fn handle_graphql_request<Connection: Clone, Packet: LinkPacket>(
 ) -> Result<(), String> {
     let payload = message.payload().to_vec();
 
+    // The radio did not carry a full HTTP request. It carried only the GraphQL
+    // request body, which is posted locally to the target service port.
     let client = reqwest::Client::builder()
         .timeout(Duration::from_millis(timeout))
         .build()
@@ -293,16 +297,17 @@ fn handle_graphql_request<Connection: Clone, Packet: LinkPacket>(
 
     let mut res = client
         .post(&format!("http://{}:{}", sat_ip, message.destination()))
+        .header("Content-Type", "application/json")
         .body(payload)
         .send()
         .map_err(|e| e.to_string())?;
 
-    let size = res.content_length().unwrap_or(0) as usize;
-    let buf = res.text().unwrap_or_else(|_| "".to_owned());
+    let buf = res.text().map_err(|e| e.to_string())?;
     let buf = buf.as_bytes();
 
-    // Take received message and wrap it in a LinkPacket
-    let packet = Packet::build(message.command_id(), PayloadType::GraphQL, 0, &buf[0..size])
+    // Wrap the GraphQL response body back into the same inner packet format
+    // before the service-specific write function sends it over CSP.
+    let packet = Packet::build(message.command_id(), PayloadType::GraphQL, 0, buf)
         .and_then(|packet| packet.to_bytes())
         .map_err(|e| e.to_string())?;
 

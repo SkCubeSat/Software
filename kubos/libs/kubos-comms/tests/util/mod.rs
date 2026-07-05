@@ -45,7 +45,9 @@ impl MockComms {
         if let Some(data) = buffer.pop() {
             return Ok(data);
         }
-        bail!("Failed to get data");
+        Err(CommsServiceError::GenericError(
+            "Failed to get data".to_string(),
+        ))
     }
 
     // Used by comms service to write to radio
@@ -76,7 +78,7 @@ pub fn read(socket: &Arc<Mutex<MockComms>>) -> CommsResult<Vec<u8>> {
     if let Ok(socket) = socket.lock() {
         socket.read()
     } else {
-        bail!("Failed to lock socket");
+        Err(CommsServiceError::MutexPoisoned)
     }
 }
 
@@ -86,7 +88,7 @@ pub fn write(socket: &Arc<Mutex<MockComms>>, data: &[u8]) -> CommsResult<()> {
         socket.write(data).unwrap();
         Ok(())
     } else {
-        bail!("Failed to lock socket");
+        Err(CommsServiceError::MutexPoisoned)
     }
 }
 

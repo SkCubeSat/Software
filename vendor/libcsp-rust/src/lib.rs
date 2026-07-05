@@ -369,7 +369,7 @@ pub struct CspUdpConf(pub ffi::csp_if_udp_conf_t);
 impl CspUdpConf {
     pub fn new(addr: &'static str, lport: u16, rport: u16) -> Self {
         Self(ffi::csp_if_udp_conf_t {
-            host: addr.as_ptr() as *mut i8,
+            host: addr.as_ptr() as *mut core::ffi::c_char,
             lport: lport.into(),
             rport: rport.into(),
             server_handle: Default::default(),

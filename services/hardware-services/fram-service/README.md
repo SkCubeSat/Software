@@ -57,7 +57,7 @@ real FRAM chip. To build, package, transfer, and run them:
 
 ```sh
 services/hardware-services/fram-service/obc-tests/package.sh
-transfer -d /home/kubos/fram-tests target/obc-tests/fram-service
+transfer -- -d /home/kubos/fram-tests target/obc-tests/fram-service
 ```
 
 Then on the OBC:

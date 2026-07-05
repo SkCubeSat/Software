@@ -7,8 +7,8 @@ log_user 0
 # ============================================================
 # BeagleBone Black Serial File Transfer Script
 # Usage:
-#   transfer [options] <local-file-or-dir> [local-file-or-dir ...]
-#   transfer -d /home/kubos/bin myfile.bin
+#   transfer -- [options] <local-file-or-dir> [local-file-or-dir ...]
+#   transfer -- -d /home/kubos/bin myfile.bin
 #
 # The final positional argument(s) are always local paths to transfer.
 # Use -d to choose where those paths land on the OBC.
@@ -22,11 +22,12 @@ set pass "Kubos123"
 set remote_dir "/tmp"
 set files {}
 set staging_dir "/tmp/transfer_staging_[pid]"
+set send_slow {1 .005}
 
 # ---- Parse arguments ----
 proc usage {{status 0}} {
     puts ""
-    puts "Usage: transfer \[options\] <local-file-or-dir> \[local-file-or-dir ...\]"
+    puts "Usage: transfer -- \[options\] <local-file-or-dir> \[local-file-or-dir ...\]"
     puts ""
     puts "The final positional argument(s) are local path(s) to transfer."
     puts "Use -d to set the destination directory on the OBC."
@@ -42,8 +43,8 @@ proc usage {{status 0}} {
     puts ""
     puts "Examples:"
     puts "  transfer myfile.bin"
-    puts "  transfer -d /home/kubos/bin myfile.bin"
-    puts "  transfer -b 921600 -p /dev/ttyUSB1 -d /home/kubos/bin myfile.bin"
+    puts "  transfer -- -d /home/kubos/bin myfile.bin"
+    puts "  transfer -- -b 921600 -p /dev/ttyUSB1 -d /home/kubos/bin myfile.bin"
     puts "  transfer ./mydir"
     puts "  transfer file1.sh file2.sh file3.sh"
     puts ""
@@ -76,11 +77,88 @@ proc shell_quote {value} {
     return "'[string map [list ' {'\''}] $value]'"
 }
 
+proc shell_relpath {value} {
+    return "./[shell_quote $value]"
+}
+
+proc send_shell {command} {
+    send -s -- "$command\r"
+}
+
+proc wait_for_prompt {} {
+    expect {
+        timeout {
+            return 1
+        }
+        -re {[$#] ?$} {
+            return 0
+        }
+    }
+}
+
+proc run_remote {command description} {
+    set marker "__TRANSFER_RC__[pid]__[clock seconds]"
+    set marker_re $marker
+    append marker_re {:([0-9]+)}
+    set remote_output ""
+
+    send_shell $command
+
+    expect {
+        timeout {
+            puts "ERROR: Timed out waiting for $description"
+            return 1
+        }
+        -re {[$#] ?$} {
+            set remote_output $expect_out(buffer)
+        }
+    }
+
+    send_shell "printf '\\n$marker:%s\\n' \$?"
+
+    expect {
+        timeout {
+            puts "ERROR: Timed out waiting for status from $description"
+            return 1
+        }
+        -re $marker_re {
+            set rc $expect_out(1,string)
+        }
+    }
+
+    if {[wait_for_prompt]} {
+        puts "ERROR: Timed out waiting for prompt after $description"
+        return 1
+    }
+
+    if {$rc != 0} {
+        puts "ERROR: Remote $description failed with exit code $rc"
+        puts "       Command: $command"
+        regsub -all {\r} $remote_output "" remote_output
+        set remote_output [string trim $remote_output]
+        if {$remote_output ne ""} {
+            puts "       Remote output:"
+            foreach line [split $remote_output "\n"] {
+                puts "         $line"
+            }
+        }
+        return 1
+    }
+
+    return 0
+}
+
 if {[llength $argv] == 0} {
     usage
 }
 
 set verbose 0
+
+# When invoked as `expect -f transfer.sh -- ...`, Expect consumes `--`.
+# When invoked directly through the shebang, tolerate the same separator.
+if {[llength $argv] > 0 && [lindex $argv 0] eq "--"} {
+    set argv [lrange $argv 1 end]
+}
 
 set i 0
 set parsing_options 1
@@ -243,10 +321,14 @@ expect {
         send "$user\r"
         expect "assword:"
         send "$pass\r"
-        expect "#"
+        if {[wait_for_prompt]} {
+            puts "ERROR: No prompt detected after login"
+            file delete -force -- $staging_dir
+            exit 1
+        }
         puts "🔑 Logged in as $user"
     }
-    "#" {
+    -re {[$#] ?$} {
         puts "✅ Already logged in"
     }
 }
@@ -255,8 +337,28 @@ expect {
 set remote_dir_q [shell_quote $remote_dir]
 set remote_user_q [shell_quote $user]
 
-send "mkdir -p $remote_dir_q\r"
-expect "#"
+if {[run_remote "mkdir -p $remote_dir_q" "create destination directory"]} {
+    file delete -force -- $staging_dir
+    exit 1
+}
+
+# If the serial shell was already logged in as root, mkdir may create a
+# root-owned destination while rz runs as kubos. /tmp should already be
+# world-writable and should keep its normal root ownership.
+if {$remote_dir ne "/tmp"} {
+    if {[run_remote "chown $remote_user_q $remote_dir_q 2>/dev/null || true" "set destination owner"]} {
+        file delete -force -- $staging_dir
+        exit 1
+    }
+    if {[run_remote "chmod u+rwx $remote_dir_q 2>/dev/null || true" "set destination permissions"]} {
+        file delete -force -- $staging_dir
+        exit 1
+    }
+}
+if {[run_remote "cd $remote_dir_q" "enter destination directory"]} {
+    file delete -force -- $staging_dir
+    exit 1
+}
 
 # ---- Transfer each file ----
 set count 0
@@ -269,11 +371,16 @@ foreach tf $transfer_files {
     set action_name [lindex $action 1]
     incr count
     set basename [file tail $tf]
-    set basename_q [shell_quote $basename]
+    set basename_path_q [shell_relpath $basename]
 
     puts "\n📤 \[$count/$total\] Sending: $basename"
 
-    send "cd $remote_dir_q && start-stop-daemon -S -a /usr/bin/rz -c $remote_user_q -- -b -y\r"
+    if {[run_remote "rm -f $basename_path_q" "remove existing $basename"]} {
+        set failed 1
+        continue
+    }
+
+    send_shell "start-stop-daemon -S -a /usr/bin/rz -c $remote_user_q -- -bZ -y"
 
     expect {
         timeout {
@@ -284,35 +391,55 @@ foreach tf $transfer_files {
         "waiting to receive" {}
     }
 
-    if {[catch {exec sz -b $tf < $serial > $serial} sz_error]} {
-        puts "ERROR: sz failed for $tf: $sz_error"
+    set send_dir [file dirname $tf]
+    set send_name [file tail $tf]
+    set old_pwd [pwd]
+    cd $send_dir
+    set sz_failed [catch {exec sz -q -b -y $send_name < $serial > $serial} sz_error]
+    cd $old_pwd
+
+    if {$sz_failed} {
+        puts "Note: sz returned non-zero after sending $basename; validating remote file"
+        if {$sz_error ne ""} {
+            puts "   sz output: $sz_error"
+        }
+    }
+
+    if {[wait_for_prompt]} {
+        puts "ERROR: No prompt detected after receiving $basename"
         set failed 1
         continue
     }
 
-    expect "#"
-
     # Post-transfer action
     if {$action_type eq "tar"} {
         puts "📦 Extracting: $action_name"
-        send "cd $remote_dir_q && tar xzf $basename_q && rm $basename_q\r"
-        expect "#"
+        if {[run_remote "tar xzf $basename_path_q && rm -f $basename_path_q" "extract $basename"]} {
+            set failed 1
+            continue
+        }
     } elseif {$action_type eq "gunzip"} {
         puts "🗜  Decompressing: $action_name"
-        send "cd $remote_dir_q && gzip -df $basename_q\r"
-        expect "#"
+        if {[run_remote "gzip -df $basename_path_q" "decompress $basename"]} {
+            set failed 1
+            continue
+        }
     }
 }
 
 # ---- Make scripts executable ----
-send "cd $remote_dir_q && chmod +x ./*.sh ./*.bash 2>/dev/null\r"
-expect "#"
+if {[run_remote "chmod +x ./*.sh ./*.bash 2>/dev/null || true" "mark scripts executable"]} {
+    set failed 1
+}
 
 # ---- Show results ----
 log_user 1
 puts "\n📁 Files on target in $remote_dir:"
-send "ls -la $remote_dir_q\r"
-expect "#"
+send_shell "ls -la $remote_dir_q"
+if {[wait_for_prompt]} {
+    puts "ERROR: No prompt detected after listing target directory"
+    set failed 1
+}
 
 # ---- Cleanup staging ----
 file delete -force -- $staging_dir

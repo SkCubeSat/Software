@@ -32,4 +32,4 @@ chmod +x "$OUT/run.sh" "$OUT/bin/fram-service" "$OUT/bin/fram-obc-tests"
 
 echo "Packaged OBC FRAM tests at $OUT"
 echo "Transfer with:"
-echo "  transfer -d /home/kubos/fram-tests $OUT"
+echo "  transfer -- -d /home/kubos/fram-tests $OUT"

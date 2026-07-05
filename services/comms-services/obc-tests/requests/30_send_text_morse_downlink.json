@@ -1,0 +1,1 @@
+{"query":"mutation { radioSendTextInMorse(role: DOWNLINK, sourceIdentification: \"SAT1\", text: \"CQ\") { role success message verbalResponseText verbalResponseHex } }"}
