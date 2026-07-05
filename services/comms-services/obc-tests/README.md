@@ -1,7 +1,8 @@
 # Comms Service OBC Tests
 
-This folder contains GraphQL request fixtures and a small shell CLI for testing
-`comms-services` on the KubOS OBC with the NXTRX4 radios connected.
+This folder contains GraphQL request fixtures and a shell runner for testing
+`comms-services` on the KubOS OBC with the NXTRX4 radios connected. Typed NMP
+commands are provided by the separate Rust `comms-cli` crate.
 
 These are hardware-facing tests, so they are intentionally separate from normal
 host `cargo test` coverage. Follow the repository testing guide: run local Rust
@@ -12,8 +13,8 @@ routes, or slave receive backend must be exercised.
 
 - `requests/*.json` - one GraphQL request per smoke test or radio command.
 - `config/comms-hw.toml` - OBC hardware config for the service.
-- `run.sh` - OBC runner and radio-control CLI.
-- `build.sh` - cross-builds `comms-services` for the OBC target.
+- `run.sh` - OBC service/fixture runner and thin `comms-cli` launcher.
+- `build.sh` - cross-builds `comms-services` and `comms-cli` for the OBC target.
 - `package.sh` - stages a transfer-ready bundle under `target/obc-tests`.
 
 ## Build And Package
@@ -24,20 +25,25 @@ From the repository root:
 services/comms-services/obc-tests/package.sh
 ```
 
-The default package command cross-builds `comms-services` and writes:
+The default package command cross-builds both Rust binaries and writes:
 
 ```text
 target/obc-tests/comms-services
 ```
 
-To package only the request files and scripts, without building or including the
-service binary:
+To omit the service binary but retain the NMP CLI:
 
 ```sh
 INCLUDE_SERVICE_BIN=0 services/comms-services/obc-tests/package.sh
 ```
 
-To keep symbols in the service binary:
+To package only request files and scripts:
+
+```sh
+INCLUDE_SERVICE_BIN=0 INCLUDE_CLI_BIN=0 services/comms-services/obc-tests/package.sh
+```
+
+To keep symbols in both binaries:
 
 ```sh
 NO_STRIP=1 services/comms-services/obc-tests/package.sh
@@ -154,6 +160,52 @@ CONFIRM_REBOOT=1 ./run.sh reboot UPLINK
 RUN_REBOOT=1 ./run.sh all
 ```
 
+## NMP CLI
+
+The Clap-based `comms-cli` exposes one subcommand for each of the 49 implemented
+public NMP methods. `run.sh nmp` starts or finds the service and delegates to
+that binary. The positional order is radio role, decimal NMP key, then command.
+
+Read examples:
+
+```sh
+./run.sh nmp DOWNLINK 0 get-frequency
+./run.sh nmp UPLINK 0 get-route-table
+./run.sh nmp DOWNLINK 0 get-config1
+./run.sh nmp DOWNLINK 0 get-fw-crc
+```
+
+Protected writes require an unlock first and a key with sufficient privilege:
+
+```sh
+./run.sh nmp DOWNLINK 123456 unlock
+./run.sh nmp DOWNLINK 123456 set-tx-enable true
+./run.sh nmp DOWNLINK 123456 set-preamble-size 100
+./run.sh nmp DOWNLINK 123456 set-morse-custom-message "RADSAT TEST"
+```
+
+Fixed byte fields default to text and optionally accept hex:
+
+```sh
+./run.sh nmp DOWNLINK 123456 set-callsign RADSAT
+./run.sh nmp DOWNLINK 123456 set-morse-custom-ident "52 41 44 31" --format hex
+./run.sh nmp DOWNLINK 123456 set-itu-key "01 02 03 04 05" --format hex
+```
+
+`set-routes` accepts one or more colon-separated route triples:
+
+```sh
+./run.sh nmp DOWNLINK 123456 set-routes 2:1:2 8:2:8
+```
+
+That example sends routes `{cspAddress: 2, destinationInterface: 1,
+nextHop: 2}` and `{cspAddress: 8, destinationInterface: 2, nextHop: 8}` in one
+NMP transaction. Run `./run.sh nmp --help` for the complete command list, then
+append `--help` to a subcommand for its typed arguments. The packaged CLI can
+also be run directly as `bin/comms-cli --url <endpoint> nmp ...`.
+Several NMP operations can change RF authorization, access keys, addressing, or
+the saved profile; use values approved for the connected test radio.
+
 ## Hardware Expectations
 
 The OBC image must have the NXTRX4 I2C slave receive backend configured before
@@ -173,6 +225,7 @@ against an already-started service with the correct config.
 URL=http://127.0.0.1:8150/graphql
 START_SERVICE=auto
 SERVICE_BIN=/path/to/comms-services
+CLI_BIN=/path/to/comms-cli
 CONFIG=/path/to/comms-hw.toml
 LOG=/tmp/comms-services.log
 REQ_DIR=/path/to/requests

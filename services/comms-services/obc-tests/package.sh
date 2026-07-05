@@ -6,6 +6,7 @@ ROOT=$(CDPATH= cd -- "$DIR/../../.." && pwd)
 TARGET="${TARGET:-armv7-unknown-linux-gnueabihf}"
 OUT="${OUT:-$ROOT/target/obc-tests/comms-services}"
 INCLUDE_SERVICE_BIN="${INCLUDE_SERVICE_BIN:-1}"
+INCLUDE_CLI_BIN="${INCLUDE_CLI_BIN:-1}"
 
 case "$OUT" in
   "$ROOT"/target/obc-tests/*) ;;
@@ -15,7 +16,7 @@ case "$OUT" in
     ;;
 esac
 
-if [ "$INCLUDE_SERVICE_BIN" = "1" ] && [ "${SKIP_BUILD:-0}" != "1" ]; then
+if { [ "$INCLUDE_SERVICE_BIN" = "1" ] || [ "$INCLUDE_CLI_BIN" = "1" ]; } && [ "${SKIP_BUILD:-0}" != "1" ]; then
   "$DIR/build.sh"
 fi
 
@@ -25,6 +26,11 @@ mkdir -p "$OUT/bin" "$OUT/config" "$OUT/requests"
 if [ "$INCLUDE_SERVICE_BIN" = "1" ]; then
   cp "$ROOT/target/$TARGET/release/comms-services" "$OUT/bin/"
   chmod +x "$OUT/bin/comms-services"
+fi
+
+if [ "$INCLUDE_CLI_BIN" = "1" ]; then
+  cp "$ROOT/target/$TARGET/release/comms-cli" "$OUT/bin/"
+  chmod +x "$OUT/bin/comms-cli"
 fi
 
 cp "$DIR/config/comms-hw.toml" "$OUT/config/"

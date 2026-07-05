@@ -67,6 +67,7 @@ members = [
     "services/payload-services/snn-service",
     "services/hardware-services/mram-service",
     "services/hardware-services/fram-service",
+    "services/comms-cli",
     "services/comms-services"
 ]
 
@@ -128,6 +129,7 @@ default-members = [
     "services/simulator-services/clyde-3g-eps-simulator",
     "services/hardware-services/mram-service",
     "services/hardware-services/fram-service",
+    "services/comms-cli",
     "services/comms-services",
 ]
 

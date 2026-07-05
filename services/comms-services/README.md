@@ -267,6 +267,40 @@ Testing mutations include:
 are sent as the UTF-8 bytes of `data`; `HEX` payloads accept separators such as
 spaces, dashes, underscores, or colons.
 
+### NMP GraphQL API
+
+Every implemented public `nxtrx4-api::nmp` operation is also exposed. Read
+operations are GraphQL queries named `radioNmpGet...`; configuration and action
+operations are mutations named `radioNmpSet...` or after the underlying action,
+such as `radioNmpUnlock`, `radioNmpClearRouteTable`, and
+`radioNmpCopyActiveToFactory`. All take `role` and the NMP `key`.
+
+The API covers CSP addressing and routes, RF/link configuration, interface
+timing, digipeater and Morse configuration, key and profile management, and all
+implemented housekeeping commands including Config 1/2. Fixed-size byte fields
+accept `format: TEXT | HEX` and byte-valued responses include both `text` and
+lossless `hex` fields. Route tables and both configuration blocks are returned
+as structured GraphQL objects.
+
+The crate's RS-485 NMP module currently defines only its command enum and states
+that the service is not implemented, so there is no callable RS-485 baud-rate
+operation to expose yet.
+
+Example NMP query and mutation:
+
+```graphql
+query {
+  radioNmpGetFrequency(role: DOWNLINK, key: 0)
+}
+
+mutation {
+  radioNmpSetTxEnable(role: DOWNLINK, key: 0, enabled: true)
+}
+```
+
+NMP writes must still follow the radio protocol: call `radioNmpUnlock` with a
+key having the required privilege before protected writes.
+
 Example query:
 
 ```graphql

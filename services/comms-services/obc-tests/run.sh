@@ -5,6 +5,7 @@ DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 REQ_DIR="${REQ_DIR:-$DIR/requests}"
 URL="${URL:-http://127.0.0.1:8150/graphql}"
 SERVICE_BIN="${SERVICE_BIN:-$DIR/bin/comms-services}"
+CLI_BIN="${CLI_BIN:-$DIR/bin/comms-cli}"
 CONFIG="${CONFIG:-$DIR/config/comms-hw.toml}"
 LOG="${LOG:-$DIR/comms-services.log}"
 START_SERVICE="${START_SERVICE:-auto}"
@@ -56,10 +57,14 @@ Commands:
   reboot <UPLINK|DOWNLINK>
       Requires CONFIRM_REBOOT=1.
 
+  nmp <UPLINK|DOWNLINK> <KEY> <COMMAND> [args...]
+      Run a typed NMP command through comms-cli. Use `./run.sh nmp --help`.
+
 Environment:
   URL=http://127.0.0.1:8150/graphql
   START_SERVICE=auto|1|0
   SERVICE_BIN=/path/to/comms-services
+  CLI_BIN=/path/to/comms-cli
   CONFIG=/path/to/comms-hw.toml
   RUN_MUTATIONS=1
   RUN_REBOOT=1
@@ -245,6 +250,12 @@ case "$cmd" in
     usage
     exit 0
     ;;
+  nmp)
+    [ -x "$CLI_BIN" ] || { echo "comms CLI not executable: $CLI_BIN" >&2; exit 2; }
+    if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ] || [ "${1:-}" = "help" ]; then
+      exec "$CLI_BIN" --url "$URL" nmp --help
+    fi
+    ;;
 esac
 
 maybe_start_service
@@ -328,6 +339,9 @@ case "$cmd" in
     fi
     role=$(normalize_role "$1")
     post_graphql "Reboot radio $role" "mutation { radioReboot(role: $role) { role success message verbalResponseText verbalResponseHex } }"
+    ;;
+  nmp)
+    "$CLI_BIN" --url "$URL" nmp "$@"
     ;;
   *)
     usage
