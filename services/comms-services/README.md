@@ -279,6 +279,39 @@ local mission software sends UDP to one of the configured `downlink_ports`; the
 framework wraps that payload in a UDP SpacePacket and then uses the same downlink
 write path.
 
+## Shell and File Transfer Over the Radio
+
+The KubOS shell-service and file-transfer-service speak CBOR over UDP, so they
+are reached through UDP passthrough (payload type 1) rather than GraphQL. Both
+directions work, but the reply path differs per service:
+
+- Passthrough datagrams are sent **from the first downlink endpoint's socket**
+  (the first entry in `comms.downlink_ports`, 14011 in the sample config).
+  Services that reply to the datagram's source address — like shell-service —
+  therefore reach the downlink endpoint, and their replies are automatically
+  wrapped in UDP SpacePackets and downlinked.
+- The file-transfer-service does not reply to the source. It sends all replies
+  to its own configured `downlink_ip`/`downlink_port`, which must point at the
+  comms downlink endpoint. On the OBC:
+
+```toml
+[file-transfer-service]
+downlink_ip = "127.0.0.1"
+downlink_port = 14011
+```
+
+(The `downlink_port = 8080` found in `configs/dev_config.toml` targets the
+`local-comms-service` used for desktop development, not this service.)
+
+All UDP downlinks arrive at the ground with `command_id = 0`; sessions are
+correlated by the channel IDs inside the CBOR protocol messages, so the ground
+side needs a shim that unwraps UDP SpacePackets back into local datagrams for
+the standard KubOS file/shell client tools.
+
+Note that file transfers with the default `transfer_chunk_size = 1024` exceed
+the packet-port budget, so each chunk uplink is one SFP transfer. Set the chunk
+size to ~180 bytes if single-CSP-packet uplinks are preferred.
+
 ## Error Downlink (NACK)
 
 When an uplinked SpacePacket is parsed and authenticated but cannot be serviced,

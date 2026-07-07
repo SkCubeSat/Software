@@ -242,8 +242,14 @@ For every GraphQL command the ground should expect exactly one of:
    lost on the RF downlink. Retry after a timeout.
 
 UDP passthrough uplinks get no positive acknowledgement, only a NACK on
-failure. Spacecraft-initiated UDP downlinks (payload type 1, `command_id` 0)
-can arrive at any time and are not correlated with any command.
+failure. All UDP downlinks (payload type 1, `command_id` 0) — replies from
+UDP-based services such as shell-service and file-transfer-service, as well as
+spacecraft-initiated datagrams — are not correlated by `command_id`. For the
+KubOS shell/file protocols, correlate by the channel ID inside the CBOR
+messages: run the standard ground client tools against a local UDP shim that
+wraps each outgoing datagram in a SpacePacket (payload type 1,
+`destination_port` = the service's UDP port on the OBC) and unwraps downlinked
+UDP SpacePackets back into local datagrams.
 
 Timing guidance: the satellite waits at most `comms.timeout` (1500 ms) for the
 local service's HTTP response, and at most 50 commands are in flight at once.

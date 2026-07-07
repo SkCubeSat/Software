@@ -277,6 +277,55 @@ fn uplink_udp_passthrough() {
     assert_eq!(telemetry.packets_down, 0);
 }
 
+// Tests that a service which replies to the source address of a passthrough
+// datagram (like shell-service) has its reply wrapped and downlinked, because
+// passthrough datagrams are sent from the downlink endpoint's socket.
+#[test]
+fn udp_passthrough_reply_to_source_is_downlinked() {
+    let sat_ip = "127.0.0.1";
+    let downlink_port = 23002;
+    let service_port = 23006;
+    let config = comms_config(sat_ip, downlink_port);
+    let mock_comms = Arc::new(Mutex::new(MockComms::new()));
+    const REQUEST: &[u8] = b"shell request";
+    const REPLY: &[u8] = b"shell reply";
+
+    // Mock a shell-like service which answers to the datagram's source.
+    let service_socket = UdpSocket::bind((sat_ip, service_port)).unwrap();
+    thread::spawn(move || {
+        let mut buf = [0; 1024];
+        let (size, source) = service_socket.recv_from(&mut buf).unwrap();
+        assert_eq!(&buf[..size], REQUEST);
+        service_socket.send_to(REPLY, source).unwrap();
+    });
+
+    let controls = CommsControlBlock::new(
+        Some(Arc::new(read)),
+        vec![Arc::new(write)],
+        mock_comms.clone(),
+        mock_comms.clone(),
+        config,
+    )
+    .unwrap();
+
+    let telem = Arc::new(Mutex::new(CommsTelemetry::default()));
+    let ground_packet = SpacePacket::build(5, PayloadType::UDP, service_port, REQUEST)
+        .unwrap()
+        .to_bytes()
+        .unwrap();
+    mock_comms.lock().unwrap().push_read(&ground_packet);
+
+    CommsService::start::<Arc<Mutex<MockComms>>, SpacePacket>(controls, &telem).unwrap();
+
+    let data = pop_write_with_timeout(&mock_comms, Duration::from_secs(2)).unwrap();
+    let packet = SpacePacket::parse(&data).unwrap();
+
+    assert_eq!(packet.payload_type(), PayloadType::UDP);
+    assert_eq!(packet.command_id(), 0);
+    assert_eq!(packet.destination(), 0);
+    assert_eq!(packet.payload(), REPLY.to_vec());
+}
+
 #[test]
 fn graphql_failure_sends_error_nack() {
     let sat_ip = "127.0.0.1";

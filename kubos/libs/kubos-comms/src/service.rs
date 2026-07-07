@@ -136,27 +136,43 @@ impl CommsService {
         control: CommsControlBlock<Connection>,
         telem: &Arc<Mutex<CommsTelemetry>>,
     ) -> CommsResult<()> {
+        // Bind the downlink endpoint sockets up front so UDP passthrough can
+        // send from the first endpoint's address. Services that reply to the
+        // source of a passthrough datagram (e.g. shell-service) then reach the
+        // downlink endpoint and their replies are downlinked to the ground.
+        let mut endpoints = vec![];
+        if let Some(ports) = &control.downlink_ports {
+            for (port, write) in ports.iter().zip(control.write.iter()) {
+                match UdpSocket::bind((control.ip, *port)) {
+                    Ok(socket) => endpoints.push((socket, write.clone())),
+                    Err(e) => {
+                        let _ = log_error(telem, e.to_string());
+                        error!("Failed to bind downlink endpoint on port {}: {}", port, e);
+                    }
+                }
+            }
+        }
+
+        let passthrough_socket = endpoints
+            .first()
+            .and_then(|(socket, _)| socket.try_clone().ok());
+
         // If desired, spawn a read thread
         if control.read.is_some() {
             let telem_ref = telem.clone();
             let control_ref = control.clone();
-            thread::spawn(move || read_thread::<Connection, Packet>(control_ref, &telem_ref));
+            thread::spawn(move || {
+                read_thread::<Connection, Packet>(control_ref, &telem_ref, passthrough_socket)
+            });
         }
 
-        // For each provided `write()` function, spawn a downlink endpoint thread.
-        if let Some(ports) = control.downlink_ports {
-            for (port, write) in ports.iter().zip(control.write.iter()) {
-                let telem_ref = telem.clone();
-                let port_ref = *port;
-                let conn_ref = control.write_conn.clone();
-                let write_ref = write.clone();
-                let ip = control.ip;
-                thread::spawn(move || {
-                    downlink_endpoint::<Connection, Packet>(
-                        &telem_ref, port_ref, conn_ref, &write_ref, ip,
-                    );
-                });
-            }
+        // For each successfully bound downlink endpoint, spawn an endpoint thread.
+        for (socket, write) in endpoints {
+            let telem_ref = telem.clone();
+            let conn_ref = control.write_conn.clone();
+            thread::spawn(move || {
+                downlink_endpoint::<Connection, Packet>(&telem_ref, socket, conn_ref, &write);
+            });
         }
 
         info!("Communication service started");
@@ -168,6 +184,7 @@ impl CommsService {
 fn read_thread<Connection: Clone + Send + 'static, Packet: LinkPacket + Send + 'static>(
     comms: CommsControlBlock<Connection>,
     data: &Arc<Mutex<CommsTelemetry>>,
+    passthrough_socket: Option<UdpSocket>,
 ) {
     // Take reader from control block.
     let read = comms.read.unwrap();
@@ -248,8 +265,11 @@ fn read_thread<Connection: Clone + Send + 'static, Packet: LinkPacket + Send + '
                 let conn_ref = comms.write_conn.clone();
                 let write_ref = comms.write[0].clone();
                 let command_id = packet.command_id();
+                let socket_ref = passthrough_socket
+                    .as_ref()
+                    .and_then(|socket| socket.try_clone().ok());
 
-                thread::spawn(move || match handle_udp_passthrough(packet, sat_ref) {
+                thread::spawn(move || match handle_udp_passthrough(packet, sat_ref, socket_ref) {
                     Ok(_) => {
                         info!("UDP Packet successfully uplinked");
                     }
@@ -409,12 +429,21 @@ fn log_nack_failure(data: &Arc<Mutex<CommsTelemetry>>, error: String) {
 
 // This function takes a Packet with PayloadType::UDP and sends the payload over a
 // UdpSocket to the specified destination.
+//
+// The datagram is sent from the first downlink endpoint's socket when one
+// exists, so services that reply to the datagram's source address get their
+// replies wrapped and downlinked. Without a downlink endpoint, an ephemeral
+// socket is used and any reply to the source is lost.
 #[allow(clippy::boxed_local)]
 fn handle_udp_passthrough<Packet: LinkPacket>(
     message: Box<Packet>,
     sat_ip: Ipv4Addr,
+    reply_socket: Option<UdpSocket>,
 ) -> Result<(), String> {
-    let socket = UdpSocket::bind((sat_ip, 0)).map_err(|e| e.to_string())?;
+    let socket = match reply_socket {
+        Some(socket) => socket,
+        None => UdpSocket::bind((sat_ip, 0)).map_err(|e| e.to_string())?,
+    };
 
     socket
         .send_to(&message.payload(), (sat_ip, message.destination()))
@@ -424,22 +453,14 @@ fn handle_udp_passthrough<Packet: LinkPacket>(
 
 // This thread reads indefinitely from a UDP socket, creating link packets from
 // the UDP packet payload and then writes the link packets to a gateway.
+// The socket is bound by `CommsService::start` so it can be shared with the
+// UDP passthrough path.
 fn downlink_endpoint<Connection: Clone, Packet: LinkPacket>(
     data: &Arc<Mutex<CommsTelemetry>>,
-    port: u16,
+    socket: UdpSocket,
     write_conn: Connection,
     write: &Arc<WriteFn<Connection>>,
-    sat_ip: Ipv4Addr,
 ) {
-    // Bind the downlink endpoint to a UDP socket.
-    let socket = match UdpSocket::bind((sat_ip, port)) {
-        Ok(sock) => sock,
-        Err(e) => {
-            let _ = log_error(data, e.to_string());
-            return;
-        }
-    };
-
     loop {
         let mut buf = vec![0; Packet::max_size()];
 
