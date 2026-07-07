@@ -52,7 +52,7 @@ fn downlink_to_ground() {
     let downlink_writer = UdpSocket::bind((sat_ip, 0)).unwrap();
 
     // Let the wheels turn
-    thread::sleep(Duration::from_millis(10));
+    thread::sleep(Duration::from_millis(100));
 
     // Send packet to comm service's downlink port
     downlink_writer
@@ -60,11 +60,10 @@ fn downlink_to_ground() {
         .unwrap();
 
     // Let the wheels turn
-    thread::sleep(Duration::from_millis(10));
+    let data = pop_write_with_timeout(&mock_comms, Duration::from_secs(2)).unwrap();
 
     // Pretend to be the ground and read the
     // packet which was written to the radio
-    let data = mock_comms.lock().unwrap().pop_write().unwrap();
     let packet = SpacePacket::parse(&data).unwrap();
 
     assert_eq!(packet.destination(), 0);

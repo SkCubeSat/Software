@@ -37,6 +37,37 @@ SpacePacket sequencing is not used for fragmentation. SpacePackets are marked
 as unsegmented, and segmented SpacePackets are rejected. Large transfers must
 use the SFP CSP port described below.
 
+## SpacePacket Wire Format
+
+This is the byte contract the ground station must implement. All fields are
+big-endian. A serialized SpacePacket is a 6-byte CCSDS primary header, a
+10-byte secondary header, and the payload:
+
+```text
+offset  size  field
+0       2     version (3 bits) | packet type (1 bit) |
+              secondary header flag (1 bit, always 1) |
+              payload type (11 bits, in the APID field)
+2       2     sequence flags (2 bits, always 0b11 = unsegmented) |
+              sequence count (14 bits, unused, 0)
+4       2     data length = 10 + payload length (secondary header + payload)
+6       8     command id (u64) - opaque correlation id chosen by the ground,
+              echoed back in the response and in error NACKs
+14      2     destination port (u16) - local service HTTP port for GraphQL,
+              local UDP port for UDP passthrough; 0 in downlinked responses
+16      n     payload - GraphQL JSON body, UDP bytes, or an error message
+```
+
+Payload types carried in the APID field:
+
+| value | type    | direction        | payload                             |
+|-------|---------|------------------|-------------------------------------|
+| 0     | GraphQL | uplink, downlink | GraphQL JSON request/response body  |
+| 1     | UDP     | uplink, downlink | raw UDP datagram bytes              |
+| 2     | Error   | downlink only    | UTF-8 error message (max 200 bytes) |
+
+Any other value is rejected on uplink and answered with an Error NACK.
+
 ## CSP Ports
 
 The service uses explicit CSP ports instead of auto-detecting packet format.
@@ -77,6 +108,7 @@ With the sample config:
 ```toml
 max_frame_bytes = 260
 sfp_mtu = 240
+sfp_read_timeout_ms = 10000
 sfp_max_space_packet_bytes = 65541
 ```
 
@@ -88,6 +120,8 @@ SFP mode allows a much larger logical SpacePacket. The sample limit is 65541
 bytes, which allows about 65525 bytes of GraphQL JSON body or UDP payload after
 the SpacePacket header. `sfp_mtu` is the per-fragment payload size used by SFP;
 the default leaves room in the CSP buffer for SFP and RDP headers.
+`sfp_read_timeout_ms` is the inter-fragment timeout while reassembling one SFP
+uplink.
 
 `max_frame_bytes` is also the buffer size used when reading one CSP frame from
 the I2C slave frame-queue backend. It only needs to hold one CSP frame, not an
@@ -196,6 +230,11 @@ ground
   -> SFP chunks are reassembled into one SpacePacket
 ```
 
+Each uplink CSP port is drained by its own poller thread, so a slow
+multi-fragment SFP reassembly never blocks single-packet commands arriving on
+the packet port. If uplink encryption is enabled, the payload is decrypted and
+authenticated here, before it is handed to `kubos-comms`.
+
 After either path, `kubos-comms` parses the SpacePacket:
 
 - payload type `GraphQL`: spawn a message handler thread
@@ -208,7 +247,12 @@ The handler posts to:
 http://<comms.ip>:<spacepacket.destination>/
 ```
 
-The HTTP body is the SpacePacket payload bytes.
+The HTTP body is the SpacePacket payload bytes. The handler waits up to
+`comms.timeout` milliseconds (default 1500) for the HTTP response, wraps the
+response body in a GraphQL SpacePacket carrying the original `command_id`, and
+downlinks it. At most `comms.max_num_handlers` (default 50) handlers run
+concurrently; further uplinks are answered with an Error NACK until a slot
+frees up.
 
 ## Downlink Flow
 
@@ -231,13 +275,92 @@ local mission software sends UDP to one of the configured `downlink_ports`; the
 framework wraps that payload in a UDP SpacePacket and then uses the same downlink
 write path.
 
+## Error Downlink (NACK)
+
+When an uplinked SpacePacket is parsed and authenticated but cannot be serviced,
+the service downlinks a SpacePacket with payload type `Error` (2) so the ground
+knows the command failed instead of timing out. The NACK carries:
+
+- the `command_id` of the failed uplink, for correlation
+- destination port `0`
+- a UTF-8 error message as the payload, truncated to 200 bytes
+
+A NACK is sent when:
+
+- the GraphQL handler fails (local service unreachable, HTTP error status, or
+  the response could not be downlinked)
+- all message handler slots are busy (`max_num_handlers` reached)
+- the payload type is unknown, or is `Error` (not accepted on uplink)
+- a UDP passthrough send fails
+
+No NACK is sent for packets that fail before dispatch: CSP-level errors, SFP
+reassembly timeouts, decryption/authentication failures, or SpacePacket parse
+errors. Those are dropped and only counted in telemetry, because there is no
+trusted `command_id` to correlate against. Ground software should treat a
+missing response as a timeout and retry.
+
+A NACK is at most 216 bytes serialized, so it always fits in one CSP packet on
+`ground_packet_csp_port`.
+
+## Uplink Encryption (AES-128-GCM)
+
+Uplink authentication and encryption is optional and disabled by default:
+
+```toml
+[comms-services.csp]
+uplink_crypto = "none"
+# uplink_crypto = "aes-128"
+# uplink_aes_key = "000102030405060708090a0b0c0d0e0f"
+```
+
+Setting `uplink_crypto = "aes-128"` requires `uplink_aes_key`, a 32-hex-character
+(16-byte) AES-128 key shared with the ground station. The key is never logged,
+is redacted from debug output, and is not exposed by the GraphQL API; the
+`health` query reports only the mode string (`"none"` or `"aes-128"`).
+
+When enabled, every uplink on both CSP ports must be encrypted. The ground
+station encrypts the entire serialized SpacePacket with AES-128-GCM and sends:
+
+```text
+nonce (12 bytes) || ciphertext || GCM tag (16 bytes)
+```
+
+as the CSP packet payload (packet port) or the SFP logical payload (SFP port).
+The ground must generate a fresh, unique 96-bit nonce for every packet — a
+random nonce or a persistent counter both work, but a nonce must never be
+reused with the same key. Nonce reuse breaks GCM confidentiality and
+authenticity entirely.
+
+The 28-byte overhead changes the size budget:
+
+- Packet port: the CSP payload limit is unchanged (`max_frame_bytes - 4`, 256
+  bytes by default), so the plaintext SpacePacket may be at most 228 bytes —
+  about 212 bytes of GraphQL/UDP payload after the 16-byte header.
+- SFP port: the service accepts up to `sfp_max_space_packet_bytes + 28` bytes
+  on the wire, so the full configured plaintext limit is still usable.
+
+Uplinks that fail authentication (wrong key, tampered bytes, truncated
+payload, or cleartext sent while encryption is enabled) are dropped without
+any response and counted in the `failed_packets_up` and `errors` telemetry.
+No NACK is sent, since unauthenticated data cannot be trusted.
+
+Downlink is not encrypted; responses, NACKs, and telemetry downlinks are sent
+in the clear. There is also no replay protection: a recorded valid uplink can
+be replayed and will decrypt successfully. Command-level replay defenses (for
+example, one-time command counters checked by the receiving service) must be
+handled above this layer.
+
 ## GraphQL Health API
 
 The service exposes its own GraphQL endpoint at `[comms-services.addr]`.
 
 Useful queries include:
 
-- `telemetry`: packet counters and comms errors
+- `telemetry`: packet counters and comms errors. `packetsUp` counts uplinked
+  SpacePackets that parsed and validated; `failedPacketsUp` counts CSP read
+  errors, decryption/authentication failures, and parse failures.
+  `packetsDown`/`failedPacketsDown` count downlink attempts. `errors` keeps the
+  100 most recent error messages.
 - `health`: configured CSP nodes, ports, SFP settings, and max packet sizes
 - `radioHealth(role: UPLINK | DOWNLINK)`: basic NXTRX4 uptime, radio status, and
   radio interface counters
@@ -349,8 +472,8 @@ mutation {
 
 ## Current Limitations
 
-- AES-128 uplink encryption is not implemented yet. `uplink_crypto` must remain
-  `"none"`.
+- Downlink is unencrypted, and AES-128-GCM uplinks have no replay protection.
+  See "Uplink Encryption (AES-128-GCM)" above.
 - NXTRX4 receive requires a patched kernel/BSP: the OMAP bus driver must support
   I2C slave mode and a frame-queue backend must expose radio master-write
   transactions through `slave_rx_device`.

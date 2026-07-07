@@ -118,7 +118,7 @@ impl Subsystem {
             max_sfp_space_packet_bytes: self.settings.csp.sfp_max_space_packet_bytes as i32,
             sfp_mtu: self.settings.csp.sfp_mtu as i32,
             sfp_use_rdp: self.settings.csp.sfp_use_rdp,
-            uplink_crypto: "none".to_string(),
+            uplink_crypto: self.settings.csp.uplink_crypto.mode().to_string(),
         }
     }
 

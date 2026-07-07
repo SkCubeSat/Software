@@ -19,7 +19,11 @@ ground_node = 2
 ground_packet_csp_port = 11
 ground_sfp_csp_port = 13
 uplink_crypto = "none"
+# To require AES-128-GCM authenticated uplinks, set:
+# uplink_crypto = "aes-128"
+# uplink_aes_key = "000102030405060708090a0b0c0d0e0f"
 sfp_mtu = 240
+sfp_read_timeout_ms = 10000
 sfp_use_rdp = true
 sfp_max_space_packet_bytes = 65541
 max_frame_bytes = 260

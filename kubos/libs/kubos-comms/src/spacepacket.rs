@@ -86,7 +86,7 @@ impl LinkPacket for SpacePacket {
             primary_header: PrimaryHeader {
                 version: 0,
                 packet_type: 0,
-                sec_header_flag: 0,
+                sec_header_flag: 1,
                 app_proc_id: u16::from(payload_type),
                 sequence_flags: SEQUENCE_FLAGS_UNSEGMENTED,
                 sequence_count: 0,
@@ -239,6 +239,15 @@ mod tests {
         let sequence_header = u16::from_be_bytes([raw[2], raw[3]]);
 
         assert_eq!((sequence_header & 0xC000) >> 14, 0b11);
+    }
+
+    #[test]
+    fn build_marks_secondary_header_present() {
+        let packet = SpacePacket::build(1, PayloadType::GraphQL, 15001, b"query").unwrap();
+        let raw = packet.to_bytes().unwrap();
+        let packet_id_header = u16::from_be_bytes([raw[0], raw[1]]);
+
+        assert_eq!((packet_id_header & 0x0800) >> 11, 1);
     }
 
     #[test]

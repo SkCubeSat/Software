@@ -19,6 +19,8 @@
 use crate::errors::*;
 use std::sync::{Arc, Mutex};
 
+const MAX_ERROR_ENTRIES: usize = 100;
+
 /// Generic telemetry collected by the communication service.
 #[derive(Default, GraphQLObject)]
 pub struct CommsTelemetry {
@@ -48,27 +50,63 @@ pub enum TelemType {
 
 // Function used to obtain a mutex lock and update communication service errors.
 pub fn log_error(data: &Arc<Mutex<CommsTelemetry>>, error: String) -> CommsResult<()> {
-    match data.lock() {
-        Ok(mut telem) => {
-            telem.errors.push(error);
-            Ok(())
-        }
-        Err(_) => Err(CommsServiceError::MutexPoisoned),
+    let mut telem = data.lock().unwrap_or_else(|err| err.into_inner());
+    telem.errors.push(error);
+    let excess = telem.errors.len().saturating_sub(MAX_ERROR_ENTRIES);
+    if excess > 0 {
+        telem.errors.drain(0..excess);
     }
+
+    Ok(())
 }
 
 // Function used to obtain a mutex lock and update communcation service telemetry.
 pub fn log_telemetry(data: &Arc<Mutex<CommsTelemetry>>, telem_type: &TelemType) -> CommsResult<()> {
-    match data.lock() {
-        Ok(mut telem) => {
-            match telem_type {
-                TelemType::Down => telem.packets_down += 1,
-                TelemType::DownFailed => telem.failed_packets_down += 1,
-                TelemType::Up => telem.packets_up += 1,
-                TelemType::UpFailed => telem.failed_packets_up += 1,
-            };
-            Ok(())
+    let mut telem = data.lock().unwrap_or_else(|err| err.into_inner());
+    match telem_type {
+        TelemType::Down => telem.packets_down += 1,
+        TelemType::DownFailed => telem.failed_packets_down += 1,
+        TelemType::Up => telem.packets_up += 1,
+        TelemType::UpFailed => telem.failed_packets_up += 1,
+    };
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::thread;
+
+    #[test]
+    fn log_error_keeps_most_recent_errors() {
+        let data = Arc::new(Mutex::new(CommsTelemetry::default()));
+
+        for index in 0..150 {
+            log_error(&data, format!("error-{index}")).unwrap();
         }
-        Err(_) => Err(CommsServiceError::MutexPoisoned),
+
+        let telemetry = data.lock().unwrap();
+        assert_eq!(telemetry.errors.len(), MAX_ERROR_ENTRIES);
+        assert_eq!(telemetry.errors.first().unwrap(), "error-50");
+        assert_eq!(telemetry.errors.last().unwrap(), "error-149");
+    }
+
+    #[test]
+    fn telemetry_logs_recover_from_poisoned_mutex() {
+        let data = Arc::new(Mutex::new(CommsTelemetry::default()));
+        let poisoned = data.clone();
+        let _ = thread::spawn(move || {
+            let _guard = poisoned.lock().unwrap();
+            panic!("poison telemetry mutex");
+        })
+        .join();
+
+        assert!(log_error(&data, "after poison".to_string()).is_ok());
+        assert!(log_telemetry(&data, &TelemType::Up).is_ok());
+
+        let telemetry = data.lock().unwrap_or_else(|err| err.into_inner());
+        assert_eq!(telemetry.errors, vec!["after poison".to_string()]);
+        assert_eq!(telemetry.packets_up, 1);
     }
 }

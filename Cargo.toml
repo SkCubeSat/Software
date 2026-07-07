@@ -140,6 +140,9 @@ documentation = "https:software.skcubesat.ca"
 repository = "https://github.com/SkCubeSat/Software"
 license = "Apache-2.0"
 
+[workspace.dependencies]
+aes-gcm = "0.10.3"
+
 [profile.release]
 lto = true
 opt-level = "z"
