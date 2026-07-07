@@ -39,6 +39,10 @@ use the SFP CSP port described below.
 
 ## SpacePacket Wire Format
 
+Everything the ground segment needs — CSP framing, SFP fragmentation,
+encryption, size budgets, and worked byte examples — is collected in
+[GROUND_STATION.md](GROUND_STATION.md).
+
 This is the byte contract the ground station must implement. All fields are
 big-endian. A serialized SpacePacket is a 6-byte CCSDS primary header, a
 10-byte secondary header, and the payload:
