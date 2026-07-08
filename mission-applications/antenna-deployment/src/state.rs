@@ -1,6 +1,8 @@
 use failure::{Error, bail, format_err};
-use kubos_app::{ServiceConfig, query};
+use kubos_app::ServiceConfig;
 use serde_json::Value;
+use std::io::{Read, Write};
+use std::net::TcpStream;
 use std::time::Duration;
 
 const FRAM_TIMEOUT: Duration = Duration::from_secs(2);
@@ -230,5 +232,139 @@ pub fn set_flag(key: MissionFlagKey, value: bool) -> Result<(), Error> {
 
 fn graphql(request: &str) -> Result<Value, Error> {
     let cfg = ServiceConfig::new("fram-service")?;
-    query(&cfg, request, Some(FRAM_TIMEOUT))
+    let addr = cfg
+        .hosturl()
+        .ok_or_else(|| format_err!("Unable to fetch addr for service"))?;
+
+    let body = serde_json::json!({ "query": request }).to_string();
+    let http_request = format!(
+        concat!(
+            "POST /graphql HTTP/1.1\r\n",
+            "Host: {addr}\r\n",
+            "Content-Type: application/json\r\n",
+            "Accept: application/json\r\n",
+            "Connection: close\r\n",
+            "Content-Length: {content_length}\r\n",
+            "\r\n",
+            "{body}"
+        ),
+        addr = addr,
+        content_length = body.len(),
+        body = body
+    );
+
+    let mut stream = TcpStream::connect(&addr)
+        .map_err(|e| format_err!("failed to connect to fram-service at {}: {}", addr, e))?;
+    stream
+        .set_read_timeout(Some(FRAM_TIMEOUT))
+        .map_err(|e| format_err!("failed to set fram-service read timeout: {}", e))?;
+    stream
+        .set_write_timeout(Some(FRAM_TIMEOUT))
+        .map_err(|e| format_err!("failed to set fram-service write timeout: {}", e))?;
+    stream
+        .write_all(http_request.as_bytes())
+        .map_err(|e| format_err!("failed to send fram-service request: {}", e))?;
+
+    let mut response = Vec::new();
+    stream
+        .read_to_end(&mut response)
+        .map_err(|e| format_err!("failed to read fram-service response: {}", e))?;
+
+    parse_graphql_response(&response)
+}
+
+fn parse_graphql_response(response: &[u8]) -> Result<Value, Error> {
+    let header_end = response
+        .windows(4)
+        .position(|window| window == b"\r\n\r\n")
+        .ok_or_else(|| format_err!("invalid HTTP response from fram-service"))?;
+
+    let headers = std::str::from_utf8(&response[..header_end])
+        .map_err(|e| format_err!("fram-service response headers were not valid UTF-8: {}", e))?;
+    let mut header_lines = headers.lines();
+    let status_line = header_lines
+        .next()
+        .ok_or_else(|| format_err!("fram-service response missing HTTP status line"))?;
+
+    if !status_line.contains(" 200 ") {
+        bail!("fram-service returned non-200 response: {}", status_line);
+    }
+
+    let is_chunked = header_lines.any(|line| {
+        let mut parts = line.splitn(2, ':');
+        let key = parts.next().unwrap_or_default().trim();
+        let value = parts.next().unwrap_or_default().trim();
+        key.eq_ignore_ascii_case("Transfer-Encoding") && value.eq_ignore_ascii_case("chunked")
+    });
+
+    let body_bytes = &response[header_end + 4..];
+    let body = if is_chunked {
+        decode_chunked_body(body_bytes)?
+    } else {
+        body_bytes.to_vec()
+    };
+
+    let response: serde_json::Value = serde_json::from_slice(&body)
+        .map_err(|e| format_err!("invalid JSON from fram-service: {}", e))?;
+
+    if let Some(errs) = response.get("errors") {
+        if errs.is_string() {
+            let errs_str = errs.as_str().unwrap_or_default();
+            if !errs_str.is_empty() {
+                bail!("{}", errs_str);
+            }
+        } else if !errs.is_null() {
+            if let Some(message) = errs.get("message").and_then(Value::as_str) {
+                bail!("{}", message);
+            }
+            bail!("{}", serde_json::to_string(errs)?);
+        }
+    }
+
+    if let Some(err) = response.get(0) {
+        if let Some(message) = err.get("message").and_then(Value::as_str) {
+            bail!("{}", message);
+        }
+    }
+
+    response
+        .get("data")
+        .cloned()
+        .ok_or_else(|| format_err!("No result returned in 'data' key: {}", response))
+}
+
+fn decode_chunked_body(bytes: &[u8]) -> Result<Vec<u8>, Error> {
+    let mut decoded = Vec::new();
+    let mut cursor = 0usize;
+
+    while cursor < bytes.len() {
+        let size_end = bytes[cursor..]
+            .windows(2)
+            .position(|window| window == b"\r\n")
+            .ok_or_else(|| format_err!("invalid chunked fram-service response"))?;
+        let size_slice = &bytes[cursor..cursor + size_end];
+        let size_str = std::str::from_utf8(size_slice)
+            .map_err(|e| format_err!("invalid chunk size in fram-service response: {}", e))?;
+        let size_hex = size_str.split(';').next().unwrap_or_default().trim();
+        let chunk_size = usize::from_str_radix(size_hex, 16)
+            .map_err(|e| format_err!("invalid chunk size '{}' in fram-service response: {}", size_hex, e))?;
+        cursor += size_end + 2;
+
+        if chunk_size == 0 {
+            return Ok(decoded);
+        }
+
+        let chunk_end = cursor + chunk_size;
+        if chunk_end + 2 > bytes.len() {
+            bail!("truncated chunked fram-service response");
+        }
+
+        decoded.extend_from_slice(&bytes[cursor..chunk_end]);
+        if &bytes[chunk_end..chunk_end + 2] != b"\r\n" {
+            bail!("invalid chunk terminator in fram-service response");
+        }
+        cursor = chunk_end + 2;
+    }
+
+    bail!("chunked fram-service response missing terminating chunk")
 }
