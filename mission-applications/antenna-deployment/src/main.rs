@@ -3,6 +3,8 @@ use log::{error, info};
 use std::time::{SystemTime, UNIX_EPOCH};
 use kubos_app::logging_setup;
 
+mod deployment;
+mod gpio;
 mod state;
 
 fn main() -> Result<(), Error> {
@@ -10,11 +12,11 @@ fn main() -> Result<(), Error> {
 
     let args: Vec<String> = std::env::args().collect();
     if args.len() < 2 {
-        print_usage();
-        return Ok(());
+        return deployment::run_once();
     }
 
     match args[1].as_str() {
+        "run-once" => deployment::run_once(),
         "show-state" => {
             let mission = state::read_mission_state()?;
             info!("remove_before_flight={}", mission.remove_before_flight);
@@ -121,6 +123,9 @@ fn now_unix() -> Result<i64, Error> {
 }
 
 fn print_usage() {
+    info!("Deployment commands:");
+    info!("  run-once");
+    info!("  <no args>  (same as run-once)");
     info!("FRAM manual interface commands:");
     info!("  show-state");
     info!("  reconcile [dry-run]");
@@ -135,6 +140,8 @@ fn print_usage() {
     info!("  initial_safe_state_complete");
     info!("  detumbling_complete");
     info!("Example:");
+    info!("  antenna-deployment");
+    info!("  antenna-deployment run-once");
     info!("  antenna-deployment set-flag vhf_antenna_deployed true");
     info!("  antenna-deployment set-deploy-start now");
     info!("  antenna-deployment show-state");
