@@ -43,7 +43,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             .with_read_timeout(Duration::from_millis(100));
     let sfp_listener = CspListener::bind(settings.csp.uplink_sfp_csp_port, settings.csp.backlog)
         .with_accept_timeout(Duration::from_millis(100))
-        .with_read_timeout(Duration::from_millis(100));
+        .with_read_timeout(settings.csp.sfp_read_timeout);
 
     // Register the I2C buses as CSP interfaces and install routes such as
     // ground_node -> downlink radio I2C address.

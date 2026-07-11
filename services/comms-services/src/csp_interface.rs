@@ -232,6 +232,7 @@ mod tests {
             backlog: 10,
             max_frame_bytes: 260,
             sfp_mtu: 240,
+            sfp_read_timeout: Duration::from_secs(10),
             sfp_max_space_packet_bytes: 4096,
             sfp_use_rdp: true,
             uplink_crypto: UplinkCrypto::None,

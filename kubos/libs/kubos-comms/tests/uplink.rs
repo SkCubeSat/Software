@@ -61,12 +61,9 @@ fn uplink_to_service_no_response() {
     let barrier = Arc::new(Barrier::new(2));
     let recv_data: Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(vec![]));
     let thread_data = recv_data.clone();
-    spawn_http_server(
-        vec![],
-        thread_data,
-        &format!("{}:{}", sat_ip, service_port),
-        barrier.clone(),
-    );
+    let service_addr = format!("{}:{}", sat_ip, service_port);
+    spawn_http_server(vec![], thread_data, &service_addr, barrier.clone());
+    wait_for_tcp_listener(&service_addr);
 
     // Start communication service.
     CommsService::start::<Arc<Mutex<MockComms>>, SpacePacket>(controls, &telem).unwrap();
@@ -119,13 +116,15 @@ fn uplink_to_service_with_handler_response() {
     let barrier = Arc::new(Barrier::new(2));
     let recv_data: Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(vec![]));
     let thread_data = recv_data.clone();
+    let service_addr = format!("{}:{}", sat_ip, service_port);
 
     spawn_http_server(
         resp_payload.clone(),
         thread_data,
-        &format!("{}:{}", sat_ip, service_port),
+        &service_addr,
         barrier.clone(),
     );
+    wait_for_tcp_listener(&service_addr);
 
     // Start communication service.
     CommsService::start::<Arc<Mutex<MockComms>>, SpacePacket>(controls, &telem).unwrap();
@@ -189,12 +188,9 @@ fn uplink_to_service_with_downlink_response() {
     // Setup & start HTTP server
     let barrier = Arc::new(Barrier::new(2));
     let recv_data: Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(vec![]));
-    spawn_http_server(
-        vec![],
-        recv_data.clone(),
-        &format!("{}:{}", sat_ip, service_port),
-        barrier.clone(),
-    );
+    let service_addr = format!("{}:{}", sat_ip, service_port);
+    spawn_http_server(vec![], recv_data.clone(), &service_addr, barrier.clone());
+    wait_for_tcp_listener(&service_addr);
 
     // Start communication service.
     CommsService::start::<Arc<Mutex<MockComms>>, SpacePacket>(controls, &telem).unwrap();
@@ -275,4 +271,166 @@ fn uplink_udp_passthrough() {
     downlink_reader.recv(&mut recv_buffer).unwrap();
 
     assert_eq!(recv_buffer, payload);
+
+    let telemetry = telem.lock().unwrap();
+    assert_eq!(telemetry.packets_up, 1);
+    assert_eq!(telemetry.packets_down, 0);
+}
+
+// Tests that a service which replies to the source address of a passthrough
+// datagram (like shell-service) has its reply wrapped and downlinked, because
+// passthrough datagrams are sent from the downlink endpoint's socket.
+#[test]
+fn udp_passthrough_reply_to_source_is_downlinked() {
+    let sat_ip = "127.0.0.1";
+    let downlink_port = 23002;
+    let service_port = 23006;
+    let config = comms_config(sat_ip, downlink_port);
+    let mock_comms = Arc::new(Mutex::new(MockComms::new()));
+    const REQUEST: &[u8] = b"shell request";
+    const REPLY: &[u8] = b"shell reply";
+
+    // Mock a shell-like service which answers to the datagram's source.
+    let service_socket = UdpSocket::bind((sat_ip, service_port)).unwrap();
+    thread::spawn(move || {
+        let mut buf = [0; 1024];
+        let (size, source) = service_socket.recv_from(&mut buf).unwrap();
+        assert_eq!(&buf[..size], REQUEST);
+        service_socket.send_to(REPLY, source).unwrap();
+    });
+
+    let controls = CommsControlBlock::new(
+        Some(Arc::new(read)),
+        vec![Arc::new(write)],
+        mock_comms.clone(),
+        mock_comms.clone(),
+        config,
+    )
+    .unwrap();
+
+    let telem = Arc::new(Mutex::new(CommsTelemetry::default()));
+    let ground_packet = SpacePacket::build(5, PayloadType::UDP, service_port, REQUEST)
+        .unwrap()
+        .to_bytes()
+        .unwrap();
+    mock_comms.lock().unwrap().push_read(&ground_packet);
+
+    CommsService::start::<Arc<Mutex<MockComms>>, SpacePacket>(controls, &telem).unwrap();
+
+    let data = pop_write_with_timeout(&mock_comms, Duration::from_secs(2)).unwrap();
+    let packet = SpacePacket::parse(&data).unwrap();
+
+    assert_eq!(packet.payload_type(), PayloadType::UDP);
+    assert_eq!(packet.command_id(), 0);
+    assert_eq!(packet.destination(), 0);
+    assert_eq!(packet.payload(), REPLY.to_vec());
+}
+
+#[test]
+fn graphql_failure_sends_error_nack() {
+    let sat_ip = "127.0.0.1";
+    let downlink_port = 20002;
+    let service_port = 20005;
+    let mut config = comms_config(sat_ip, downlink_port);
+    config.timeout = Some(100);
+    let mock_comms = Arc::new(Mutex::new(MockComms::new()));
+    let payload = b"{\"query\":\"{ping}\"}";
+
+    let controls = CommsControlBlock::new(
+        Some(Arc::new(read)),
+        vec![Arc::new(write)],
+        mock_comms.clone(),
+        mock_comms.clone(),
+        config,
+    )
+    .unwrap();
+
+    let telem = Arc::new(Mutex::new(CommsTelemetry::default()));
+    let ground_packet = SpacePacket::build(77, PayloadType::GraphQL, service_port, payload)
+        .unwrap()
+        .to_bytes()
+        .unwrap();
+    mock_comms.lock().unwrap().push_read(&ground_packet);
+
+    CommsService::start::<Arc<Mutex<MockComms>>, SpacePacket>(controls, &telem).unwrap();
+
+    let data = pop_write_with_timeout(&mock_comms, Duration::from_secs(2)).unwrap();
+    let packet = SpacePacket::parse(&data).unwrap();
+
+    assert_eq!(packet.payload_type(), PayloadType::Error);
+    assert_eq!(packet.command_id(), 77);
+    assert_eq!(packet.destination(), 0);
+    assert!(!packet.payload().is_empty());
+    assert!(packet.payload().len() <= 200);
+}
+
+#[test]
+fn unknown_payload_type_sends_error_nack() {
+    let sat_ip = "127.0.0.1";
+    let downlink_port = 21002;
+    let config = comms_config(sat_ip, downlink_port);
+    let mock_comms = Arc::new(Mutex::new(MockComms::new()));
+
+    let controls = CommsControlBlock::new(
+        Some(Arc::new(read)),
+        vec![Arc::new(write)],
+        mock_comms.clone(),
+        mock_comms.clone(),
+        config,
+    )
+    .unwrap();
+
+    let telem = Arc::new(Mutex::new(CommsTelemetry::default()));
+    let ground_packet = SpacePacket::build(88, PayloadType::Unknown(99), 0, b"")
+        .unwrap()
+        .to_bytes()
+        .unwrap();
+    mock_comms.lock().unwrap().push_read(&ground_packet);
+
+    CommsService::start::<Arc<Mutex<MockComms>>, SpacePacket>(controls, &telem).unwrap();
+
+    let data = pop_write_with_timeout(&mock_comms, Duration::from_secs(2)).unwrap();
+    let packet = SpacePacket::parse(&data).unwrap();
+
+    assert_eq!(packet.payload_type(), PayloadType::Error);
+    assert_eq!(packet.command_id(), 88);
+    assert_eq!(packet.destination(), 0);
+    assert!(String::from_utf8(packet.payload())
+        .unwrap()
+        .contains("Unknown payload type"));
+}
+
+#[test]
+fn udp_passthrough_failure_sends_error_nack() {
+    let sat_ip = "192.0.2.1";
+    let downlink_port = 22002;
+    let service_port = 22006;
+    let config = comms_config(sat_ip, downlink_port);
+    let mock_comms = Arc::new(Mutex::new(MockComms::new()));
+
+    let controls = CommsControlBlock::new(
+        Some(Arc::new(read)),
+        vec![Arc::new(write)],
+        mock_comms.clone(),
+        mock_comms.clone(),
+        config,
+    )
+    .unwrap();
+
+    let telem = Arc::new(Mutex::new(CommsTelemetry::default()));
+    let ground_packet = SpacePacket::build(99, PayloadType::UDP, service_port, b"udp")
+        .unwrap()
+        .to_bytes()
+        .unwrap();
+    mock_comms.lock().unwrap().push_read(&ground_packet);
+
+    CommsService::start::<Arc<Mutex<MockComms>>, SpacePacket>(controls, &telem).unwrap();
+
+    let data = pop_write_with_timeout(&mock_comms, Duration::from_secs(2)).unwrap();
+    let packet = SpacePacket::parse(&data).unwrap();
+
+    assert_eq!(packet.payload_type(), PayloadType::Error);
+    assert_eq!(packet.command_id(), 99);
+    assert_eq!(packet.destination(), 0);
+    assert!(!packet.payload().is_empty());
 }

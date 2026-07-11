@@ -10,6 +10,7 @@ pub const SERVICE_NAME: &str = "comms-services";
 const DEFAULT_BACKLOG: usize = 10;
 const DEFAULT_COMMAND_TIMEOUT_MS: u64 = 1_000;
 const DEFAULT_MAX_FRAME_BYTES: usize = 260;
+const DEFAULT_SFP_READ_TIMEOUT_MS: u64 = 10_000;
 const DEFAULT_SFP_MAX_SPACE_PACKET_BYTES: usize = u16::MAX as usize + 6;
 const DEFAULT_SFP_MTU: usize = 240;
 const MAX_SFP_MTU_WITH_RDP: usize = 243;
@@ -44,14 +45,37 @@ pub struct CspSettings {
     pub backlog: usize,
     pub max_frame_bytes: usize,
     pub sfp_mtu: usize,
+    pub sfp_read_timeout: Duration,
     pub sfp_max_space_packet_bytes: usize,
     pub sfp_use_rdp: bool,
     pub uplink_crypto: UplinkCrypto,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum UplinkCrypto {
     None,
+    Aes128 { key: [u8; 16] },
+}
+
+impl UplinkCrypto {
+    pub fn mode(&self) -> &'static str {
+        match self {
+            Self::None => "none",
+            Self::Aes128 { .. } => "aes-128",
+        }
+    }
+}
+
+impl fmt::Debug for UplinkCrypto {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::None => formatter.write_str("None"),
+            Self::Aes128 { .. } => formatter
+                .debug_struct("Aes128")
+                .field("key", &"<redacted>")
+                .finish(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -100,10 +124,10 @@ impl ServiceSettings {
 impl CspSettings {
     fn from_config(config: &Config) -> Result<Self, ConfigError> {
         let table = config_table(config, "csp")?;
-        let obc_node = required_u16(&table, "csp.obc_node")?;
+        let obc_node = required_node(&table, "csp.obc_node")?;
         let uplink_packet_csp_port = required_port(&table, "csp.uplink_packet_csp_port")?;
         let uplink_sfp_csp_port = required_port(&table, "csp.uplink_sfp_csp_port")?;
-        let ground_node = required_u16(&table, "csp.ground_node")?;
+        let ground_node = required_node(&table, "csp.ground_node")?;
         let ground_packet_csp_port = required_port(&table, "csp.ground_packet_csp_port")?;
         let ground_sfp_csp_port = required_port(&table, "csp.ground_sfp_csp_port")?;
         require_distinct_ports(
@@ -122,6 +146,11 @@ impl CspSettings {
         let max_frame_bytes =
             optional_usize(&table, "csp.max_frame_bytes", DEFAULT_MAX_FRAME_BYTES)?;
         let sfp_mtu = optional_usize(&table, "csp.sfp_mtu", DEFAULT_SFP_MTU)?;
+        let sfp_read_timeout_ms = optional_u64(
+            &table,
+            "csp.sfp_read_timeout_ms",
+            DEFAULT_SFP_READ_TIMEOUT_MS,
+        )?;
         if sfp_mtu == 0 || sfp_mtu > MAX_SFP_MTU_WITH_RDP {
             return Err(ConfigError::InvalidValue {
                 key: "csp.sfp_mtu".to_string(),
@@ -146,12 +175,13 @@ impl CspSettings {
         let sfp_use_rdp = optional_bool(&table, "csp.sfp_use_rdp", true)?;
         let uplink_crypto = match optional_str(&table, "csp.uplink_crypto", "none")? {
             "none" => UplinkCrypto::None,
+            "aes-128" => UplinkCrypto::Aes128 {
+                key: parse_aes128_key(required_str(&table, "csp.uplink_aes_key")?)?,
+            },
             value => {
                 return Err(ConfigError::InvalidValue {
                     key: "csp.uplink_crypto".to_string(),
-                    message: format!(
-                        "`{value}` is not implemented yet; use `none` for the first cleartext service"
-                    ),
+                    message: format!("expected `none` or `aes-128`, got `{value}`"),
                 });
             }
         };
@@ -166,6 +196,7 @@ impl CspSettings {
             backlog,
             max_frame_bytes,
             sfp_mtu,
+            sfp_read_timeout: Duration::from_millis(sfp_read_timeout_ms),
             sfp_max_space_packet_bytes,
             sfp_use_rdp,
             uplink_crypto,
@@ -203,7 +234,7 @@ fn radio_config(radios: &Value, role: &str) -> Result<RadioConfig, ConfigError> 
     let prefix = format!("radios.{role}");
     let table = value_table(radios.get(role), &prefix)?;
     let bus = required_str(table, &format!("{prefix}.bus"))?.to_string();
-    let csp_node = required_u16(table, &format!("{prefix}.csp_node"))?;
+    let csp_node = required_node(table, &format!("{prefix}.csp_node"))?;
     let i2c_addr = required_u8(table, &format!("{prefix}.i2c_addr"))?;
     let slave_rx_device = optional_string(table, &format!("{prefix}.slave_rx_device"))?;
     let command_timeout_ms = optional_u64(
@@ -302,6 +333,18 @@ fn required_u16(table: &Value, key: &str) -> Result<u16, ConfigError> {
     })
 }
 
+fn required_node(table: &Value, key: &str) -> Result<u16, ConfigError> {
+    let node = required_u16(table, key)?;
+    if node <= 31 {
+        Ok(node)
+    } else {
+        Err(ConfigError::InvalidValue {
+            key: key.to_string(),
+            message: "CSP v1 node addresses must be in range 0..=31".to_string(),
+        })
+    }
+}
+
 fn required_port(table: &Value, key: &str) -> Result<u8, ConfigError> {
     let port = required_u8(table, key)?;
     if port <= 63 {
@@ -371,6 +414,40 @@ fn parse_integer(table: &Value, key: &str) -> Result<u64, ConfigError> {
     })
 }
 
+fn parse_aes128_key(value: &str) -> Result<[u8; 16], ConfigError> {
+    if value.len() != 32 {
+        return Err(ConfigError::InvalidValue {
+            key: "csp.uplink_aes_key".to_string(),
+            message: "expected exactly 32 hex characters for an AES-128 key".to_string(),
+        });
+    }
+
+    let bytes = value.as_bytes();
+    let mut key = [0u8; 16];
+    for (index, byte) in key.iter_mut().enumerate() {
+        let high = hex_nibble(bytes[index * 2]).ok_or_else(|| ConfigError::InvalidValue {
+            key: "csp.uplink_aes_key".to_string(),
+            message: "expected only hexadecimal characters".to_string(),
+        })?;
+        let low = hex_nibble(bytes[index * 2 + 1]).ok_or_else(|| ConfigError::InvalidValue {
+            key: "csp.uplink_aes_key".to_string(),
+            message: "expected only hexadecimal characters".to_string(),
+        })?;
+        *byte = (high << 4) | low;
+    }
+
+    Ok(key)
+}
+
+fn hex_nibble(byte: u8) -> Option<u8> {
+    match byte {
+        b'0'..=b'9' => Some(byte - b'0'),
+        b'a'..=b'f' => Some(byte - b'a' + 10),
+        b'A'..=b'F' => Some(byte - b'A' + 10),
+        _ => None,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -378,6 +455,79 @@ mod tests {
     fn parse(contents: &str) -> ServiceSettings {
         let config = Config::new_from_str(SERVICE_NAME, contents).unwrap();
         ServiceSettings::from_config(&config).unwrap()
+    }
+
+    fn parse_result(contents: &str) -> Result<ServiceSettings, ConfigError> {
+        let config = Config::new_from_str(SERVICE_NAME, contents).unwrap();
+        ServiceSettings::from_config(&config)
+    }
+
+    fn minimal_config(csp_extra: &str) -> String {
+        format!(
+            r#"
+            [comms-services.addr]
+            ip = "127.0.0.1"
+            port = 8150
+
+            [comms-services.comms]
+            ip = "127.0.0.1"
+
+            [comms-services.csp]
+            obc_node = 1
+            uplink_packet_csp_port = 10
+            uplink_sfp_csp_port = 12
+            ground_node = 2
+            ground_packet_csp_port = 11
+            ground_sfp_csp_port = 13
+            {csp_extra}
+
+            [comms-services.radios.uplink]
+            bus = "/dev/i2c-1"
+            csp_node = 8
+            i2c_addr = 8
+
+            [comms-services.radios.downlink]
+            bus = "/dev/i2c-1"
+            csp_node = 9
+            i2c_addr = 9
+            "#
+        )
+    }
+
+    fn config_with_nodes(
+        obc_node: u16,
+        ground_node: u16,
+        uplink_node: u16,
+        downlink_node: u16,
+    ) -> String {
+        format!(
+            r#"
+            [comms-services.addr]
+            ip = "127.0.0.1"
+            port = 8150
+
+            [comms-services.comms]
+            ip = "127.0.0.1"
+
+            [comms-services.csp]
+            obc_node = {obc_node}
+            uplink_packet_csp_port = 10
+            uplink_sfp_csp_port = 12
+            ground_node = {ground_node}
+            ground_packet_csp_port = 11
+            ground_sfp_csp_port = 13
+
+            [comms-services.radios.uplink]
+            bus = "/dev/i2c-1"
+            csp_node = {uplink_node}
+            i2c_addr = 8
+
+            [comms-services.radios.downlink]
+            bus = "/dev/i2c-1"
+            csp_node = {downlink_node}
+            i2c_addr = 9
+            "#
+        )
     }
 
     #[test]
@@ -423,6 +573,7 @@ mod tests {
         assert_eq!(settings.csp.ground_packet_csp_port, 11);
         assert_eq!(settings.csp.ground_sfp_csp_port, 13);
         assert_eq!(settings.csp.sfp_mtu, 240);
+        assert_eq!(settings.csp.sfp_read_timeout, Duration::from_millis(10_000));
         assert!(settings.csp.sfp_use_rdp);
         assert_eq!(settings.csp.uplink_crypto, UplinkCrypto::None);
         assert_eq!(settings.radios.uplink.bus, "/dev/i2c-1");
@@ -437,43 +588,84 @@ mod tests {
     }
 
     #[test]
-    fn rejects_unimplemented_crypto() {
-        let config = Config::new_from_str(
-            SERVICE_NAME,
+    fn accepts_aes_128_crypto() {
+        let settings = parse(&minimal_config(
             r#"
-            [comms-services.addr]
-            ip = "127.0.0.1"
-            port = 8150
-
-            [comms-services.comms]
-            ip = "127.0.0.1"
-
-            [comms-services.csp]
-            obc_node = 1
-            uplink_packet_csp_port = 10
-            uplink_sfp_csp_port = 12
-            ground_node = 2
-            ground_packet_csp_port = 11
-            ground_sfp_csp_port = 13
             uplink_crypto = "aes-128"
-
-            [comms-services.radios.uplink]
-            bus = "/dev/i2c-1"
-            csp_node = 8
-            i2c_addr = 8
-
-            [comms-services.radios.downlink]
-            bus = "/dev/i2c-1"
-            csp_node = 9
-            i2c_addr = 9
+            uplink_aes_key = "000102030405060708090a0b0c0d0e0f"
+            sfp_read_timeout_ms = 1234
             "#,
-        )
-        .unwrap();
+        ));
 
+        match &settings.csp.uplink_crypto {
+            UplinkCrypto::Aes128 { key } => {
+                assert_eq!(*key, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+            }
+            UplinkCrypto::None => panic!("expected AES-128 crypto"),
+        }
+        assert_eq!(settings.csp.sfp_read_timeout, Duration::from_millis(1234));
+        assert_eq!(settings.csp.uplink_crypto.mode(), "aes-128");
+        assert!(
+            !format!("{:?}", settings.csp.uplink_crypto)
+                .contains("000102030405060708090a0b0c0d0e0f")
+        );
+    }
+
+    #[test]
+    fn rejects_unknown_crypto() {
         assert!(matches!(
-            ServiceSettings::from_config(&config),
+            parse_result(&minimal_config(r#"uplink_crypto = "xor""#)),
             Err(ConfigError::InvalidValue { key, .. }) if key == "csp.uplink_crypto"
         ));
+    }
+
+    #[test]
+    fn rejects_aes_128_crypto_without_key() {
+        assert!(matches!(
+            parse_result(&minimal_config(r#"uplink_crypto = "aes-128""#)),
+            Err(ConfigError::MissingValue(key)) if key == "csp.uplink_aes_key"
+        ));
+    }
+
+    #[test]
+    fn rejects_aes_128_crypto_key_with_wrong_length() {
+        assert!(matches!(
+            parse_result(&minimal_config(
+                r#"
+                uplink_crypto = "aes-128"
+                uplink_aes_key = "0011"
+                "#
+            )),
+            Err(ConfigError::InvalidValue { key, .. }) if key == "csp.uplink_aes_key"
+        ));
+    }
+
+    #[test]
+    fn rejects_aes_128_crypto_key_with_non_hex_character() {
+        assert!(matches!(
+            parse_result(&minimal_config(
+                r#"
+                uplink_crypto = "aes-128"
+                uplink_aes_key = "000102030405060708090a0b0c0d0e0g"
+                "#
+            )),
+            Err(ConfigError::InvalidValue { key, .. }) if key == "csp.uplink_aes_key"
+        ));
+    }
+
+    #[test]
+    fn rejects_csp_v1_node_ids_above_31() {
+        for (expected_key, config) in [
+            ("csp.obc_node", config_with_nodes(32, 2, 8, 9)),
+            ("csp.ground_node", config_with_nodes(1, 32, 8, 9)),
+            ("radios.uplink.csp_node", config_with_nodes(1, 2, 32, 9)),
+            ("radios.downlink.csp_node", config_with_nodes(1, 2, 8, 32)),
+        ] {
+            assert!(matches!(
+                parse_result(&config),
+                Err(ConfigError::InvalidValue { key, .. }) if key == expected_key
+            ));
+        }
     }
 
     #[test]

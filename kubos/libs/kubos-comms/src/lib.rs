@@ -39,7 +39,8 @@
 //! let write_conn = Arc::new(UdpSocket::bind(("192.168.8.1", 13001)).unwrap());
 //!
 //! // Fetching communications settings from the common config.toml file.
-//! let service_config = radsat_system::Config::new("service-name")?;
+//! let service_config = radsat_system::Config::new("service-name")
+//!     .map_err(|err| CommsServiceError::ConfigError(err.to_string()))?;
 //! let comms_config = CommsConfig::new(service_config)?;
 //!
 //! // Putting everything into the control block.

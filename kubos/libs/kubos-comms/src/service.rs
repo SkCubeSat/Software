@@ -28,6 +28,9 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
+const READ_ERROR_RETRY_DELAY_MS: u64 = 100;
+const ERROR_NACK_MAX_BYTES: usize = 200;
+
 /// Type definition for a "read" function pointer.
 pub type ReadFn<Connection> = dyn Fn(&Connection) -> CommsResult<Vec<u8>> + Send + Sync + 'static;
 /// Type definition for a "write" function pointer.
@@ -133,27 +136,43 @@ impl CommsService {
         control: CommsControlBlock<Connection>,
         telem: &Arc<Mutex<CommsTelemetry>>,
     ) -> CommsResult<()> {
+        // Bind the downlink endpoint sockets up front so UDP passthrough can
+        // send from the first endpoint's address. Services that reply to the
+        // source of a passthrough datagram (e.g. shell-service) then reach the
+        // downlink endpoint and their replies are downlinked to the ground.
+        let mut endpoints = vec![];
+        if let Some(ports) = &control.downlink_ports {
+            for (port, write) in ports.iter().zip(control.write.iter()) {
+                match UdpSocket::bind((control.ip, *port)) {
+                    Ok(socket) => endpoints.push((socket, write.clone())),
+                    Err(e) => {
+                        let _ = log_error(telem, e.to_string());
+                        error!("Failed to bind downlink endpoint on port {}: {}", port, e);
+                    }
+                }
+            }
+        }
+
+        let passthrough_socket = endpoints
+            .first()
+            .and_then(|(socket, _)| socket.try_clone().ok());
+
         // If desired, spawn a read thread
         if control.read.is_some() {
             let telem_ref = telem.clone();
             let control_ref = control.clone();
-            thread::spawn(move || read_thread::<Connection, Packet>(control_ref, &telem_ref));
+            thread::spawn(move || {
+                read_thread::<Connection, Packet>(control_ref, &telem_ref, passthrough_socket)
+            });
         }
 
-        // For each provided `write()` function, spawn a downlink endpoint thread.
-        if let Some(ports) = control.downlink_ports {
-            for (port, write) in ports.iter().zip(control.write.iter()) {
-                let telem_ref = telem.clone();
-                let port_ref = *port;
-                let conn_ref = control.write_conn.clone();
-                let write_ref = write.clone();
-                let ip = control.ip;
-                thread::spawn(move || {
-                    downlink_endpoint::<Connection, Packet>(
-                        &telem_ref, port_ref, conn_ref, &write_ref, ip,
-                    );
-                });
-            }
+        // For each successfully bound downlink endpoint, spawn an endpoint thread.
+        for (socket, write) in endpoints {
+            let telem_ref = telem.clone();
+            let conn_ref = control.write_conn.clone();
+            thread::spawn(move || {
+                downlink_endpoint::<Connection, Packet>(&telem_ref, socket, conn_ref, &write);
+            });
         }
 
         info!("Communication service started");
@@ -165,6 +184,7 @@ impl CommsService {
 fn read_thread<Connection: Clone + Send + 'static, Packet: LinkPacket + Send + 'static>(
     comms: CommsControlBlock<Connection>,
     data: &Arc<Mutex<CommsTelemetry>>,
+    passthrough_socket: Option<UdpSocket>,
 ) {
     // Take reader from control block.
     let read = comms.read.unwrap();
@@ -177,7 +197,9 @@ fn read_thread<Connection: Clone + Send + 'static, Packet: LinkPacket + Send + '
         let bytes = match (read)(&comms.read_conn.clone()) {
             Ok(bytes) => bytes,
             Err(e) => {
-                log_error(data, e.to_string()).unwrap();
+                let _ = log_telemetry(data, &TelemType::UpFailed);
+                let _ = log_error(data, e.to_string());
+                thread::sleep(Duration::from_millis(READ_ERROR_RETRY_DELAY_MS));
                 continue;
             }
         };
@@ -186,8 +208,8 @@ fn read_thread<Connection: Clone + Send + 'static, Packet: LinkPacket + Send + '
         let packet = match Packet::parse(&bytes) {
             Ok(packet) => packet,
             Err(e) => {
-                log_telemetry(data, &TelemType::UpFailed).unwrap();
-                log_error(data, CommsServiceError::HeaderParsing.to_string()).unwrap();
+                let _ = log_telemetry(data, &TelemType::UpFailed);
+                let _ = log_error(data, CommsServiceError::HeaderParsing.to_string());
                 error!("Failed to parse packet header {}", e);
                 continue;
             }
@@ -195,53 +217,98 @@ fn read_thread<Connection: Clone + Send + 'static, Packet: LinkPacket + Send + '
 
         // Validate the link packet
         if !packet.validate() {
-            log_telemetry(data, &TelemType::UpFailed).unwrap();
-            log_error(data, CommsServiceError::InvalidChecksum.to_string()).unwrap();
+            let _ = log_telemetry(data, &TelemType::UpFailed);
+            let _ = log_error(data, CommsServiceError::InvalidChecksum.to_string());
             error!("Packet checksum failed");
             continue;
         }
 
         // Update number of packets up.
-        log_telemetry(data, &TelemType::Up).unwrap();
+        let _ = log_telemetry(data, &TelemType::Up);
         info!("Packet successfully uplinked");
 
         // Check link type for appropriate message handling path
         match packet.payload_type() {
             PayloadType::Unknown(value) => {
-                log_error(
-                    data,
-                    CommsServiceError::UnknownPayloadType(value).to_string(),
-                )
-                .unwrap();
+                let message = CommsServiceError::UnknownPayloadType(value).to_string();
+                let _ = log_error(data, message.clone());
                 error!("Unknown payload type encountered: {}", value);
+                let conn_ref = comms.write_conn.clone();
+                let write_ref = comms.write[0].clone();
+                if let Err(e) = send_error_nack::<Connection, Packet>(
+                    &conn_ref,
+                    &write_ref,
+                    packet.command_id(),
+                    &message,
+                ) {
+                    log_nack_failure(data, e);
+                }
+            }
+            PayloadType::Error => {
+                let message = "Error payload type is not accepted on uplink".to_string();
+                let _ = log_error(data, message.clone());
+                error!("{}", message);
+                let conn_ref = comms.write_conn.clone();
+                let write_ref = comms.write[0].clone();
+                if let Err(e) = send_error_nack::<Connection, Packet>(
+                    &conn_ref,
+                    &write_ref,
+                    packet.command_id(),
+                    &message,
+                ) {
+                    log_nack_failure(data, e);
+                }
             }
             PayloadType::UDP => {
                 let sat_ref = comms.ip;
                 let data_ref = data.clone();
+                let conn_ref = comms.write_conn.clone();
+                let write_ref = comms.write[0].clone();
+                let command_id = packet.command_id();
+                let socket_ref = passthrough_socket
+                    .as_ref()
+                    .and_then(|socket| socket.try_clone().ok());
 
-                thread::spawn(move || match handle_udp_passthrough(packet, sat_ref) {
+                thread::spawn(move || match handle_udp_passthrough(packet, sat_ref, socket_ref) {
                     Ok(_) => {
-                        log_telemetry(&data_ref, &TelemType::Down).unwrap();
                         info!("UDP Packet successfully uplinked");
                     }
                     Err(e) => {
-                        log_telemetry(&data_ref, &TelemType::DownFailed).unwrap();
-                        log_error(&data_ref, e.to_string()).unwrap();
+                        let _ = log_telemetry(&data_ref, &TelemType::DownFailed);
+                        let _ = log_error(&data_ref, e.to_string());
                         error!("UDP packet failed to uplink: {}", e);
+                        if let Err(nack_err) = send_error_nack::<Connection, Packet>(
+                            &conn_ref, &write_ref, command_id, &e,
+                        ) {
+                            log_nack_failure(&data_ref, nack_err);
+                        }
                     }
                 });
             }
             PayloadType::GraphQL => {
                 // The SpacePacket destination is an internal service port.
                 // The handler posts the GraphQL body to http://ip:port/.
-                if let Ok(mut num_handlers) = num_handlers.lock() {
+                {
+                    let mut num_handlers =
+                        num_handlers.lock().unwrap_or_else(|err| err.into_inner());
                     if *num_handlers >= comms.max_num_handlers {
-                        log_error(data, CommsServiceError::NoAvailablePorts.to_string()).unwrap();
+                        let message = CommsServiceError::NoAvailablePorts.to_string();
+                        let _ = log_error(data, message.clone());
                         error!("No message handler ports available");
+                        let conn_ref = comms.write_conn.clone();
+                        let write_ref = comms.write[0].clone();
+                        if let Err(e) = send_error_nack::<Connection, Packet>(
+                            &conn_ref,
+                            &write_ref,
+                            packet.command_id(),
+                            &message,
+                        ) {
+                            log_nack_failure(data, e);
+                        }
                         continue;
-                    } else {
-                        *num_handlers += 1;
                     }
+
+                    *num_handlers += 1;
                 }
 
                 // Spawn new message handler.
@@ -251,23 +318,32 @@ fn read_thread<Connection: Clone + Send + 'static, Packet: LinkPacket + Send + '
                 let sat_ref = comms.ip;
                 let time_ref = comms.timeout;
                 let num_handlers_ref = num_handlers.clone();
+                let command_id = packet.command_id();
                 thread::spawn(move || {
                     let res =
-                        handle_graphql_request(conn_ref, &write_ref, packet, time_ref, sat_ref);
+                        handle_graphql_request(&conn_ref, &write_ref, packet, time_ref, sat_ref);
 
-                    if let Ok(mut num_handlers) = num_handlers_ref.lock() {
-                        *num_handlers -= 1;
+                    {
+                        let mut num_handlers = num_handlers_ref
+                            .lock()
+                            .unwrap_or_else(|err| err.into_inner());
+                        *num_handlers = num_handlers.saturating_sub(1);
                     }
 
                     match res {
                         Ok(_) => {
-                            log_telemetry(&data_ref, &TelemType::Down).unwrap();
+                            let _ = log_telemetry(&data_ref, &TelemType::Down);
                             info!("GraphQL Packet successfully downlinked");
                         }
                         Err(e) => {
-                            log_telemetry(&data_ref, &TelemType::DownFailed).unwrap();
-                            log_error(&data_ref, e.to_string()).unwrap();
+                            let _ = log_telemetry(&data_ref, &TelemType::DownFailed);
+                            let _ = log_error(&data_ref, e.to_string());
                             error!("GraphQL packet failed to downlink: {}", e);
+                            if let Err(nack_err) = send_error_nack::<Connection, Packet>(
+                                &conn_ref, &write_ref, command_id, &e,
+                            ) {
+                                log_nack_failure(&data_ref, nack_err);
+                            }
                         }
                     }
                 });
@@ -279,8 +355,8 @@ fn read_thread<Connection: Clone + Send + 'static, Packet: LinkPacket + Send + '
 // This thread sends a query/mutation to its intended destination and waits for a response.
 // The thread then writes the response to the gateway.
 #[allow(clippy::boxed_local)]
-fn handle_graphql_request<Connection: Clone, Packet: LinkPacket>(
-    write_conn: Connection,
+fn handle_graphql_request<Connection, Packet: LinkPacket>(
+    write_conn: &Connection,
     write: &Arc<WriteFn<Connection>>,
     message: Box<Packet>,
     timeout: u64,
@@ -302,6 +378,13 @@ fn handle_graphql_request<Connection: Clone, Packet: LinkPacket>(
         .send()
         .map_err(|e| e.to_string())?;
 
+    if !res.status().is_success() {
+        return Err(format!(
+            "GraphQL HTTP request failed with status {}",
+            res.status()
+        ));
+    }
+
     let buf = res.text().map_err(|e| e.to_string())?;
     let buf = buf.as_bytes();
 
@@ -312,17 +395,55 @@ fn handle_graphql_request<Connection: Clone, Packet: LinkPacket>(
         .map_err(|e| e.to_string())?;
 
     // Write packet to the gateway
-    write(&write_conn, &packet).map_err(|e| e.to_string())
+    write(write_conn, &packet).map_err(|e| e.to_string())
+}
+
+fn send_error_nack<Connection, Packet: LinkPacket>(
+    write_conn: &Connection,
+    write: &Arc<WriteFn<Connection>>,
+    command_id: u64,
+    message: &str,
+) -> Result<(), String> {
+    let payload = truncated_error_payload(message);
+    let packet = Packet::build(command_id, PayloadType::Error, 0, &payload)
+        .and_then(|packet| packet.to_bytes())
+        .map_err(|e| e.to_string())?;
+
+    write(write_conn, &packet).map_err(|e| e.to_string())
+}
+
+fn truncated_error_payload(message: &str) -> Vec<u8> {
+    let mut end = message.len().min(ERROR_NACK_MAX_BYTES);
+    while !message.is_char_boundary(end) {
+        end -= 1;
+    }
+
+    message.as_bytes()[..end].to_vec()
+}
+
+fn log_nack_failure(data: &Arc<Mutex<CommsTelemetry>>, error: String) {
+    let message = format!("failed to send error NACK: {}", error);
+    let _ = log_error(data, message.clone());
+    error!("{}", message);
 }
 
 // This function takes a Packet with PayloadType::UDP and sends the payload over a
 // UdpSocket to the specified destination.
+//
+// The datagram is sent from the first downlink endpoint's socket when one
+// exists, so services that reply to the datagram's source address get their
+// replies wrapped and downlinked. Without a downlink endpoint, an ephemeral
+// socket is used and any reply to the source is lost.
 #[allow(clippy::boxed_local)]
 fn handle_udp_passthrough<Packet: LinkPacket>(
     message: Box<Packet>,
     sat_ip: Ipv4Addr,
+    reply_socket: Option<UdpSocket>,
 ) -> Result<(), String> {
-    let socket = UdpSocket::bind((sat_ip, 0)).map_err(|e| e.to_string())?;
+    let socket = match reply_socket {
+        Some(socket) => socket,
+        None => UdpSocket::bind((sat_ip, 0)).map_err(|e| e.to_string())?,
+    };
 
     socket
         .send_to(&message.payload(), (sat_ip, message.destination()))
@@ -332,19 +453,14 @@ fn handle_udp_passthrough<Packet: LinkPacket>(
 
 // This thread reads indefinitely from a UDP socket, creating link packets from
 // the UDP packet payload and then writes the link packets to a gateway.
+// The socket is bound by `CommsService::start` so it can be shared with the
+// UDP passthrough path.
 fn downlink_endpoint<Connection: Clone, Packet: LinkPacket>(
     data: &Arc<Mutex<CommsTelemetry>>,
-    port: u16,
+    socket: UdpSocket,
     write_conn: Connection,
     write: &Arc<WriteFn<Connection>>,
-    sat_ip: Ipv4Addr,
 ) {
-    // Bind the downlink endpoint to a UDP socket.
-    let socket = match UdpSocket::bind((sat_ip, port)) {
-        Ok(sock) => sock,
-        Err(e) => return log_error(data, e.to_string()).unwrap(),
-    };
-
     loop {
         let mut buf = vec![0; Packet::max_size()];
 
@@ -352,7 +468,7 @@ fn downlink_endpoint<Connection: Clone, Packet: LinkPacket>(
         let (size, _address) = match socket.recv_from(&mut buf) {
             Ok(tuple) => tuple,
             Err(e) => {
-                log_error(data, e.to_string()).unwrap();
+                let _ = log_error(data, e.to_string());
                 continue;
             }
         };
@@ -365,7 +481,7 @@ fn downlink_endpoint<Connection: Clone, Packet: LinkPacket>(
         {
             Ok(packet) => packet,
             Err(e) => {
-                log_error(data, e.to_string()).unwrap();
+                let _ = log_error(data, e.to_string());
                 continue;
             }
         };
@@ -373,12 +489,12 @@ fn downlink_endpoint<Connection: Clone, Packet: LinkPacket>(
         // Write packet to the gateway and update telemetry.
         match write(&write_conn.clone(), &packet) {
             Ok(_) => {
-                log_telemetry(data, &TelemType::Down).unwrap();
+                let _ = log_telemetry(data, &TelemType::Down);
                 info!("Packet successfully downlinked");
             }
             Err(e) => {
-                log_telemetry(data, &TelemType::DownFailed).unwrap();
-                log_error(data, e.to_string()).unwrap();
+                let _ = log_telemetry(data, &TelemType::DownFailed);
+                let _ = log_error(data, e.to_string());
                 error!("Packet failed to downlink");
             }
         };
