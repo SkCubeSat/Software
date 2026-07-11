@@ -36,3 +36,150 @@ port = 8030
 [shell-service.addr]
 ip = "0.0.0.0"
 port = 8050
+
+[mram-service]
+backend = "file"
+image_path = "/tmp/mram-service.img"
+# Must match MR2xH40 capacity for littlefs layout.
+image_capacity_bytes = 524288
+
+# Enable these when building with --features spidev
+# backend = "spidev"
+# spi_device = "/dev/spidev1.0"
+# spi_speed_hz = 10000000
+# spi_mode = 0
+
+[mram-service.addr]
+ip = "127.0.0.1"
+port = 8090
+
+[fram-service]
+backend = "file"
+image_path = "/tmp/fram-service.img"
+image_capacity_bytes = 8192
+
+fw_printenv = "/usr/sbin/fw_printenv"
+fw_setenv = "/usr/sbin/fw_setenv"
+
+# Enable hardware mode by building with: cargo build -p fram-service --features i2c
+# backend = "i2c"
+# i2c_bus = "/dev/i2c-2"
+# i2c_addr = "0x50"
+# capacity_bytes = 8192
+# address_width_bytes = 2
+# max_transfer_bytes = 32
+# I2C bus speed is configured by Linux/device-tree. The FRAM supports up to 1 MHz.
+
+[fram-service.addr]
+ip = "127.0.0.1"
+port = 8091
+
+[snn-service]
+# UART bus path the SNN payload board is wired to.
+uart_bus = "/dev/ttyUL2"
+uart_baud = 115200
+
+# Per-step timeouts (milliseconds). Distinct from the wall-clock processing time
+# which is bounded by `processing_timeout_ms` below.
+read_line_timeout_ms = 2000
+ready_timeout_ms = 2000
+rx_ok_timeout_ms = 5000
+processing_timeout_ms = 60000
+result_info_timeout_ms = 2000
+result_header_timeout_ms = 2000
+
+# Pending-job FIFO depth. Each slot holds an in-memory JPEG, so keep this small
+# unless you understand the RAM cost.
+queue_capacity = 4
+
+# Maximum number of completed inference results retained in-memory (LRU).
+# Mission apps must call getResult before eviction.
+result_retention = 4
+
+# Maximum accepted image size in bytes. Rejects oversize submissions before
+# they hit the wire.
+max_image_bytes = 4194304
+
+[snn-service.addr]
+ip = "127.0.0.1"
+port = 8092
+
+[star-risc]
+uart_bus = "/dev/pts/11"
+uart_baud = 115200
+
+[star-risc.addr]
+ip = "127.0.0.1"
+port = 8001
+
+[dosimeter]
+i2c_bus = "/dev/i2c-1"
+device_addr = 0x48
+
+[dosimeter.addr]
+ip = "127.0.0.1"
+port = 8093
+
+[cube-adcs-service]
+can_interface = "can0"
+can_bitrate = 1000000
+source_address = 1
+destination_address = 4
+timeout_ms = 5000
+
+[cube-adcs-service.addr]
+ip = "127.0.0.1"
+port = 8094
+
+[comms-services.addr]
+ip = "0.0.0.0"
+port = 8150
+
+[comms-services.comms]
+ip = "127.0.0.1"
+timeout = 1500
+max_num_handlers = 50
+downlink_ports = [14011]
+
+[comms-services.csp]
+# Outer CSP routing. Ground uplinks target obc_node plus one of the explicit
+# uplink ports below. SpacePacket sequencing stays unsegmented; large logical
+# payloads use the SFP port so libcsp can fragment/reassemble CSP packets.
+obc_node = 1
+uplink_packet_csp_port = 10
+uplink_sfp_csp_port = 12
+ground_node = 2
+ground_packet_csp_port = 11
+ground_sfp_csp_port = 13
+uplink_crypto = "none"
+# To require AES-128-GCM authenticated uplinks, set:
+# uplink_crypto = "aes-128"
+# uplink_aes_key = "000102030405060708090a0b0c0d0e0f"
+sfp_mtu = 240
+sfp_read_timeout_ms = 10000
+sfp_use_rdp = true
+sfp_max_space_packet_bytes = 65541
+max_frame_bytes = 260
+
+[comms-services.radios.uplink]
+# Uplink radio: inbound RF frames are returned by the radio as I2C master-write
+# transactions to the OBC slave address. The kernel frameq backend exposes each
+# transaction as one raw CSP frame at slave_rx_device.
+bus = "/dev/i2c-1"
+csp_node = 15
+i2c_addr = 15
+slave_rx_device = "/dev/i2c-slave-frameq-1-08"
+command_timeout_ms = 1000
+# Optional NMP credentials. TOML accepts hexadecimal integers. Reads prefer the
+# user key and fall back to the superuser key; writes use the superuser key.
+# nmp_user_key = 0x00000000
+# nmp_superuser_key = 0x00000000
+
+[comms-services.radios.downlink]
+# Downlink radio: route used when sending CSP packets to ground_node.
+bus = "/dev/i2c-2"
+csp_node = 9
+i2c_addr = 9
+command_timeout_ms = 1000
+# nmp_user_key = 0x00000000
+# nmp_superuser_key = 0x00000000

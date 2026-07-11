@@ -1094,6 +1094,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "cube-adcs-service"
+version = "0.1.0"
+dependencies = [
+ "async-graphql",
+ "cubespace-adcs-api",
+ "kubos-service",
+ "log 0.4.29",
+ "rust-can",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "cubespace-adcs-api"
+version = "0.1.0"
+dependencies = [
+ "async-graphql",
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "darling"
 version = "0.20.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1447,6 +1468,15 @@ name = "either"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
+
+[[package]]
+name = "embedded-can"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e9d2e857f87ac832df68fa498d18ddc679175cf3d2e4aa893988e5601baf9438"
+dependencies = [
+ "nb",
+]
 
 [[package]]
 name = "embedded-hal"
@@ -2243,6 +2273,12 @@ name = "hermit-abi"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc0fef456e4baa96da950455cd02c081ca953b141298e41db3fc7e36b1da849c"
+
+[[package]]
+name = "hex"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "http"
@@ -3536,6 +3572,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "memoffset"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "488016bfae457b036d996092f6cb448677611ce4449e970ceaf42695203f218a"
+dependencies = [
+ "autocfg 1.5.0",
+]
+
+[[package]]
 name = "mime"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3877,6 +3922,7 @@ dependencies = [
  "cfg-if 1.0.4",
  "cfg_aliases",
  "libc",
+ "memoffset 0.9.1",
 ]
 
 [[package]]
@@ -5064,6 +5110,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "rust-can"
+version = "0.1.0"
+dependencies = [
+ "socketcan",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "rust-i2c"
 version = "0.1.0"
 dependencies = [
@@ -5727,6 +5781,24 @@ checksum = "86f4aa3ad99f2088c990dfa82d367e19cb29268ed67c574d10d0a4bfe71f07e0"
 dependencies = [
  "libc",
  "windows-sys 0.60.2",
+]
+
+[[package]]
+name = "socketcan"
+version = "3.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ea24328be148eea05f36bc3991b1c174c586853e04d1480b92429b2df6aea865"
+dependencies = [
+ "bitflags 2.10.0",
+ "embedded-can",
+ "hex",
+ "itertools",
+ "libc",
+ "log 0.4.29",
+ "nb",
+ "nix 0.29.0",
+ "socket2 0.5.10",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
