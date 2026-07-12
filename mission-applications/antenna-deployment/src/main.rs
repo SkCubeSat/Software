@@ -19,29 +19,29 @@ fn main() -> Result<(), Error> {
         "run-once" => deployment::run_once(),
         "show-state" => {
             let mission = state::read_mission_state()?;
-            info!("remove_before_flight={}", mission.remove_before_flight);
-            info!("deployed={}", mission.deployed);
+            info!("remove_before_flight = {}", mission.remove_before_flight);
+            info!("deployed = {}", mission.deployed);
             info!(
-                "deploy_start={}",
+                "deploy_start = {}",
                 mission
                     .deploy_start
                     .map(|x| x.to_string())
                     .unwrap_or_else(|| "null".to_string())
             );
-            info!("solar_panel_deployed={}", mission.solar_panel_deployed);
-            info!("uhf_antenna_deployed={}", mission.uhf_antenna_deployed);
-            info!("vhf_antenna_deployed={}", mission.vhf_antenna_deployed);
+            info!("solar_panel_deployed = {}", mission.solar_panel_deployed);
+            info!("uhf_antenna_deployed = {}", mission.uhf_antenna_deployed);
+            info!("vhf_antenna_deployed = {}", mission.vhf_antenna_deployed);
             info!(
-                "initial_safe_state_complete={}",
+                "initial_safe_state_complete = {}",
                 mission.initial_safe_state_complete
             );
-            info!("detumbling_complete={}", mission.detumbling_complete);
+            info!("detumbling_complete = {}", mission.detumbling_complete);
             Ok(())
         }
         "reconcile" => {
             let dry_run = matches!(args.get(2).map(String::as_str), Some("dry-run"));
             state::reconcile_mission_state(dry_run)?;
-            info!("reconcile complete (dry_run={})", dry_run);
+            info!("reconcile complete (dry_run = {})", dry_run);
             Ok(())
         }
         "set-flag" => {
@@ -69,7 +69,7 @@ fn main() -> Result<(), Error> {
             };
 
             state::set_flag(key, value)?;
-            info!("set-flag {}={}", args[2], value);
+            info!("set-flag {} = {}", args[2], value);
             Ok(())
         }
         "set-deploy-start" => {
