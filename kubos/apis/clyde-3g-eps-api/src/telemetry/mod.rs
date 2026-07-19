@@ -17,6 +17,7 @@
 #[macro_use]
 mod lib;
 
+pub mod battery;
 pub mod daughterboard;
 pub mod motherboard;
 pub mod reset;

@@ -19,8 +19,10 @@ mod watchdog;
 
 pub mod board_status;
 pub mod checksum;
+pub mod heater;
 pub mod last_error;
 pub mod version;
 
 pub use crate::commands::reset::*;
 pub use crate::commands::watchdog::*;
+pub use crate::commands::heater::*;

@@ -56,6 +56,7 @@ pub enum TestType {
     Hardware,
 }
 
+pub mod battery_telemetry;
 pub mod board_status;
 pub mod daughterboard_telemetry;
 pub mod last_error;

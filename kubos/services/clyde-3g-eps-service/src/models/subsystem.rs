@@ -17,7 +17,7 @@
 //! Main module used for interacting with the underlying EPS API
 
 use crate::models::*;
-use clyde_3g_eps_api::{Checksum, Clyde3gEps, Eps};
+use clyde_3g_eps_api::{BatteryTelemetry, Checksum, Clyde3gEps, Eps};
 use eps_api::EpsResult;
 // use failure::Error;
 use rust_i2c::*;
@@ -46,6 +46,14 @@ pub enum Mutations {
     SetWatchdogPeriod,
     /// Hardware test
     TestHardware,
+    /// Battery manual reset
+    BatteryManualReset,
+    /// Battery raw passthrough command
+    BatteryRawCommand,
+    /// Battery watchdog reset
+    BatteryResetWatchdog,
+    /// Set battery heater controller status
+    BatterySetHeater,
 }
 
 fn watchdog_thread(eps: Arc<Mutex<Box<dyn Clyde3gEps + Send>>>) {
@@ -89,7 +97,10 @@ impl Subsystem {
     /// Create the underlying EPS object and then create a new subsystem which will use it
     pub fn from_path(bus: &str) -> EpsResult<Self> {
         let clyde_eps: Box<dyn Clyde3gEps + Send> =
-            Box::new(Eps::new(Connection::from_path(bus, 0x2B)));
+            Box::new(Eps::new(
+                Connection::from_path(bus, 0x2B),
+                Connection::from_path(bus, 0x2A),
+            ));
         Subsystem::new(clyde_eps)
     }
 
@@ -305,6 +316,190 @@ impl Subsystem {
             _ => Ok(vec![
                 "Error: Failed to borrow master errors vector".to_string()
             ]),
+        }
+    }
+
+    // --- Battery board methods ---
+
+    /// Get the battery board status
+    pub fn get_battery_board_status(&self) -> Result<board_status::BoardData, String> {
+        let eps = self.eps.lock().unwrap();
+        Ok(run!(eps.get_battery_board_status(), self.errors)?.into())
+    }
+
+    /// Get the battery board version information
+    pub fn get_battery_version(&self) -> Result<version::VersionData, String> {
+        let eps = self.eps.lock().unwrap();
+        Ok(run!(eps.get_battery_version_info(), self.errors)?.into())
+    }
+
+    /// Get the battery board last error
+    pub fn get_battery_last_error(&self) -> Result<last_error::ErrorData, String> {
+        let eps = self.eps.lock().unwrap();
+        Ok(run!(eps.get_battery_last_error(), self.errors)?.into())
+    }
+
+    /// Get the specific type of reset counts from the battery board
+    pub fn get_battery_reset_telemetry(
+        &self,
+        telem_type: reset_telemetry::Type,
+    ) -> Result<reset_telemetry::Data, String> {
+        let eps = self.eps.lock().unwrap();
+        Ok(run!(eps.get_battery_reset_telemetry(telem_type.into()), self.errors)?.into())
+    }
+
+    /// Get all battery telemetry in a single call
+    pub fn get_battery_telemetry(&self) -> Result<battery_telemetry::BatteryTelemetryData, String> {
+        let eps = self.eps.lock().unwrap();
+
+        let battery_output_voltage = run!(
+            eps.get_battery_telemetry(BatteryTelemetry::Type::BatteryOutputVoltage),
+            self.errors
+        )?;
+        let battery_current_magnitude = run!(
+            eps.get_battery_telemetry(BatteryTelemetry::Type::BatteryCurrentMagnitude),
+            self.errors
+        )?;
+        let battery_current_direction = run!(
+            eps.get_battery_telemetry(BatteryTelemetry::Type::BatteryCurrentDirection),
+            self.errors
+        )?;
+        let motherboard_temperature = run!(
+            eps.get_battery_telemetry(BatteryTelemetry::Type::MotherboardTemperature),
+            self.errors
+        )?;
+        let current_draw_5v = run!(
+            eps.get_battery_telemetry(BatteryTelemetry::Type::CurrentDraw5V),
+            self.errors
+        )?;
+        let output_voltage_5v = run!(
+            eps.get_battery_telemetry(BatteryTelemetry::Type::OutputVoltage5V),
+            self.errors
+        )?;
+        let current_draw_3v3 = run!(
+            eps.get_battery_telemetry(BatteryTelemetry::Type::CurrentDraw3V3),
+            self.errors
+        )?;
+        let output_voltage_3v3 = run!(
+            eps.get_battery_telemetry(BatteryTelemetry::Type::OutputVoltage3V3),
+            self.errors
+        )?;
+        let daughterboard_1_temp = run!(
+            eps.get_battery_telemetry(BatteryTelemetry::Type::Daughterboard1Temp),
+            self.errors
+        )?;
+        let daughterboard_1_heater = run!(
+            eps.get_battery_telemetry(BatteryTelemetry::Type::Daughterboard1Heater),
+            self.errors
+        )?;
+        let daughterboard_2_temp = run!(
+            eps.get_battery_telemetry(BatteryTelemetry::Type::Daughterboard2Temp),
+            self.errors
+        )?;
+        let daughterboard_2_heater = run!(
+            eps.get_battery_telemetry(BatteryTelemetry::Type::Daughterboard2Heater),
+            self.errors
+        )?;
+        let daughterboard_3_temp = run!(
+            eps.get_battery_telemetry(BatteryTelemetry::Type::Daughterboard3Temp),
+            self.errors
+        )?;
+        let daughterboard_3_heater = run!(
+            eps.get_battery_telemetry(BatteryTelemetry::Type::Daughterboard3Heater),
+            self.errors
+        )?;
+        let daughterboard_4_temp = run!(
+            eps.get_battery_telemetry(BatteryTelemetry::Type::Daughterboard4Temp),
+            self.errors
+        )?;
+        let daughterboard_4_heater = run!(
+            eps.get_battery_telemetry(BatteryTelemetry::Type::Daughterboard4Heater),
+            self.errors
+        )?;
+
+        Ok(battery_telemetry::BatteryTelemetryData {
+            battery_output_voltage,
+            battery_current_magnitude,
+            battery_current_direction,
+            motherboard_temperature,
+            current_draw_5v,
+            output_voltage_5v,
+            current_draw_3v3,
+            output_voltage_3v3,
+            daughterboard_1_temp,
+            daughterboard_1_heater,
+            daughterboard_2_temp,
+            daughterboard_2_heater,
+            daughterboard_3_temp,
+            daughterboard_3_heater,
+            daughterboard_4_temp,
+            daughterboard_4_heater,
+        })
+    }
+
+    /// Get the heater controller status from the battery board
+    pub fn get_battery_heater_status(&self) -> Result<i32, String> {
+        let eps = self.eps.lock().unwrap();
+        Ok(run!(eps.get_heater_controller_status(), self.errors)? as i32)
+    }
+
+    /// Set the heater controller status on the battery board
+    pub fn set_battery_heater_status(&self, mode: u8) -> Result<MutationResponse, String> {
+        let eps = self.eps.lock().unwrap();
+        match run!(eps.set_heater_controller_status(mode), self.errors) {
+            Ok(_v) => Ok(MutationResponse {
+                success: true,
+                errors: "".to_string(),
+            }),
+            Err(e) => Ok(MutationResponse {
+                success: false,
+                errors: e,
+            }),
+        }
+    }
+
+    /// Trigger a manual reset of the battery board
+    pub fn battery_manual_reset(&self) -> Result<MutationResponse, String> {
+        let eps = self.eps.lock().unwrap();
+        match run!(eps.battery_manual_reset(), self.errors) {
+            Ok(_v) => Ok(MutationResponse {
+                success: true,
+                errors: "".to_string(),
+            }),
+            Err(e) => Ok(MutationResponse {
+                success: false,
+                errors: e,
+            }),
+        }
+    }
+
+    /// Kick the battery board I2C watchdog
+    pub fn battery_reset_watchdog(&self) -> Result<MutationResponse, String> {
+        let eps = self.eps.lock().unwrap();
+        match run!(eps.reset_battery_comms_watchdog(), self.errors) {
+            Ok(_v) => Ok(MutationResponse {
+                success: true,
+                errors: "".to_string(),
+            }),
+            Err(e) => Ok(MutationResponse {
+                success: false,
+                errors: e,
+            }),
+        }
+    }
+
+    /// Pass raw command values through to the battery board
+    pub fn battery_raw_command(&self, command: u8, data: Vec<u8>) -> Result<MutationResponse, String> {
+        let eps = self.eps.lock().unwrap();
+        match run!(eps.battery_raw_command(command, data), self.errors) {
+            Ok(_v) => Ok(MutationResponse {
+                success: true,
+                errors: "".to_string(),
+            }),
+            Err(e) => Ok(MutationResponse {
+                success: false,
+                errors: e,
+            }),
         }
     }
 }

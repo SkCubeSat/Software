@@ -74,6 +74,43 @@ impl Clyde3gEps for MockBadEps {
     fn raw_command(&self, _cmd: u8, _data: Vec<u8>) -> EpsResult<()> {
         Err(EpsError::GenericError)
     }
+    // Battery board methods
+    fn get_battery_board_status(&self) -> EpsResult<BoardStatus> {
+        Err(EpsError::GenericError)
+    }
+    fn get_battery_checksum(&self) -> EpsResult<Checksum> {
+        Err(EpsError::GenericError)
+    }
+    fn get_battery_version_info(&self) -> EpsResult<VersionInfo> {
+        Err(EpsError::GenericError)
+    }
+    fn get_battery_last_error(&self) -> EpsResult<LastError> {
+        Err(EpsError::GenericError)
+    }
+    fn battery_manual_reset(&self) -> EpsResult<()> {
+        Err(EpsError::GenericError)
+    }
+    fn reset_battery_comms_watchdog(&self) -> EpsResult<()> {
+        Err(EpsError::GenericError)
+    }
+    fn get_battery_telemetry(&self, _telem_type: BatteryTelemetry::Type) -> EpsResult<f64> {
+        Err(EpsError::GenericError)
+    }
+    fn get_battery_reset_telemetry(
+        &self,
+        _telem_type: ResetTelemetry::Type,
+    ) -> EpsResult<ResetTelemetry::Data> {
+        Err(EpsError::GenericError)
+    }
+    fn get_heater_controller_status(&self) -> EpsResult<u8> {
+        Err(EpsError::GenericError)
+    }
+    fn set_heater_controller_status(&self, _mode: u8) -> EpsResult<()> {
+        Err(EpsError::GenericError)
+    }
+    fn battery_raw_command(&self, _cmd: u8, _data: Vec<u8>) -> EpsResult<()> {
+        Err(EpsError::GenericError)
+    }
 }
 
 fn gen_mock_bad_eps() -> Box<dyn Clyde3gEps + Send> {
@@ -156,6 +193,61 @@ impl Clyde3gEps for MockGoodEps {
         Ok(10)
     }
     fn raw_command(&self, _cmd: u8, _data: Vec<u8>) -> EpsResult<()> {
+        Ok(())
+    }
+    // Battery board methods
+    fn get_battery_board_status(&self) -> EpsResult<BoardStatus> {
+        Ok(BoardStatus {
+            motherboard: StatusCode::default(),
+            daughterboard: None,
+        })
+    }
+    fn get_battery_checksum(&self) -> EpsResult<Checksum> {
+        Ok(Checksum {
+            motherboard: 200,
+            daughterboard: None,
+        })
+    }
+    fn get_battery_version_info(&self) -> EpsResult<VersionInfo> {
+        Ok(VersionInfo {
+            motherboard: Version {
+                revision: 5,
+                firmware_number: 50,
+            },
+            daughterboard: None,
+        })
+    }
+    fn get_battery_last_error(&self) -> EpsResult<LastError> {
+        Ok(LastError {
+            motherboard: ErrorCode::None,
+            daughterboard: None,
+        })
+    }
+    fn battery_manual_reset(&self) -> EpsResult<()> {
+        Ok(())
+    }
+    fn reset_battery_comms_watchdog(&self) -> EpsResult<()> {
+        Ok(())
+    }
+    fn get_battery_telemetry(&self, _telem_type: BatteryTelemetry::Type) -> EpsResult<f64> {
+        Ok(42.0)
+    }
+    fn get_battery_reset_telemetry(
+        &self,
+        _telem_type: ResetTelemetry::Type,
+    ) -> EpsResult<ResetTelemetry::Data> {
+        Ok(ResetTelemetry::Data {
+            motherboard: 1,
+            daughterboard: None,
+        })
+    }
+    fn get_heater_controller_status(&self) -> EpsResult<u8> {
+        Ok(1)
+    }
+    fn set_heater_controller_status(&self, _mode: u8) -> EpsResult<()> {
+        Ok(())
+    }
+    fn battery_raw_command(&self, _cmd: u8, _data: Vec<u8>) -> EpsResult<()> {
         Ok(())
     }
 }

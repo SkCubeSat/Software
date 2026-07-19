@@ -130,12 +130,85 @@ pub trait Clyde3gEps {
     ///
     /// This command sends a raw command to the EPS
     fn raw_command(&self, cmd: u8, data: Vec<u8>) -> EpsResult<()>;
+
+    // --- Battery board methods ---
+
+    /// Get Battery Board Status
+    ///
+    /// The status bytes are designed to supply operational data about the battery I2C Node.
+    fn get_battery_board_status(&self) -> EpsResult<board_status::BoardStatus>;
+
+    /// Get Battery Checksum
+    ///
+    /// This command instructs the battery node to self-inspect its ROM contents.
+    fn get_battery_checksum(&self) -> EpsResult<checksum::Checksum>;
+
+    /// Get Battery Version
+    ///
+    /// The version number of the battery firmware will be returned on this command.
+    fn get_battery_version_info(&self) -> EpsResult<version::VersionInfo>;
+
+    /// Get Battery Last Error
+    ///
+    /// Retrieve details about the last error from the battery board.
+    fn get_battery_last_error(&self) -> EpsResult<last_error::LastError>;
+
+    /// Battery Manual Reset
+    ///
+    /// Reset the battery TTC node.
+    fn battery_manual_reset(&self) -> EpsResult<()>;
+
+    /// Reset Battery Communications Watchdog
+    ///
+    /// Reset the battery board's communications watchdog timer.
+    fn reset_battery_comms_watchdog(&self) -> EpsResult<()>;
+
+    /// Get Battery Telemetry
+    ///
+    /// This command is used to request a specific telemetry item from the battery board.
+    ///
+    /// # Arguments
+    /// `telem_type` - Variant of [`BatteryTelemetry::Type`] to request
+    fn get_battery_telemetry(
+        &self,
+        telem_type: telemetry::battery::Type,
+    ) -> EpsResult<f64>;
+
+    /// Get Battery Reset Telemetry
+    ///
+    /// Get reset counter telemetry from the battery board.
+    fn get_battery_reset_telemetry(
+        &self,
+        telem_type: telemetry::reset::Type,
+    ) -> EpsResult<telemetry::reset::Data>;
+
+    /// Get Heater Controller Status
+    ///
+    /// Return the current status of the battery heater controller.
+    /// Returns 0x00 if disabled, 0x01 if enabled.
+    fn get_heater_controller_status(&self) -> EpsResult<u8>;
+
+    /// Set Heater Controller Status
+    ///
+    /// Control the operation of the battery heater circuitry.
+    /// - 0x00: Thermostat control disabled. Heater will remain off.
+    /// - 0x01: Thermostat control enabled. Heater switches on when appropriate.
+    ///
+    /// # Arguments
+    /// `mode` - 0x00 to disable, 0x01 to enable
+    fn set_heater_controller_status(&self, mode: u8) -> EpsResult<()>;
+
+    /// Issue Raw Command to Battery Board
+    ///
+    /// This command sends a raw command to the battery board.
+    fn battery_raw_command(&self, cmd: u8, data: Vec<u8>) -> EpsResult<()>;
 }
 
 /// EPS structure containing low level connection and functionality
 /// required for commanding and requesting telemetry from EPS device.
 pub struct Eps {
     connection: Connection,
+    battery_connection: Connection,
 }
 
 impl Eps {
@@ -144,11 +217,15 @@ impl Eps {
     /// Creates new instance of Eps structure.
     ///
     /// # Arguments
-    /// `connection` - A [`Connection`] used as low-level connection to EPS hardware
+    /// `connection` - A [`Connection`] used as low-level connection to EPS (PDB) hardware
+    /// `battery_connection` - A [`Connection`] used as low-level connection to battery board hardware
     ///
     /// [`Connection`]: ../rust_i2c/struct.Connection.html
-    pub fn new(connection: Connection) -> Self {
-        Eps { connection }
+    pub fn new(connection: Connection, battery_connection: Connection) -> Self {
+        Eps {
+            connection,
+            battery_connection,
+        }
     }
 }
 
@@ -339,6 +416,111 @@ impl Clyde3gEps for Eps {
     fn raw_command(&self, cmd: u8, data: Vec<u8>) -> EpsResult<()> {
         thread::sleep(INTER_COMMAND_DELAY);
         self.connection.write(Command { cmd, data })?;
+        Ok(())
+    }
+
+    // --- Battery board implementations ---
+
+    fn get_battery_board_status(&self) -> EpsResult<board_status::BoardStatus> {
+        thread::sleep(INTER_COMMAND_DELAY);
+        let (command, rx_len) = board_status::command();
+        board_status::parse(
+            &self
+                .battery_connection
+                .transfer(command, rx_len, Duration::from_millis(3))?,
+        )
+    }
+
+    fn get_battery_checksum(&self) -> EpsResult<checksum::Checksum> {
+        thread::sleep(INTER_COMMAND_DELAY);
+        let (command, rx_len) = checksum::command();
+        checksum::parse(
+            &self
+                .battery_connection
+                .transfer(command, rx_len, Duration::from_millis(80))?,
+        )
+    }
+
+    fn get_battery_version_info(&self) -> EpsResult<version::VersionInfo> {
+        thread::sleep(INTER_COMMAND_DELAY);
+        let (command, rx_len) = version::command();
+        version::parse(
+            &self
+                .battery_connection
+                .transfer(command, rx_len, Duration::from_millis(3))?,
+        )
+    }
+
+    fn get_battery_last_error(&self) -> EpsResult<last_error::LastError> {
+        thread::sleep(INTER_COMMAND_DELAY);
+        let (command, rx_len) = last_error::command();
+        last_error::parse(
+            &self
+                .battery_connection
+                .transfer(command, rx_len, Duration::from_millis(3))?,
+        )
+    }
+
+    fn battery_manual_reset(&self) -> EpsResult<()> {
+        thread::sleep(INTER_COMMAND_DELAY);
+        self.battery_connection.write(manual_reset::command())?;
+        Ok(())
+    }
+
+    fn reset_battery_comms_watchdog(&self) -> EpsResult<()> {
+        thread::sleep(INTER_COMMAND_DELAY);
+        self.battery_connection
+            .write(reset_comms_watchdog::command())?;
+        Ok(())
+    }
+
+    fn get_battery_telemetry(
+        &self,
+        telem_type: telemetry::battery::Type,
+    ) -> EpsResult<f64> {
+        thread::sleep(INTER_COMMAND_DELAY);
+        let (command, rx_len) = telemetry::battery::command(telem_type);
+        telemetry::battery::parse(
+            &self
+                .battery_connection
+                .transfer(command, rx_len, Duration::from_millis(20))?,
+            telem_type,
+        )
+    }
+
+    fn get_battery_reset_telemetry(
+        &self,
+        telem_type: telemetry::reset::Type,
+    ) -> EpsResult<telemetry::reset::Data> {
+        thread::sleep(INTER_COMMAND_DELAY);
+        let (command, rx_len) = telemetry::reset::command(telem_type);
+        telemetry::reset::parse(&self.battery_connection.transfer(
+            command,
+            rx_len,
+            Duration::from_millis(3),
+        )?)
+    }
+
+    fn get_heater_controller_status(&self) -> EpsResult<u8> {
+        thread::sleep(INTER_COMMAND_DELAY);
+        let (command, rx_len) = get_heater_controller_status::command();
+        get_heater_controller_status::parse(
+            &self
+                .battery_connection
+                .transfer(command, rx_len, Duration::from_millis(3))?,
+        )
+    }
+
+    fn set_heater_controller_status(&self, mode: u8) -> EpsResult<()> {
+        thread::sleep(INTER_COMMAND_DELAY);
+        self.battery_connection
+            .write(set_heater_controller_status::command(mode))?;
+        Ok(())
+    }
+
+    fn battery_raw_command(&self, cmd: u8, data: Vec<u8>) -> EpsResult<()> {
+        thread::sleep(INTER_COMMAND_DELAY);
+        self.battery_connection.write(Command { cmd, data })?;
         Ok(())
     }
 }
