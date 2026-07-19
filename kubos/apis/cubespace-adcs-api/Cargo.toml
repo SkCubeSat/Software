@@ -1,0 +1,13 @@
+[package]
+name = "cubespace-adcs-api"
+version = "0.1.0"
+authors = ["RADSAT-SK2 Software Team"]
+edition = "2018"
+
+[dependencies]
+async-graphql = "7.0.17"
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "2.0"
+
+[package.metadata.release]
+release = false

@@ -16,9 +16,11 @@
 
 use kubos_comms::*;
 use std::cell::RefCell;
+use std::net::{SocketAddr, TcpStream};
 use std::str;
 use std::sync::{Arc, Barrier, Mutex};
 use std::thread;
+use std::time::{Duration, Instant};
 use warp::{self, Buf, Filter};
 
 // This MockComms structure allows for easy integration testing
@@ -45,7 +47,9 @@ impl MockComms {
         if let Some(data) = buffer.pop() {
             return Ok(data);
         }
-        bail!("Failed to get data");
+        Err(CommsServiceError::GenericError(
+            "Failed to get data".to_string(),
+        ))
     }
 
     // Used by comms service to write to radio
@@ -76,7 +80,7 @@ pub fn read(socket: &Arc<Mutex<MockComms>>) -> CommsResult<Vec<u8>> {
     if let Ok(socket) = socket.lock() {
         socket.read()
     } else {
-        bail!("Failed to lock socket");
+        Err(CommsServiceError::MutexPoisoned)
     }
 }
 
@@ -86,7 +90,7 @@ pub fn write(socket: &Arc<Mutex<MockComms>>, data: &[u8]) -> CommsResult<()> {
         socket.write(data).unwrap();
         Ok(())
     } else {
-        bail!("Failed to lock socket");
+        Err(CommsServiceError::MutexPoisoned)
     }
 }
 
@@ -132,4 +136,36 @@ pub fn spawn_http_server(
         });
     let service_ip: std::net::SocketAddrV4 = service_ip.parse().unwrap();
     thread::spawn(move || warp::serve(routes).run(service_ip));
+}
+
+#[allow(dead_code)]
+pub fn wait_for_tcp_listener(service_ip: &str) {
+    let address: SocketAddr = service_ip.parse().unwrap();
+    for _ in 0..100 {
+        if TcpStream::connect_timeout(&address, Duration::from_millis(20)).is_ok() {
+            return;
+        }
+        thread::sleep(Duration::from_millis(10));
+    }
+
+    panic!("HTTP test server did not start at {}", service_ip);
+}
+
+#[allow(dead_code)]
+pub fn pop_write_with_timeout(
+    mock_comms: &Arc<Mutex<MockComms>>,
+    timeout: Duration,
+) -> Option<Vec<u8>> {
+    let start = Instant::now();
+    loop {
+        if let Some(data) = mock_comms.lock().unwrap().pop_write() {
+            return Some(data);
+        }
+
+        if start.elapsed() >= timeout {
+            return None;
+        }
+
+        thread::sleep(Duration::from_millis(10));
+    }
 }

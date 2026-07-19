@@ -17,9 +17,15 @@
 //! Packet Definition for SpacePacket
 
 use crate::packet::{LinkPacket, PayloadType};
-use crate::CommsResult;
+use crate::{CommsResult, CommsServiceError};
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
+use std::convert::TryFrom;
 use std::io::Cursor;
+
+const PRIMARY_HEADER_LEN: usize = 6;
+const SECONDARY_HEADER_LEN: usize = 10;
+const MIN_PACKET_LEN: usize = PRIMARY_HEADER_LEN + SECONDARY_HEADER_LEN;
+const SEQUENCE_FLAGS_UNSEGMENTED: u8 = 0b11;
 
 #[derive(Eq, Debug, PartialEq)]
 struct PrimaryHeader {
@@ -62,15 +68,29 @@ impl LinkPacket for SpacePacket {
         destination_port: u16,
         payload: &[u8],
     ) -> CommsResult<Box<Self>> {
+        // The SpacePacket is the inner comms envelope. Its payload is the
+        // GraphQL body or UDP bytes; its destination is a local service port.
+        //
+        // Fragmentation is intentionally not represented here. Larger payloads
+        // should be split/reassembled by the CSP SFP layer before this packet
+        // reaches kubos-comms.
+        let packet_data_len = SECONDARY_HEADER_LEN + payload.len();
+        let data_length =
+            u16::try_from(packet_data_len).map_err(|_| {
+                CommsServiceError::ParsingError(format!(
+                    "SpacePacket payload is too large: packet data length {packet_data_len} exceeds u16"
+                ))
+            })?;
+
         Ok(Box::new(SpacePacket {
             primary_header: PrimaryHeader {
                 version: 0,
                 packet_type: 0,
-                sec_header_flag: 0,
+                sec_header_flag: 1,
                 app_proc_id: u16::from(payload_type),
-                sequence_flags: 0,
+                sequence_flags: SEQUENCE_FLAGS_UNSEGMENTED,
                 sequence_count: 0,
-                data_length: (payload.len() + 10) as u16,
+                data_length,
             },
             secondary_header: SecondaryHeader {
                 command_id,
@@ -81,6 +101,15 @@ impl LinkPacket for SpacePacket {
     }
 
     fn parse(raw: &[u8]) -> CommsResult<Box<Self>> {
+        // Parse a single complete SpacePacket from the CSP payload. Fragment
+        // reassembly belongs to CSP SFP, so segmented SpacePackets are rejected.
+        if raw.len() < MIN_PACKET_LEN {
+            return Err(CommsServiceError::ParsingError(format!(
+                "SpacePacket is too short: {} bytes, minimum is {MIN_PACKET_LEN}",
+                raw.len()
+            )));
+        }
+
         let mut reader = Cursor::new(raw.to_vec());
 
         let header_0 = reader.read_u16::<BigEndian>()?;
@@ -94,6 +123,20 @@ impl LinkPacket for SpacePacket {
         let sequence_count = header_1 & 0x3FFF;
 
         let data_length = reader.read_u16::<BigEndian>()?;
+        let expected_len = PRIMARY_HEADER_LEN + usize::from(data_length);
+        if raw.len() != expected_len {
+            return Err(CommsServiceError::ParsingError(format!(
+                "SpacePacket length mismatch: header declares {expected_len} bytes, received {}",
+                raw.len()
+            )));
+        }
+
+        if sequence_flags != SEQUENCE_FLAGS_UNSEGMENTED {
+            return Err(CommsServiceError::ParsingError(format!(
+                "segmented SpacePacket received with sequence flags {sequence_flags:#04b}; use CSP SFP for fragmentation"
+            )));
+        }
+
         let command_id = reader.read_u64::<BigEndian>()?;
         let destination_port = reader.read_u16::<BigEndian>()?;
         let pos = reader.position() as usize;
@@ -154,10 +197,17 @@ impl LinkPacket for SpacePacket {
     fn destination(&self) -> u16 {
         self.secondary_header.destination_port
     }
+
+    fn validate(&self) -> bool {
+        self.primary_header.sequence_flags == SEQUENCE_FLAGS_UNSEGMENTED
+            && usize::from(self.primary_header.data_length)
+                == SECONDARY_HEADER_LEN + self.payload.len()
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::SECONDARY_HEADER_LEN;
     use crate::*;
 
     #[test]
@@ -177,8 +227,61 @@ mod tests {
 
     #[test]
     fn parse_python_spacepacket() {
-        let raw = b"\x00\x01\x00\x00\x00\x0f\x00\x00\x00\x00\x00\x00\x00o\x05\xdcquery";
+        let raw = b"\x00\x01\xc0\x00\x00\x0f\x00\x00\x00\x00\x00\x00\x00o\x05\xdcquery";
         let parsed = SpacePacket::parse(raw).unwrap();
         dbg!(parsed);
+    }
+
+    #[test]
+    fn build_marks_packet_unsegmented() {
+        let packet = SpacePacket::build(1, PayloadType::GraphQL, 15001, b"query").unwrap();
+        let raw = packet.to_bytes().unwrap();
+        let sequence_header = u16::from_be_bytes([raw[2], raw[3]]);
+
+        assert_eq!((sequence_header & 0xC000) >> 14, 0b11);
+    }
+
+    #[test]
+    fn build_marks_secondary_header_present() {
+        let packet = SpacePacket::build(1, PayloadType::GraphQL, 15001, b"query").unwrap();
+        let raw = packet.to_bytes().unwrap();
+        let packet_id_header = u16::from_be_bytes([raw[0], raw[1]]);
+
+        assert_eq!((packet_id_header & 0x0800) >> 11, 1);
+    }
+
+    #[test]
+    fn parse_rejects_segmented_packet() {
+        let packet = SpacePacket::build(1, PayloadType::GraphQL, 15001, b"query").unwrap();
+        let mut raw = packet.to_bytes().unwrap();
+        raw[2] = 0x00;
+        raw[3] = 0x00;
+
+        assert!(SpacePacket::parse(&raw).is_err());
+    }
+
+    #[test]
+    fn parse_rejects_truncated_packet() {
+        let packet = SpacePacket::build(1, PayloadType::GraphQL, 15001, b"query").unwrap();
+        let mut raw = packet.to_bytes().unwrap();
+        raw.pop();
+
+        assert!(SpacePacket::parse(&raw).is_err());
+    }
+
+    #[test]
+    fn parse_rejects_length_mismatch() {
+        let packet = SpacePacket::build(1, PayloadType::GraphQL, 15001, b"query").unwrap();
+        let mut raw = packet.to_bytes().unwrap();
+        raw[5] += 1;
+
+        assert!(SpacePacket::parse(&raw).is_err());
+    }
+
+    #[test]
+    fn build_rejects_payload_too_large_for_length_field() {
+        let payload = vec![0; usize::from(u16::MAX) - SECONDARY_HEADER_LEN + 1];
+
+        assert!(SpacePacket::build(1, PayloadType::GraphQL, 15001, &payload).is_err());
     }
 }

@@ -5,6 +5,7 @@ members = [
     # Pure Rust crates
     "kubos/apis/app-api/rust",
     "kubos/apis/adcs-api",
+    "kubos/apis/nxtrx4-api",
     "kubos/apis/clyde-3g-eps-api",
     "kubos/apis/eps-api",
     "kubos/apis/mai400-api",
@@ -58,6 +59,7 @@ members = [
     "kubos/apis/gomspace-p31u-api",
     "kubos/examples/rust-c-service/extern-lib",
     "kubos/examples/rust-c-service/service",
+    "kubos/libs/radsat-csp",
     "kubos/services/iobc-supervisor-service",
     "kubos/services/isis-ants-service",
     "kubos/test/integration/linux/isis-ants",
@@ -65,12 +67,19 @@ members = [
     "services/payload-services/star-risc",
     "services/payload-services/dosimeter",
     "services/payload-services/snn-service",
+    "services/bus-services/cube-adcs-service",
     "services/hardware-services/mram-service",
     "services/hardware-services/fram-service",
-    "services/payload-services/dosimeter",
+    "services/comms-cli",
+    "services/comms-services"
 ]
 
-exclude = ["kubos/apis/nosengine-rust", "kubos/test/integration/nosengine-rust"]
+exclude = [
+    "kubos/apis/nosengine-rust",
+    "kubos/test/integration/nosengine-rust",
+    "vendor/libcsp",
+    "vendor/libcsp-rust",
+]
 
 # This contains just pure Rust crates to allow for running
 # cargo commands without C-build dependencies
@@ -122,9 +131,12 @@ default-members = [
     "kubos/test/integration/large_upload",
     "kubos/utils",
     "services/simulator-services/clyde-3g-eps-simulator",
+    "services/bus-services/cube-adcs-service",
     "services/bus-services/novatel-oem7-service",
     "services/hardware-services/mram-service",
     "services/hardware-services/fram-service",
+    "services/comms-cli",
+    "services/comms-services",
 ]
 
 [workspace.package]
@@ -133,6 +145,9 @@ description = "Radsat OBC software, built on KubOS"
 documentation = "https:software.skcubesat.ca"
 repository = "https://github.com/SkCubeSat/Software"
 license = "Apache-2.0"
+
+[workspace.dependencies]
+aes-gcm = "0.10.3"
 
 [profile.release]
 lto = true

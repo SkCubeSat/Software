@@ -1,0 +1,1 @@
+{"query":"mutation { radioReboot(role: DOWNLINK) { role success message verbalResponseText verbalResponseHex } }"}
