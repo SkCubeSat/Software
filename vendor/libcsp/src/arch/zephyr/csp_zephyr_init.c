@@ -1,0 +1,26 @@
+#include <zephyr/kernel.h>
+#include <zephyr/init.h>
+/* https://github.com/zephyrproject-rtos/zephyr/discussions/96911*/
+#if __has_include(<zephyr/posix/posix_time.h>)
+  #include <time.h>
+#else
+  #include <zephyr/posix/time.h>
+#endif
+#include <csp/csp_debug.h>
+
+#include <zephyr/logging/log.h>
+LOG_MODULE_REGISTER(libcsp);
+
+static int libcsp_zephyr_init(void)
+{
+
+	struct timespec ts = {
+		.tv_sec = 946652400,
+		.tv_nsec = 0,
+	};
+	clock_settime(CLOCK_REALTIME, &ts);
+
+	return 0;
+}
+
+SYS_INIT(libcsp_zephyr_init, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);

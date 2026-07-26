@@ -1,0 +1,1 @@
+{"query":"{ radioHealth(role: DOWNLINK) { role cspNode uptimeSeconds radioStatus radioTxPackets radioRxPackets radioRxOverruns errors } }"}

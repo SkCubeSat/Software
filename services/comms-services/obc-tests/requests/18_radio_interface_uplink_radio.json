@@ -1,0 +1,1 @@
+{"query":"{ radioInterfaceStats(role: UPLINK, interface: RADIO) { role interface interfaceName txPacketCount rxPacketCount lockedInTxCount rxOverrunCount txLengthError criticalInternalError txPacketCountAfterReset rxPacketCountAfterReset } }"}

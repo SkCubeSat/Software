@@ -1,0 +1,1 @@
+{"query":"{ radioPing(role: DOWNLINK, payloadSize: 8) { role payloadSize roundTripMs } }"}

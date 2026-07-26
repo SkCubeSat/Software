@@ -1,0 +1,7 @@
+if(CSP_POSIX)
+  add_subdirectory(posix)
+elseif(CSP_FREERTOS)
+  add_subdirectory(freertos)
+elseif(CSP_ZEPHYR)
+  add_subdirectory(zephyr)
+endif()

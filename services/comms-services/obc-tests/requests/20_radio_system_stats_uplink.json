@@ -1,0 +1,1 @@
+{"query":"{ radioSystemStats(role: UPLINK) { role systemInfo { cpuVoltage10mv cpuTemperatureKelvin totalResetCount } sriStatus { wdtReset borReset porReset rstNmiReset exitFromLpm5 totalUpTime upTime statusBytesHex } adcData { cpuTempKelvin cpuVoltage10mv extVoltage rssiRxImmediate rssiRxAvg rssiRxMax rssiBackgroundImmediate rssiBackgroundAvg rssiBackgroundMax swr paNtc } } }"}

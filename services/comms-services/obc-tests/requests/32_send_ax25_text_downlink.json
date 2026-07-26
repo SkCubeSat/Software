@@ -1,0 +1,1 @@
+{"query":"mutation { radioSendAx25Message(role: DOWNLINK, data: \"CQ RADSAT\", format: TEXT) { role success message verbalResponseText verbalResponseHex } }"}

@@ -14,9 +14,6 @@
 // limitations under the License.
 //
 
-#[macro_use]
-extern crate failure;
-
 mod util;
 
 use kubos_comms::*;
@@ -67,13 +64,15 @@ fn concurrent_uplinks_to_service_with_handler_response() {
 
         // Setup & start HTTP server
         let recv_data: Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(vec![]));
+        let service_addr = format!("{}:{}", sat_ip, service_port + i);
 
         spawn_http_server(
             resp_payload.clone(),
             recv_data.clone(),
-            &format!("{}:{}", sat_ip, service_port + i),
+            &service_addr,
             barrier.clone(),
         );
+        wait_for_tcp_listener(&service_addr);
 
         recv_data_list.push(recv_data);
 
@@ -148,12 +147,14 @@ fn too_many_concurrent_uplinks_to_service_with_handler_response() {
 
         // Setup & start HTTP server
         let recv_data: Arc<Mutex<Vec<u8>>> = Arc::new(Mutex::new(vec![]));
+        let service_addr = format!("{}:{}", sat_ip, service_port + i);
         spawn_http_server(
             resp_payload.clone(),
             recv_data.clone(),
-            &format!("{}:{}", sat_ip, service_port + i),
+            &service_addr,
             barrier.clone(),
         );
+        wait_for_tcp_listener(&service_addr);
 
         recv_data_list.push(recv_data);
 
@@ -186,6 +187,7 @@ fn too_many_concurrent_uplinks_to_service_with_handler_response() {
     thread::sleep(Duration::from_millis(100));
 
     let mut num_packet_correct = 0;
+    let mut num_error_nacks = 0;
     let mut num_packet_empty = 0;
     for _ in 0..(num_tests) {
         // Pretend to be the ground and read the
@@ -193,13 +195,25 @@ fn too_many_concurrent_uplinks_to_service_with_handler_response() {
         let data = mock_comms.lock().unwrap().pop_write();
         if let Some(data) = data {
             let packet = SpacePacket::parse(&data).unwrap();
-            assert_eq!(packet.payload().to_vec(), resp_payload);
-            assert_eq!(packet.destination(), 0);
-            num_packet_correct += 1;
+            match packet.payload_type() {
+                PayloadType::GraphQL => {
+                    assert_eq!(packet.payload().to_vec(), resp_payload);
+                    assert_eq!(packet.destination(), 0);
+                    num_packet_correct += 1;
+                }
+                PayloadType::Error => {
+                    assert_eq!(packet.destination(), 0);
+                    assert!(!packet.payload().is_empty());
+                    assert!(packet.payload().len() <= 200);
+                    num_error_nacks += 1;
+                }
+                payload_type => panic!("unexpected payload type: {:?}", payload_type),
+            }
         } else {
             num_packet_empty += 1;
         }
     }
     assert_eq!(num_packet_correct, 10);
-    assert_eq!(num_packet_empty, 5);
+    assert_eq!(num_error_nacks, 5);
+    assert_eq!(num_packet_empty, 0);
 }

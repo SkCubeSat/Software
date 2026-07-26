@@ -1,44 +1,82 @@
-use rust_i2c::*;
+use std::{
+    process,
+    sync::{Arc, Mutex},
+    time::Duration,
+};
+
+use comms_services::{
+    config::{SERVICE_NAME, ServiceSettings},
+    csp_interface::spawn_i2c_workers,
+    model::Subsystem,
+    nxtrx_comms::{NxtrxComms, read, write},
+    schema::{MutationRoot, QueryRoot},
+};
+use kubos_comms::{CommsControlBlock, CommsService, CommsTelemetry, SpacePacket};
+use kubos_service::{Config, Logger, Service};
+use log::info;
+use radsat_csp::{CspListener, ReservedServiceWorker, RouterWorker};
 
 fn main() {
-    println!("Hello, world!");
+    if let Err(err) = run() {
+        log::error!("{err}");
+        eprintln!("{err}");
+        process::exit(1);
+    }
 }
 
-/*
-// CSP and custom Needronix management ports used in sun sensor:
-#define CSP_PORT_CMP 0
-#define CSP_PORT_PING 1
-#define CSP_PORT_REBOOT 4
-#define CSP_PORT_RADIO_READY_CHECK 5 // equivalent of csp_get_buf_free
-#define CSP_PORT_GET_UPTIME 6
-#define CSP_PORT_MORSE 11
-#define CSP_PORT_MORSE_TEXT 12
-#define CSP_PORT_AX25_BEACON 15
-#define NMP_PORT 20
-#define CSP_PORT_GET_SYSTEM_STATS 22
-#define CSP_PORT_GET_INTF_STATS 23
+fn run() -> Result<(), Box<dyn std::error::Error>> {
+    Logger::init(SERVICE_NAME)?;
 
-#define CSP_ERR_NONE 0 /* No error */
-#define CSP_ERR_NOMEM -1 /* Not enough memory */
-#define CSP_ERR_INVAL -2 /* Invalid argument */
-#define CSP_ERR_TIMEDOUT -3 /* Operation timed out */
-#define CSP_ERR_USED -4 /* Resource already in use */
-#define CSP_ERR_NOTSUP -5 /* Operation not supported */
-#define CSP_ERR_BUSY -6 /* Device or resource busy */
-#define CSP_ERR_ALREADY -7 /* Connection already in progress */
-#define CSP_ERR_RESET -8 /* Connection reset */
-#define CSP_ERR_NOBUFS -9 /* No more buffer space available */
-#define CSP_ERR_TX -10 /* Transmission failed */
-#define CSP_ERR_DRIVER -11 /* Error in driver layer */
-#define CSP_ERR_AGAIN -12 /* Resource temporarily unavailable */
-#define CSP_ERR_NOT_NMP -13 /* Length too short to be NMP protocol*/
-#define CSP_ERR_LEN -16 /* Length related problem (too short or too long) - this is what a specific command finds and evaluates */
-#define CSP_ERR_LOCKED -19 /* NMP critical command requires to unlock NMP first */
-#define CSP_ERR_PERMISSION -29 /* NMP: unlocked, key is valid, but you are not authorized to execute this command */
-#define CSP_ERR_PERMISSION_INTERNAL -31 /* no permission found - this will not happen in real operation, this is to capture programmers mistake at testing */
-#define CSP_ERR_KEY -37 /* no valid key provided */
-#define CSP_ERR_HMAC -100 /* HMAC failed */
-#define CSP_ERR_XTEA -101 /* XTEA failed */
-#define CSP_ERR_CRC32 -102 /* CRC32 failed */
+    let config = Config::new(SERVICE_NAME)?;
+    let settings = ServiceSettings::from_config(&config)?;
 
-*/
+    // CSP is the outer transport layer. It moves packets between CSP nodes
+    // such as the ground station, OBC, and each NXTRX4 radio.
+    let _router = RouterWorker::start();
+    let _ping_service = ReservedServiceWorker::start_ping_service();
+
+    // Inbound RF traffic arrives on two explicit CSP ports: one for a single
+    // CSP packet and one for SFP-fragmented SpacePackets.
+    let packet_listener =
+        CspListener::bind(settings.csp.uplink_packet_csp_port, settings.csp.backlog)
+            .with_accept_timeout(Duration::from_millis(100))
+            .with_read_timeout(Duration::from_millis(100));
+    let sfp_listener = CspListener::bind(settings.csp.uplink_sfp_csp_port, settings.csp.backlog)
+        .with_accept_timeout(Duration::from_millis(100))
+        .with_read_timeout(settings.csp.sfp_read_timeout);
+
+    // Register the I2C buses as CSP interfaces and install routes such as
+    // ground_node -> downlink radio I2C address.
+    spawn_i2c_workers(&settings.csp, &settings.radios)?;
+
+    let comms = NxtrxComms::new(
+        packet_listener,
+        sfp_listener,
+        &settings.csp,
+        &settings.radios,
+    );
+    let controls = CommsControlBlock::new(
+        Some(Arc::new(read)),
+        vec![Arc::new(write)],
+        comms.clone(),
+        comms.clone(),
+        settings.comms.clone(),
+    )?;
+    let telemetry = Arc::new(Mutex::new(CommsTelemetry::default()));
+
+    info!(
+        "NXTRX4 communications service starting: uplink node {} on {}, downlink node {} on {}",
+        settings.radios.uplink.csp_node,
+        settings.radios.uplink.bus,
+        settings.radios.downlink.csp_node,
+        settings.radios.downlink.bus
+    );
+    // kubos-comms handles the inner SpacePacket: parse it, choose GraphQL or
+    // UDP by payload type, dispatch by destination port, and call write().
+    CommsService::start::<NxtrxComms, SpacePacket>(controls, &telemetry)?;
+
+    let subsystem = Subsystem::new(telemetry, comms, settings);
+    Service::new(config, subsystem, QueryRoot, MutationRoot).start();
+
+    Ok(())
+}

@@ -1,0 +1,550 @@
+# NXTRX4 Communications Service
+
+This service owns the spacecraft communication path between the OBC, two
+Needronix NXTRX4 radios, and the rest of the KubOS services running on the
+satellite.
+
+The service uses one process for both radios:
+
+- the uplink radio returns inbound RF frames by writing CSP-over-I2C frames to
+  the OBC's I2C slave address
+- the downlink radio is used for outbound CSP frames to the ground station
+- both radios are still exposed for basic health queries through this service's
+  GraphQL API
+
+## Packet Stack
+
+The on-wire logical stack is:
+
+```text
+GraphQL JSON body or UDP bytes
+  -> KubOS SpacePacket
+  -> CSP packet or CSP SFP transfer
+  -> NXTRX4 radio / RF link
+```
+
+The layers have different responsibilities:
+
+- CSP routes traffic between nodes and ports, such as ground, OBC, and radios.
+- CSP SFP handles fragmentation and reassembly when a logical payload is too
+  large for one CSP packet.
+- The KubOS SpacePacket is the inner dispatch envelope. It says whether the
+  payload is GraphQL or UDP and which local service port should receive it.
+- The GraphQL payload is only the HTTP request body, not a full HTTP request.
+  The comms service creates the local HTTP POST after the packet is received.
+
+SpacePacket sequencing is not used for fragmentation. SpacePackets are marked
+as unsegmented, and segmented SpacePackets are rejected. Large transfers must
+use the SFP CSP port described below.
+
+## SpacePacket Wire Format
+
+Everything the ground segment needs — CSP framing, SFP fragmentation,
+encryption, size budgets, and worked byte examples — is collected in
+[GROUND_STATION.md](GROUND_STATION.md).
+
+This is the byte contract the ground station must implement. All fields are
+big-endian. A serialized SpacePacket is a 6-byte CCSDS primary header, a
+10-byte secondary header, and the payload:
+
+```text
+offset  size  field
+0       2     version (3 bits) | packet type (1 bit) |
+              secondary header flag (1 bit, always 1) |
+              payload type (11 bits, in the APID field)
+2       2     sequence flags (2 bits, always 0b11 = unsegmented) |
+              sequence count (14 bits, unused, 0)
+4       2     data length = 10 + payload length (secondary header + payload)
+6       8     command id (u64) - opaque correlation id chosen by the ground,
+              echoed back in the response and in error NACKs
+14      2     destination port (u16) - local service HTTP port for GraphQL,
+              local UDP port for UDP passthrough; 0 in downlinked responses
+16      n     payload - GraphQL JSON body, UDP bytes, or an error message
+```
+
+Payload types carried in the APID field:
+
+| value | type    | direction        | payload                             |
+|-------|---------|------------------|-------------------------------------|
+| 0     | GraphQL | uplink, downlink | GraphQL JSON request/response body  |
+| 1     | UDP     | uplink, downlink | raw UDP datagram bytes              |
+| 2     | Error   | downlink only    | UTF-8 error message (max 200 bytes) |
+
+Any other value is rejected on uplink and answered with an Error NACK.
+
+## CSP Ports
+
+The service uses explicit CSP ports instead of auto-detecting packet format.
+This keeps the ground/OBC contract simple and avoids ambiguity while receiving
+multi-packet SFP transfers.
+
+Default sample config:
+
+```toml
+[comms-services.csp]
+obc_node = 1
+uplink_packet_csp_port = 10
+uplink_sfp_csp_port = 12
+ground_node = 2
+ground_packet_csp_port = 11
+ground_sfp_csp_port = 13
+```
+
+Meaning:
+
+- `uplink_packet_csp_port`: ground sends one CSP packet containing one complete
+  SpacePacket.
+- `uplink_sfp_csp_port`: ground sends one logical SpacePacket fragmented with
+  CSP SFP.
+- `ground_packet_csp_port`: service sends small downlink responses to this
+  ground CSP port as one CSP packet.
+- `ground_sfp_csp_port`: service sends larger downlink responses to this ground
+  CSP port using CSP SFP.
+
+On uplink, the ground side chooses the port based on message size. On downlink,
+the service chooses automatically: if the serialized SpacePacket fits in one CSP
+packet, it uses the packet port; otherwise it uses the SFP port.
+
+## Size Limits
+
+With the sample config:
+
+```toml
+max_frame_bytes = 260
+sfp_mtu = 240
+sfp_read_timeout_ms = 10000
+sfp_max_space_packet_bytes = 65541
+```
+
+Normal CSP packet mode allows one serialized SpacePacket of about 256 bytes.
+After the 16-byte SpacePacket header, that leaves about 240 bytes for the
+GraphQL JSON body or UDP payload.
+
+SFP mode allows a much larger logical SpacePacket. The sample limit is 65541
+bytes, which allows about 65525 bytes of GraphQL JSON body or UDP payload after
+the SpacePacket header. `sfp_mtu` is the per-fragment payload size used by SFP;
+the default leaves room in the CSP buffer for SFP and RDP headers.
+`sfp_read_timeout_ms` is the inter-fragment timeout while reassembling one SFP
+uplink.
+
+`max_frame_bytes` is also the buffer size used when reading one CSP frame from
+the I2C slave frame-queue backend. It only needs to hold one CSP frame, not an
+entire SFP transfer.
+
+## I2C Slave Receive Backend
+
+The NXTRX4 CSP-over-I2C interface is multi-master. The OBC writes commands to
+the radio as I2C master, but the radio returns received RF frames by becoming
+I2C master and writing to the OBC's configured I2C slave address.
+
+The comms service therefore expects an external kernel/BSP backend to expose
+those slave writes as a frame stream. The backend contract is:
+
+```text
+one I2C master-write transaction from the radio
+  -> one read() from slave_rx_device
+  -> one raw CSP-over-I2C frame, including CSP header bytes
+```
+
+The backend must not parse CSP, add length prefixes, pad frames, split one I2C
+write across multiple reads, or combine multiple writes into one read. CSP and
+CSP SFP reassembly stay in libcsp after the frame is injected.
+
+This repo includes reference kernel patches:
+
+```text
+../radsat-linux/common/patches/linux/0003-i2c-omap-add-slave-support-linux-4.4.patch
+../radsat-linux/common/patches/linux/0004-i2c-add-slave-frameq-backend.patch
+```
+
+Apply the OMAP bus-driver patch first, then the frame queue backend patch. The
+kernel must report `I2C_FUNC_SLAVE: yes` on the NXTRX4 bus before the backend
+can be used. Example backend setup for bus 1 and OBC slave address `0x01`:
+
+```sh
+modprobe i2c-slave-frameq max_frame_bytes=260 queue_depth=32
+echo slave-frameq 0x1001 > /sys/bus/i2c/devices/i2c-1/new_device
+```
+
+The service config then points the uplink radio at the resulting device:
+
+```toml
+[comms-services.radios.uplink]
+bus = "/dev/i2c-1"
+csp_node = 8
+i2c_addr = 8
+slave_rx_device = "/dev/i2c-slave-frameq-1-01"
+```
+
+## Startup
+
+Startup happens in `src/main.rs`:
+
+1. Load the `comms-services` section from the KubOS config.
+2. Start the global libcsp router and ping service.
+3. Bind two CSP listeners:
+   - packet uplink listener
+   - SFP uplink listener
+4. Register the configured I2C buses as CSP interfaces.
+5. Install CSP routes for the uplink radio, downlink radio, and ground node.
+6. Open the configured uplink `slave_rx_device` and start the frame injection
+   worker.
+7. Start `kubos-comms`, passing it read/write callbacks backed by NXTRX4/CSP.
+8. Start this service's GraphQL API for telemetry and radio health.
+
+## Routing
+
+`src/csp_interface.rs` builds the OBC-side CSP route table.
+
+The important route is:
+
+```text
+ground_node -> downlink radio I2C address
+```
+
+That means any CSP packet addressed to `ground_node` is sent out through the
+downlink NXTRX4. This is separate from KubOS service routing. KubOS service
+routing happens inside the SpacePacket using its destination port.
+
+## Uplink Flow
+
+Packet-port uplink:
+
+```text
+ground
+  -> CSP packet to obc_node:uplink_packet_csp_port
+  -> NXTRX4 uplink radio
+  -> NXTRX4 writes one CSP frame to the OBC I2C slave address
+  -> frameq backend returns one frame to the service
+  -> service injects the CSP frame into libcsp
+  -> CspListener receives one CSP packet
+  -> CSP payload is parsed as one SpacePacket
+```
+
+SFP-port uplink:
+
+```text
+ground
+  -> CSP SFP transfer to obc_node:uplink_sfp_csp_port
+  -> NXTRX4 uplink radio
+  -> NXTRX4 writes each CSP/SFP fragment as a CSP frame
+  -> frameq backend returns one frame per I2C transaction
+  -> service injects each CSP frame into libcsp
+  -> CspListener reads multiple CSP packets on one connection
+  -> SFP chunks are reassembled into one SpacePacket
+```
+
+Each uplink CSP port is drained by its own poller thread, so a slow
+multi-fragment SFP reassembly never blocks single-packet commands arriving on
+the packet port. If uplink encryption is enabled, the payload is decrypted and
+authenticated here, before it is handed to `kubos-comms`.
+
+After either path, `kubos-comms` parses the SpacePacket:
+
+- payload type `GraphQL`: spawn a message handler thread
+- payload type `UDP`: send the payload as a UDP datagram to the destination port
+
+For GraphQL, the SpacePacket destination is interpreted as a local service port.
+The handler posts to:
+
+```text
+http://<comms.ip>:<spacepacket.destination>/
+```
+
+The HTTP body is the SpacePacket payload bytes. The handler waits up to
+`comms.timeout` milliseconds (default 1500) for the HTTP response, wraps the
+response body in a GraphQL SpacePacket carrying the original `command_id`, and
+downlinks it. At most `comms.max_num_handlers` (default 50) handlers run
+concurrently; further uplinks are answered with an Error NACK until a slot
+frees up.
+
+## Downlink Flow
+
+GraphQL response path:
+
+```text
+local KubOS service
+  -> HTTP response body
+  -> message handler wraps body in a SpacePacket
+  -> NXTRX4 write callback sends it to ground_node
+  -> libcsp route table chooses the downlink radio
+  -> downlink NXTRX4 transmits to ground
+```
+
+Small responses are sent as one CSP packet to `ground_packet_csp_port`. Larger
+responses are sent with SFP to `ground_sfp_csp_port`.
+
+Spacecraft-initiated downlinks use the normal KubOS comms endpoint behavior:
+local mission software sends UDP to one of the configured `downlink_ports`; the
+framework wraps that payload in a UDP SpacePacket and then uses the same downlink
+write path.
+
+## Shell and File Transfer Over the Radio
+
+The KubOS shell-service and file-transfer-service speak CBOR over UDP, so they
+are reached through UDP passthrough (payload type 1) rather than GraphQL. Both
+directions work, but the reply path differs per service:
+
+- Passthrough datagrams are sent **from the first downlink endpoint's socket**
+  (the first entry in `comms.downlink_ports`, 14011 in the sample config).
+  Services that reply to the datagram's source address — like shell-service —
+  therefore reach the downlink endpoint, and their replies are automatically
+  wrapped in UDP SpacePackets and downlinked.
+- The file-transfer-service does not reply to the source. It sends all replies
+  to its own configured `downlink_ip`/`downlink_port`, which must point at the
+  comms downlink endpoint. On the OBC:
+
+```toml
+[file-transfer-service]
+downlink_ip = "127.0.0.1"
+downlink_port = 14011
+```
+
+(The `downlink_port = 8080` found in `configs/dev_config.toml` targets the
+`local-comms-service` used for desktop development, not this service.)
+
+All UDP downlinks arrive at the ground with `command_id = 0`; sessions are
+correlated by the channel IDs inside the CBOR protocol messages, so the ground
+side needs a shim that unwraps UDP SpacePackets back into local datagrams for
+the standard KubOS file/shell client tools.
+
+Note that file transfers with the default `transfer_chunk_size = 1024` exceed
+the packet-port budget, so each chunk uplink is one SFP transfer. Set the chunk
+size to ~180 bytes if single-CSP-packet uplinks are preferred.
+
+## Error Downlink (NACK)
+
+When an uplinked SpacePacket is parsed and authenticated but cannot be serviced,
+the service downlinks a SpacePacket with payload type `Error` (2) so the ground
+knows the command failed instead of timing out. The NACK carries:
+
+- the `command_id` of the failed uplink, for correlation
+- destination port `0`
+- a UTF-8 error message as the payload, truncated to 200 bytes
+
+A NACK is sent when:
+
+- the GraphQL handler fails (local service unreachable, HTTP error status, or
+  the response could not be downlinked)
+- all message handler slots are busy (`max_num_handlers` reached)
+- the payload type is unknown, or is `Error` (not accepted on uplink)
+- a UDP passthrough send fails
+
+No NACK is sent for packets that fail before dispatch: CSP-level errors, SFP
+reassembly timeouts, decryption/authentication failures, or SpacePacket parse
+errors. Those are dropped and only counted in telemetry, because there is no
+trusted `command_id` to correlate against. Ground software should treat a
+missing response as a timeout and retry.
+
+A NACK is at most 216 bytes serialized, so it always fits in one CSP packet on
+`ground_packet_csp_port`.
+
+## Uplink Encryption (AES-128-GCM)
+
+Uplink authentication and encryption is optional and disabled by default:
+
+```toml
+[comms-services.csp]
+uplink_crypto = "none"
+# uplink_crypto = "aes-128"
+# uplink_aes_key = "000102030405060708090a0b0c0d0e0f"
+```
+
+Setting `uplink_crypto = "aes-128"` requires `uplink_aes_key`, a 32-hex-character
+(16-byte) AES-128 key shared with the ground station. The key is never logged,
+is redacted from debug output, and is not exposed by the GraphQL API; the
+`health` query reports only the mode string (`"none"` or `"aes-128"`).
+
+When enabled, every uplink on both CSP ports must be encrypted. The ground
+station encrypts the entire serialized SpacePacket with AES-128-GCM and sends:
+
+```text
+nonce (12 bytes) || ciphertext || GCM tag (16 bytes)
+```
+
+as the CSP packet payload (packet port) or the SFP logical payload (SFP port).
+The ground must generate a fresh, unique 96-bit nonce for every packet — a
+random nonce or a persistent counter both work, but a nonce must never be
+reused with the same key. Nonce reuse breaks GCM confidentiality and
+authenticity entirely.
+
+The 28-byte overhead changes the size budget:
+
+- Packet port: the CSP payload limit is unchanged (`max_frame_bytes - 4`, 256
+  bytes by default), so the plaintext SpacePacket may be at most 228 bytes —
+  about 212 bytes of GraphQL/UDP payload after the 16-byte header.
+- SFP port: the service accepts up to `sfp_max_space_packet_bytes + 28` bytes
+  on the wire, so the full configured plaintext limit is still usable.
+
+Uplinks that fail authentication (wrong key, tampered bytes, truncated
+payload, or cleartext sent while encryption is enabled) are dropped without
+any response and counted in the `failed_packets_up` and `errors` telemetry.
+No NACK is sent, since unauthenticated data cannot be trusted.
+
+Downlink is not encrypted; responses, NACKs, and telemetry downlinks are sent
+in the clear. There is also no replay protection: a recorded valid uplink can
+be replayed and will decrypt successfully. Command-level replay defenses (for
+example, one-time command counters checked by the receiving service) must be
+handled above this layer.
+
+## GraphQL Health API
+
+The service exposes its own GraphQL endpoint at `[comms-services.addr]`.
+
+Useful queries include:
+
+- `telemetry`: packet counters and comms errors. `packetsUp` counts uplinked
+  SpacePackets that parsed and validated; `failedPacketsUp` counts CSP read
+  errors, decryption/authentication failures, and parse failures.
+  `packetsDown`/`failedPacketsDown` count downlink attempts. `errors` keeps the
+  100 most recent error messages.
+- `health`: configured CSP nodes, ports, SFP settings, and max packet sizes
+- `radioHealth(role: UPLINK | DOWNLINK)`: basic NXTRX4 uptime, radio status, and
+  radio interface counters
+- `radioPing(role: UPLINK | DOWNLINK, payloadSize: 0)`: CSP ping round-trip to a
+  radio
+- `radioUptime(role: UPLINK | DOWNLINK)`: radio uptime in seconds
+- `radioStatus(role: UPLINK | DOWNLINK)`: free space in the radio TX input
+  buffer
+- `radioIdent(role: UPLINK | DOWNLINK)`: CMP identity strings
+- `radioInterfaceStats(role: UPLINK | DOWNLINK, interface: RADIO | CSP | I2C0 |
+  I2C2 | RS485)`: CMP interface counters
+- `radioSystemStats(role: UPLINK | DOWNLINK)`: decoded NXTRX4 system, reset, and
+  ADC statistics
+
+This GraphQL API is for observing the comms service itself. It is separate from
+the GraphQL payloads being forwarded through the radio link.
+
+Testing mutations include:
+
+- `radioSendTextInMorse(role, sourceIdentification, text)`
+- `radioSendCompressedMorse(role, sourceIdentification, num1, num2, num3, num4,
+  num5, num6)`
+- `radioSendAx25Message(role, data, format: TEXT | HEX)`
+- `radioReboot(role)`
+
+`sourceIdentification` must be exactly four ASCII bytes. AX.25 `TEXT` payloads
+are sent as the UTF-8 bytes of `data`; `HEX` payloads accept separators such as
+spaces, dashes, underscores, or colons.
+
+### NMP GraphQL API
+
+Every implemented public `nxtrx4-api::nmp` operation is also exposed. Read
+operations are GraphQL queries named `radioNmpGet...`; configuration and action
+operations are mutations named `radioNmpSet...` or after the underlying action,
+such as `radioNmpUnlock`, `radioNmpClearRouteTable`, and
+`radioNmpCopyActiveToFactory`. All take `role` and an optional NMP `key`.
+
+The API covers CSP addressing and routes, RF/link configuration, interface
+timing, digipeater and Morse configuration, key and profile management, and all
+implemented housekeeping commands including Config 1/2. Fixed-size byte fields
+accept `format: TEXT | HEX` and byte-valued responses include both `text` and
+lossless `hex` fields. Route tables and both configuration blocks are returned
+as structured GraphQL objects.
+
+The crate's RS-485 NMP module currently defines only its command enum and states
+that the service is not implemented, so there is no callable RS-485 baud-rate
+operation to expose yet.
+
+Example NMP query and mutation:
+
+```graphql
+query {
+  radioNmpGetFrequency(role: DOWNLINK, key: 0)
+}
+
+mutation {
+  radioNmpSetTxEnable(role: DOWNLINK, key: 0, enabled: true)
+}
+```
+
+NMP writes must still follow the radio protocol: call `radioNmpUnlock` with a
+key having the required privilege before protected writes.
+
+Optional credentials can be configured independently for each radio. TOML
+hexadecimal integers are accepted:
+
+```toml
+[comms-services.radios.uplink]
+nmp_user_key = 0x1234ABCD
+nmp_superuser_key = 0xFEDCBA98
+```
+
+When a GraphQL operation omits `key`, ordinary reads prefer `nmp_user_key` and
+fall back to `nmp_superuser_key`. Config 1/2 reads and all mutations/actions use
+`nmp_superuser_key`. An explicit GraphQL/CLI key always overrides the configured
+value. Keys are never returned by the GraphQL API.
+
+Example query:
+
+```graphql
+{
+  radioPing(role: UPLINK, payloadSize: 8) {
+    role
+    payloadSize
+    roundTripMs
+  }
+  radioIdent(role: UPLINK) {
+    hostname
+    model
+    revision
+    buildDate
+    buildTime
+  }
+}
+```
+
+Example mutation:
+
+```graphql
+mutation {
+  radioSendAx25Message(role: DOWNLINK, data: "43 51 20 52 41 44 53 41 54", format: HEX) {
+    success
+    message
+    verbalResponseText
+    verbalResponseHex
+  }
+}
+```
+
+## Current Limitations
+
+- Downlink is unencrypted, and AES-128-GCM uplinks have no replay protection.
+  See "Uplink Encryption (AES-128-GCM)" above.
+- NXTRX4 receive requires a patched kernel/BSP: the OMAP bus driver must support
+  I2C slave mode and a frame-queue backend must expose radio master-write
+  transactions through `slave_rx_device`.
+- SFP behavior has been wired into the service and compiles, but end-to-end SFP
+  must be tested with a ground-side CSP/SFP implementation and the real radio
+  link.
+- The ground side must use the same explicit port contract:
+  - normal command/query: `uplink_packet_csp_port`
+  - large command/query: `uplink_sfp_csp_port`
+  - listen for small responses on `ground_packet_csp_port`
+  - listen for large responses on `ground_sfp_csp_port`
+
+## Local Checks
+
+Useful checks while changing this service:
+
+```sh
+cargo check -p comms-services
+cargo test -p comms-services
+cargo test -p kubos-comms spacepacket
+cargo test -p radsat-csp
+```
+
+## OBC Radio Tests
+
+Hardware-facing GraphQL fixtures and a small radio-control CLI live in:
+
+```text
+services/comms-services/obc-tests
+```
+
+Use these when you need to test the real NXTRX4 radios, CSP/I2C routing, or the
+I2C slave receive backend on the OBC. The folder includes request JSON files,
+`run.sh` for smoke tests and one-off radio commands, and `package.sh` for
+creating a transfer-ready bundle. See
+`services/comms-services/obc-tests/README.md` for the full transfer and command
+workflow.

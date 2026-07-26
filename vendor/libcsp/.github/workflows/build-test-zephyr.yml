@@ -1,0 +1,68 @@
+name: Zephyr Build and Test
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 10 * * 0' # Run it every Sunday 10am UTC
+
+permissions:
+  contents: read
+jobs:
+  build-zephyr:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        board:
+          - scobc_module1
+          - qemu_cortex_m3
+          - mps2/an385
+        python-version:
+          - '3.10'
+          - '3.11'
+          - '3.12'
+          - '3.13'
+
+    steps:
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Python version
+        run: |
+          python3 --version
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          path: libcsp-zephyr
+          repository: yashi/libcsp-zephyr
+
+      - name: Install yq
+        run: |
+          sudo apt-get install tree yq
+
+      - name: Update libcsp revision (Pull Req)
+        if: github.event_name == 'pull_request'
+        working-directory: libcsp-zephyr
+        run: |
+          yq -iy '(.manifest.projects[] | select(.name == "libcsp") | .revision) = "${{ github.event.pull_request.head.sha }}"' west.yml
+          git diff -w
+
+      - name: Update libcsp revision (Push)
+        if: github.event_name == 'push'
+        working-directory: libcsp-zephyr
+        run: |
+          yq -iy '(.manifest.projects[] | select(.name == "libcsp") | .revision) = "${{ github.sha }}"' west.yml
+          git diff -w
+
+      - name: Setup Zephyr
+        uses: zephyrproject-rtos/action-zephyr-setup@v1
+        with:
+          app-path: libcsp-zephyr
+          toolchains: arm-zephyr-eabi
+
+      - name: Build
+        run: |
+          west build -b ${{ matrix.board }} libcsp-zephyr

@@ -1,11 +1,16 @@
 use async_graphql::{Context, EmptyMutation, Object};
 use kubos_service::{Config, Service};
-use std::time::Duration;
 use std::collections::VecDeque;
 use std::sync::Arc;
+use std::time::Duration;
+use tokio::io::AsyncReadExt;
 use tokio::sync::RwLock;
 use tokio_serial::SerialPortBuilderExt;
-use tokio::io::AsyncReadExt;
+
+struct UartConfig {
+    bus: String,
+    baud: u32,
+}
 
 // Define our data structure for storing UART readings
 #[derive(Clone)]
@@ -30,7 +35,7 @@ impl AppState {
 
     fn add_reading(&mut self, data: Vec<u8>) {
         self.readings.push_back(UartReading { data });
-        
+
         // Remove old readings if we exceed the maximum size
         while self.readings.len() > self.max_readings {
             self.readings.pop_front();
@@ -62,7 +67,8 @@ impl StarRiscSubsystem {
 
     pub async fn get_uart_readings(&self) -> Vec<u8> {
         let state = self.state.read().await;
-        state.get_readings()
+        state
+            .get_readings()
             .iter()
             .flat_map(|reading| reading.data.clone())
             .collect()
@@ -86,21 +92,21 @@ impl QueryRoot {
 }
 
 // UART reading task
-async fn uart_reading_task(subsystem: StarRiscSubsystem) {
+async fn uart_reading_task(subsystem: StarRiscSubsystem, uart_config: UartConfig) {
     // For simulation, we'll use a PTY (pseudo-terminal)
     // You can create one using: socat -d -d pty,raw,echo=0 pty,raw,echo=0
     // This will give you two device paths like /dev/pts/X and /dev/pts/Y
     // Use one end to write data and the other to read
-    
+
     // Try to open the UART, but don't panic if it fails (for demo purposes)
-    let uart_result = tokio_serial::new("/dev/pts/11", 115200)
+    let uart_result = tokio_serial::new(uart_config.bus.clone(), uart_config.baud)
         .data_bits(tokio_serial::DataBits::Eight)
         .flow_control(tokio_serial::FlowControl::None)
         .parity(tokio_serial::Parity::None)
         .stop_bits(tokio_serial::StopBits::One)
         .timeout(Duration::from_millis(100))
         .open_native_async();
-    
+
     if let Ok(mut uart) = uart_result {
         let mut buffer = [0u8; 1024];
         loop {
@@ -131,6 +137,20 @@ async fn uart_reading_task(subsystem: StarRiscSubsystem) {
     }
 }
 
+fn load_uart_config(config: &Config) -> UartConfig {
+    let bus = config
+        .get("uart_bus")
+        .and_then(|v| v.as_str().map(|s| s.to_string()))
+        .unwrap_or_else(|| "/dev/pts/11".to_string());
+    let baud = config
+        .get("uart_baud")
+        .and_then(|v| v.as_integer())
+        .map(|v| v as u32)
+        .unwrap_or(115200);
+
+    UartConfig { bus, baud }
+}
+
 #[tokio::main]
 async fn main() {
     // Initialize the logger
@@ -144,22 +164,19 @@ async fn main() {
         })
         .unwrap();
 
+    let uart_config = load_uart_config(&config);
+
     // Create our subsystem
     let subsystem = StarRiscSubsystem::new();
 
     // Spawn the UART reading task
     let subsystem_clone = subsystem.clone();
     tokio::spawn(async move {
-        uart_reading_task(subsystem_clone).await;
+        uart_reading_task(subsystem_clone, uart_config).await;
     });
 
     // Create and start the service using kubos-service
-    let service = Service::new(
-        config,
-        subsystem,
-        QueryRoot::default(),
-        EmptyMutation,
-    );
+    let service = Service::new(config, subsystem, QueryRoot::default(), EmptyMutation);
 
     println!("Star RISC service starting...");
     service.start_async().await;

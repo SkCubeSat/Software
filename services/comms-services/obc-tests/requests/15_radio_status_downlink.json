@@ -1,0 +1,1 @@
+{"query":"{ radioStatus(role: DOWNLINK) { role bufferFree } }"}

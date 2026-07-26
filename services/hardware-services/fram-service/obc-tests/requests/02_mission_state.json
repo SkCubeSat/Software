@@ -1,0 +1,1 @@
+{"query":"{ missionState { removeBeforeFlight deployed deployStart solarPanelDeployed uhfAntennaDeployed vhfAntennaDeployed initialSafeStateComplete detumblingComplete } }"}

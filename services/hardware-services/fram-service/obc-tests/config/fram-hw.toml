@@ -1,0 +1,14 @@
+[fram-service]
+backend = "i2c"
+i2c_bus = "/dev/i2c-2"
+i2c_addr = "0x50"
+capacity_bytes = 8192
+address_width_bytes = 2
+max_transfer_bytes = 32
+
+fw_printenv = "/usr/sbin/fw_printenv"
+fw_setenv = "/usr/sbin/fw_setenv"
+
+[fram-service.addr]
+ip = "127.0.0.1"
+port = 8091

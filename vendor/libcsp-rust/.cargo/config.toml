@@ -1,0 +1,4 @@
+[env]
+# This is set for this repository so it does not always have to be set in the command line.
+# It is required for building libcsp-rust.
+CSP_CONFIG_DIR = { value = "examples", relative = true }

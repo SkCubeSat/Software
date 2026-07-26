@@ -14,8 +14,6 @@
 // limitations under the License.
 //
 
-#[macro_use]
-extern crate failure;
 extern crate tempfile;
 
 mod util;

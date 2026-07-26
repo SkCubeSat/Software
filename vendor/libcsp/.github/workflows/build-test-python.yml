@@ -1,0 +1,74 @@
+name: Python Bindings
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  build-test-python:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - '3.9'
+          - '3.10'
+          - '3.11'
+          - '3.12'
+          - '3.13'
+        os:
+          - ubuntu-24.04
+          - ubuntu-22.04
+        buildsystem:
+          - meson
+          - cmake
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Setup packages on Linux
+        run: |
+          sudo apt-get update
+          sudo apt-get install libzmq3-dev libsocketcan-dev socat
+
+      - name: Setup build system packages on Linux
+        run: |
+          sudo apt-get install ninja-build ${{ matrix.buildsystem }}
+
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Build libcsp examples
+        run: python3 examples/buildall.py --build-system=${{ matrix.buildsystem }}
+
+      - name: Build libcsp with python binding with cmake
+        if: ${{ matrix.buildsystem == 'cmake' }}
+        run: |
+          cmake -GNinja -B builddir -DCSP_ENABLE_PYTHON3_BINDINGS=1 -DCSP_USE_RTABLE=1 && ninja -C builddir
+
+      - name: Install the latest Meson using Pip if Python is 3.12 or later
+        # Meson 1.3+ supports Python 3.12 (distutils removed)
+        if: ${{ matrix.buildsystem == 'meson' && matrix.python-version >= '3.12' }}
+        run: |
+          pip install meson
+          meson --version
+
+      - name: Build libcsp with python binding with meson
+        if: ${{ matrix.buildsystem == 'meson' }}
+        run: |
+          meson setup builddir -Denable_python3_bindings=true -Duse_rtable=true && ninja -C builddir
+
+      - name: Run ZMQ Python binding Test
+        run: |
+          build/examples/zmqproxy &
+          PYTHONPATH=builddir python3 examples/python_bindings_example_server.py -z localhost -a 3 &
+          PYTHONPATH=builddir python3 examples/python_bindings_example_client.py -z localhost -s 3 -a 2
+          pkill zmqproxy
+
+      - name: Run KISS Python binding Test
+        run: |
+          socat -d -d -d pty,raw,echo=0,link=/tmp/pty1 pty,raw,echo=0,link=/tmp/pty2 &
+          sleep 1
+          PYTHONPATH=builddir python3 examples/python_bindings_example_server.py -k /tmp/pty2 -a 1 &
+          PYTHONPATH=builddir python3 examples/python_bindings_example_client.py -k /tmp/pty1 -a 2 -s 1
+          pkill socat
