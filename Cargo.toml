@@ -5,11 +5,7 @@ members = [
     # Pure Rust crates
     "kubos/apis/app-api/rust",
     "kubos/apis/adcs-api",
-<<<<<<< HEAD
     "kubos/apis/cubespace-adcs-api",
-=======
-    "kubos/apis/nxtrx4-api",
->>>>>>> origin/main
     "kubos/apis/clyde-3g-eps-api",
     "kubos/apis/eps-api",
     "kubos/apis/mai400-api",
@@ -58,7 +54,6 @@ members = [
     "kubos/libs/radsat-csp",
     "kubos/services/iobc-supervisor-service",
     "kubos/services/isis-ants-service",
-    "kubos/test/integration/linux/isis-ants", "services/csp-service",
     "kubos/test/integration/linux/isis-ants",
     "services/bus-services/cube-adcs-service",
     "services/payload-services/star-risc",
@@ -117,7 +112,9 @@ default-members = [
     "kubos/test/integration/large_download",
     "kubos/test/integration/large_upload",
     "kubos/utils",
-    "services/bus-services/cube-adcs-service",
+    "services/simulator-services/clyde-3g-eps-simulator",
+    "services/hardware-services/mram-service",
+    "services/hardware-services/fram-service",
 ]
 
 [workspace.package]
@@ -140,3 +137,4 @@ codegen-units = 1
 
 [workspace.metadata.release]
 tag-name = "{{version}}"
+
