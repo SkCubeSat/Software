@@ -5,6 +5,8 @@ use crate::error::SnnError;
 pub enum PayloadLine {
     /// Sent unsolicited at boot.
     PayloadReady,
+    /// Response to `PING`.
+    Pong,
     /// Status query response: payload is currently idle.
     Idle,
     /// Status query response: payload is processing image `id`.
@@ -53,6 +55,7 @@ impl PayloadLine {
 
         match head {
             "PAYLOAD_READY" => PayloadLine::PayloadReady,
+            "PONG" => PayloadLine::Pong,
             "IDLE" => PayloadLine::Idle,
             "READY" => PayloadLine::Ready,
             "RX_OK" => match rest.first().and_then(|s| parse_u32(s)) {
@@ -129,6 +132,10 @@ fn parse_hex32(s: &str) -> Option<u32> {
 }
 
 /// Render an OBC-to-payload command as a single ASCII line, terminated by `\n`.
+pub fn cmd_ping() -> Vec<u8> {
+    b"PING\n".to_vec()
+}
+
 pub fn cmd_status() -> Vec<u8> {
     b"STATUS\n".to_vec()
 }
@@ -151,6 +158,10 @@ pub fn cmd_ready() -> Vec<u8> {
 
 pub fn cmd_result_rx_ok(image_id: u32) -> Vec<u8> {
     format!("RESULT_RX_OK {image_id}\n").into_bytes()
+}
+
+pub fn cmd_result_rx_fail(image_id: u32, reason: &str) -> Vec<u8> {
+    format!("RESULT_RX_FAIL {image_id} {reason}\n").into_bytes()
 }
 
 /// CRC-32 (IEEE) of a byte slice — same algorithm the payload uses.
@@ -178,6 +189,11 @@ mod tests {
     fn parses_payload_ready() {
         assert_eq!(PayloadLine::parse("PAYLOAD_READY"), PayloadLine::PayloadReady);
         assert_eq!(PayloadLine::parse("PAYLOAD_READY\r"), PayloadLine::PayloadReady);
+    }
+
+    #[test]
+    fn parses_pong() {
+        assert_eq!(PayloadLine::parse("PONG"), PayloadLine::Pong);
     }
 
     #[test]

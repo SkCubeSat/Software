@@ -11,6 +11,14 @@ use crate::protocol::{self, PayloadLine};
 
 pub const MAX_LINE_BYTES: usize = 256;
 
+/// Chunk size for streaming image bytes to the payload, matching the working
+/// Python test scripts to avoid overwhelming the serial TX buffer.
+const WRITE_CHUNK_SIZE: usize = 4096;
+
+/// Settling delay after opening the serial port. The FTDI USB-serial chip and
+/// kernel tty layer need a brief window to configure before we start I/O.
+const UART_SETTLE_MS: u64 = 300;
+
 /// Per-driver tunables (mirrored from `config.toml`).
 #[derive(Clone, Debug)]
 pub struct DriverConfig {
@@ -234,6 +242,30 @@ fn run(config: DriverConfig, handle: DriverHandle) {
             job
         };
 
+        // If the initial handshake failed and the driver is still Initializing,
+        // retry the handshake now that the payload has had more time to boot.
+        {
+            let guard = handle.state.lock().expect("state lock");
+            if guard.phase == DriverPhase::Initializing {
+                drop(guard);
+                info!("snn: retrying handshake before first job");
+                drain_rx_buffer(&connection);
+                match initial_handshake(&connection, &config) {
+                    Ok(()) => {
+                        let mut guard = handle.state.lock().expect("state lock");
+                        guard.phase = DriverPhase::Busy;
+                        guard.last_error = None;
+                        info!("snn: handshake succeeded on retry");
+                    }
+                    Err(err) => {
+                        warn!("snn: handshake retry failed: {err}");
+                        // Continue anyway — the SEND command may still work
+                        // if the payload is in fact idle.
+                    }
+                }
+            }
+        }
+
         let result = execute_job(&connection, &config, &job, &handle);
 
         let mut guard = handle.state.lock().expect("state lock");
@@ -255,8 +287,10 @@ fn run(config: DriverConfig, handle: DriverHandle) {
                     status.phase = JobPhase::Failed;
                     status.error = Some(msg);
                 }
-                // Unrecoverable wire errors push us to Faulted; logical NAKs leave us Idle.
-                if matches!(err, SnnError::Uart(_) | SnnError::Timeout(_)) {
+                // Only hard UART errors (cable unplugged, device gone) are
+                // unrecoverable. Timeouts and protocol errors are transient —
+                // the payload may recover, so we stay Idle for the next job.
+                if matches!(err, SnnError::Uart(_)) {
                     guard.phase = DriverPhase::Faulted;
                 }
             }
@@ -269,7 +303,7 @@ fn run(config: DriverConfig, handle: DriverHandle) {
 }
 
 fn open_uart(config: &DriverConfig) -> Result<Connection, UartError> {
-    Connection::from_path(
+    let conn = Connection::from_path(
         &config.uart_bus,
         PortSettings {
             baud_rate: BaudRate::from_speed(config.uart_baud as usize),
@@ -279,20 +313,68 @@ fn open_uart(config: &DriverConfig) -> Result<Connection, UartError> {
             flow_control: FlowControl::FlowNone,
         },
         config.read_line_timeout,
-    )
+    )?;
+
+    // Settling delay: let the FTDI/tty layer stabilise after port open, matching
+    // the time.sleep(0.3) in the working Python test scripts.
+    std::thread::sleep(Duration::from_millis(UART_SETTLE_MS));
+
+    // Drain any stale bytes sitting in the kernel RX buffer (e.g. PAYLOAD_READY
+    // sent before we opened, or U-Boot boot output). We read with a very short
+    // timeout so this returns quickly whether or not there is data.
+    drain_rx_buffer(&conn);
+
+    Ok(conn)
 }
 
-/// On startup, send STATUS once and look for IDLE. We tolerate a stray PAYLOAD_READY
-/// preceding it (boot announcement) and a BUSY response (payload mid-cycle from before
-/// we started — wait it out for one processing window).
+/// Best-effort drain of stale bytes from the serial RX buffer.
+/// Reads in small chunks with a very short timeout until nothing more arrives.
+fn drain_rx_buffer(conn: &Connection) {
+    let drain_timeout = Duration::from_millis(50);
+    loop {
+        match conn.read(64, drain_timeout) {
+            Ok(data) => {
+                if data.is_empty() {
+                    break;
+                }
+                info!("snn: drained {} stale bytes from UART RX", data.len());
+            }
+            Err(_) => break, // timeout or error → buffer is empty
+        }
+    }
+}
+
+/// On startup, probe liveness and confirm the payload is idle.
+///
+/// Strategy (matching the working Python test scripts):
+/// 1. Send STATUS and look for IDLE.
+/// 2. Tolerate stray PAYLOAD_READY, PONG, and unknown lines from boot.
+/// 3. If BUSY, poll with STATUS until IDLE or deadline.
 fn initial_handshake(conn: &Connection, config: &DriverConfig) -> Result<(), SnnError> {
     conn.write(&protocol::cmd_status())?;
     let deadline = Instant::now() + config.processing_timeout;
     loop {
-        let line = read_line(conn, config.read_line_timeout)?;
+        let remaining = deadline.saturating_duration_since(Instant::now());
+        if remaining.is_zero() {
+            return Err(SnnError::Timeout("handshake: no IDLE received"));
+        }
+        let line = match read_line(conn, remaining.min(config.read_line_timeout)) {
+            Ok(l) => l,
+            Err(SnnError::Timeout(_)) => {
+                // No response yet — retry STATUS.
+                conn.write(&protocol::cmd_status())?;
+                continue;
+            }
+            Err(other) => return Err(other),
+        };
         match PayloadLine::parse(&line) {
             PayloadLine::Idle => return Ok(()),
-            PayloadLine::PayloadReady => continue,
+            // Tolerate boot announcements and stale responses.
+            PayloadLine::PayloadReady | PayloadLine::Pong => {
+                // Re-send STATUS after consuming a stale line.
+                conn.write(&protocol::cmd_status())?;
+                continue;
+            }
             PayloadLine::Busy { .. } | PayloadLine::Processing { .. } => {
                 if Instant::now() >= deadline {
                     return Err(SnnError::NotIdle("BUSY".to_string()));
@@ -302,10 +384,25 @@ fn initial_handshake(conn: &Connection, config: &DriverConfig) -> Result<(), Snn
             }
             PayloadLine::ResultReadyNotify { .. } => {
                 // Stale completion from a previous run we don't know about.
-                // Drain it by reading whatever the payload offers next.
                 continue;
             }
-            other => return Err(protocol::unexpected_line("IDLE", &other)),
+            PayloadLine::Unknown(ref s) => {
+                // During boot, U-Boot or kernel may emit unrecognised lines.
+                // Log and continue rather than aborting.
+                warn!("snn: ignoring unknown line during handshake: {s:?}");
+                continue;
+            }
+            PayloadLine::Error { .. } => {
+                // Payload error during handshake — log but keep trying.
+                warn!("snn: payload error during handshake: {line:?}");
+                conn.write(&protocol::cmd_status())?;
+                continue;
+            }
+            _ => {
+                // Any other recognised but unexpected line — log and continue.
+                warn!("snn: unexpected line during handshake: {line:?}");
+                continue;
+            }
         }
     }
 }
@@ -325,8 +422,11 @@ pub(crate) fn execute_job(
         matches!(line, PayloadLine::Ready)
     }, "READY (after SEND)")?;
 
-    // Stream raw image bytes.
-    conn.write(&job.image)?;
+    // Stream raw image bytes in chunks to avoid overwhelming the serial TX buffer.
+    // This matches the chunked write pattern in the working Python test scripts.
+    for chunk in job.image.chunks(WRITE_CHUNK_SIZE) {
+        conn.write(chunk)?;
+    }
 
     // Expect RX_OK <id>.
     expect_line(conn, config.rx_ok_timeout, |line| {
@@ -389,6 +489,8 @@ pub(crate) fn execute_job(
 
     let actual_crc = protocol::crc32(&bitmap);
     if actual_crc != hdr_crc {
+        // Notify the payload of the CRC failure before returning an error.
+        let _ = conn.write(&protocol::cmd_result_rx_fail(id, "CRC"));
         return Err(SnnError::CrcMismatch {
             expected: hdr_crc,
             actual: actual_crc,
@@ -410,6 +512,9 @@ pub(crate) fn execute_job(
 
 /// Read a single line (terminated by '\n'). Strips trailing '\r'. Bounded by `MAX_LINE_BYTES`
 /// to prevent runaway reads when the wire is producing junk.
+///
+/// UART I/O timeout errors are translated to `SnnError::Timeout` so the caller
+/// can distinguish them from hard UART failures (cable unplugged, etc.).
 fn read_line(conn: &Connection, timeout: Duration) -> Result<String, SnnError> {
     let deadline = Instant::now() + timeout;
     let mut buf = Vec::with_capacity(64);
@@ -423,7 +528,18 @@ fn read_line(conn: &Connection, timeout: Duration) -> Result<String, SnnError> {
             )));
         }
         let remaining = deadline.saturating_duration_since(Instant::now());
-        let chunk = conn.read(1, remaining.max(Duration::from_millis(1)))?;
+        let chunk = match conn.read(1, remaining.max(Duration::from_millis(1))) {
+            Ok(c) => c,
+            Err(UartError::IoError { cause, .. })
+                if cause == std::io::ErrorKind::TimedOut =>
+            {
+                // The underlying read_exact timed out waiting for a byte.
+                // Translate to our Timeout error so the caller doesn't treat
+                // this as an unrecoverable UART fault.
+                return Err(SnnError::Timeout("line"));
+            }
+            Err(e) => return Err(SnnError::Uart(e)),
+        };
         let byte = chunk[0];
         if byte == b'\n' {
             // Strip optional trailing '\r'.
