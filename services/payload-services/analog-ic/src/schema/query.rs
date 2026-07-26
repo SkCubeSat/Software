@@ -51,16 +51,52 @@ impl QueryRoot {
 
     /// Retrieve the latest payload telemetry data.
     ///
-    /// This sends the Send Data command (0xC5) to the board, which loads
-    /// the latest collected data from the SD card into the transfer buffer,
-    /// then reads the 107-byte response containing:
-    /// - 27 unsigned 16-bit IC test readings (9 ICs × 3 readings each)
-    /// - 6 bytes of timestamp data
+    /// This follows the updated data collection flow:
+    /// 1. Check Latest Timestamp (0x6A) to identify the data file
+    /// 2. Send Data command (0xC5) with file byte
+    /// 3. Read the response containing:
+    ///    - 50 unsigned 16-bit IC test readings (5×10 matrix, little-endian)
+    ///    - ASCII timestamp string
     async fn telemetry(
         &self,
         ctx: &async_graphql::Context<'_>,
     ) -> FieldResult<PayloadDataResponse> {
         let context = ctx.data::<Context>()?;
         Ok(context.subsystem().get_payload_data()?)
+    }
+
+    /// Get the current RTC time from the payload board (0x68).
+    ///
+    /// Returns the year, month, day, weekday, hour, minute, and second
+    /// as currently set on the board's STM32 RTC.
+    async fn rtc_time(
+        &self,
+        ctx: &async_graphql::Context<'_>,
+    ) -> FieldResult<RtcTimeResponse> {
+        let context = ctx.data::<Context>()?;
+        Ok(context.subsystem().get_rtc_time()?)
+    }
+
+    /// Check the current power status of the board (0x69).
+    ///
+    /// Returns the power mode flag: Normal (0) or PowerSaving (1).
+    async fn power_status(
+        &self,
+        ctx: &async_graphql::Context<'_>,
+    ) -> FieldResult<PowerStatusResponse> {
+        let context = ctx.data::<Context>()?;
+        Ok(context.subsystem().check_power_status()?)
+    }
+
+    /// Check the latest data file timestamp on the SD card (0x6A).
+    ///
+    /// Returns the FAT timestamp of the most recent S_*.CSV file
+    /// on the board's SD card.
+    async fn latest_timestamp(
+        &self,
+        ctx: &async_graphql::Context<'_>,
+    ) -> FieldResult<LatestTimestampResponse> {
+        let context = ctx.data::<Context>()?;
+        Ok(context.subsystem().check_latest_timestamp()?)
     }
 }

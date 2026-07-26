@@ -53,4 +53,4 @@ pub mod telemetry;
 
 pub use crate::analog_ic::{AnalogIc, AnalogIcPayload};
 pub use crate::error::{AnalogIcError, AnalogIcResult};
-pub use crate::telemetry::PayloadData;
+pub use crate::telemetry::{PayloadData, PowerMode, RtcTime};

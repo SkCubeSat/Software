@@ -16,134 +16,207 @@
 
 //! Telemetry data structures and parsing for the Analog IC payload.
 //!
-//! The payload board collects data from 9 testing ICs every 12 hours.
-//! Each IC is tested 5 times; the highest and lowest readings are
-//! discarded, leaving 3 readings per IC (27 total unsigned 16-bit values).
-//! The data also includes a 6-byte timestamp indicating when the data
-//! was collected.
+//! The payload board collects data from ICs arranged in a 5×10 matrix.
+//! Each value is an unsigned 16-bit integer stored in little-endian byte
+//! order. The data response also includes a 24-byte ASCII timestamp
+//! string in the format "TS:YYYY-MM-DD hh:mm:ss\r\n".
 
-use crate::commands::NUM_IC_READINGS;
+use crate::commands::{DATA_MATRIX_COLS, DATA_MATRIX_ROWS, IC_DATA_BYTES, NUM_IC_READINGS};
 use crate::error::{AnalogIcError, AnalogIcResult};
-
-/// Number of ICs being tested
-pub const NUM_ICS: usize = 9;
-
-/// Number of retained readings per IC (5 tests, discard highest and lowest)
-pub const READINGS_PER_IC: usize = 3;
 
 /// Parsed payload data from the Analog IC board
 #[derive(Clone, Debug)]
 pub struct PayloadData {
-    /// 27 unsigned 16-bit IC test readings.
-    /// Organized as 9 ICs × 3 readings each (big-endian from the board).
+    /// 50 unsigned 16-bit IC test readings arranged in a 5×10 matrix
+    /// (little-endian from the board).
     pub ic_readings: Vec<u16>,
-    /// Raw timestamp bytes (6 bytes) indicating when the data was collected.
-    /// Format is board-specific (likely: year_hi, year_lo, month, day, hour, minute
-    /// or similar — matching the RTC format minus weekday and seconds).
-    pub timestamp_bytes: Vec<u8>,
-    /// The full raw data buffer as received from the board (107 bytes)
+    /// ASCII timestamp string from the board (up to 24 bytes),
+    /// e.g. "TS:2025-07-25 14:30:00"
+    pub timestamp: String,
+    /// The full raw data buffer as received from the board
     pub raw_data: Vec<u8>,
 }
 
 impl PayloadData {
-    /// Get the reading for a specific IC and reading index.
+    /// Get the reading at a specific row and column of the data matrix.
     ///
     /// # Arguments
     ///
-    /// * `ic_index` - IC index (0-8)
-    /// * `reading_index` - Reading index (0-2)
+    /// * `row` - Row index (0-4)
+    /// * `col` - Column index (0-9)
     ///
     /// # Returns
     ///
     /// The u16 reading value, or `None` if indices are out of range.
-    pub fn get_reading(&self, ic_index: usize, reading_index: usize) -> Option<u16> {
-        if ic_index >= NUM_ICS || reading_index >= READINGS_PER_IC {
+    pub fn get_reading(&self, row: usize, col: usize) -> Option<u16> {
+        if row >= DATA_MATRIX_ROWS || col >= DATA_MATRIX_COLS {
             return None;
         }
-        let idx = ic_index * READINGS_PER_IC + reading_index;
+        let idx = row * DATA_MATRIX_COLS + col;
         self.ic_readings.get(idx).copied()
     }
+
+    /// Get the data as a 2D matrix (5 rows × 10 columns).
+    pub fn as_matrix(&self) -> Vec<Vec<u16>> {
+        let mut matrix = Vec::with_capacity(DATA_MATRIX_ROWS);
+        for r in 0..DATA_MATRIX_ROWS {
+            let start = r * DATA_MATRIX_COLS;
+            let end = start + DATA_MATRIX_COLS;
+            matrix.push(self.ic_readings[start..end].to_vec());
+        }
+        matrix
+    }
+}
+
+/// RTC time data returned by the Get RTC Time command (0x68)
+#[derive(Clone, Debug)]
+pub struct RtcTime {
+    /// Year
+    pub year: u16,
+    /// Month (1-12)
+    pub month: u8,
+    /// Day (1-31)
+    pub day: u8,
+    /// Weekday (0=Monday .. 6=Sunday)
+    pub weekday: u8,
+    /// Hour (0-23)
+    pub hour: u8,
+    /// Minute (0-59)
+    pub minute: u8,
+    /// Second (0-59)
+    pub second: u8,
+}
+
+/// Power status returned by the Check Power Status command (0x69)
+#[derive(Clone, Debug, PartialEq)]
+pub enum PowerMode {
+    /// Normal operating mode
+    Normal,
+    /// Power-saving / sleep mode
+    PowerSaving,
+    /// Unknown mode flag
+    Unknown(u8),
 }
 
 /// Parse raw bytes received from the Analog IC board into structured data.
 ///
+/// The board sends `IC_DATA_BYTES` (100) bytes of little-endian u16 readings,
+/// followed by a 24-byte ASCII timestamp string.
+///
 /// # Arguments
 ///
-/// * `raw` - Raw byte buffer received from the board (expected 107 bytes)
-///
-/// # Returns
-///
-/// Parsed `PayloadData` containing the 27 IC readings and 6-byte timestamp.
+/// * `raw` - Raw byte buffer received from the board
 ///
 /// # Errors
 ///
-/// Returns `AnalogIcError::ParsingFailure` if the data length is less than
-/// the minimum required (54 bytes for readings + 6 bytes for timestamp).
+/// Returns `AnalogIcError::ParsingFailure` if the data is shorter than
+/// the minimum required length (100 bytes for readings).
 pub fn parse_payload_data(raw: &[u8]) -> AnalogIcResult<PayloadData> {
-    // Minimum required: 27 readings * 2 bytes + 6 timestamp bytes = 60 bytes
-    let min_len = NUM_IC_READINGS * 2 + 6;
-    if raw.len() < min_len {
+    if raw.len() < IC_DATA_BYTES {
         return Err(AnalogIcError::ParsingFailure {
             source_description: format!(
                 "Expected at least {} bytes of payload data, got {}",
-                min_len,
+                IC_DATA_BYTES,
                 raw.len()
             ),
         });
     }
 
-    // Parse 27 unsigned 16-bit readings (big-endian)
+    // Parse 50 unsigned 16-bit readings in little-endian byte order
+    // (matching the working Python script: data_raw[i] | (data_raw[i+1] << 8))
     let mut ic_readings = Vec::with_capacity(NUM_IC_READINGS);
     for i in 0..NUM_IC_READINGS {
         let offset = i * 2;
-        let value = u16::from_be_bytes([raw[offset], raw[offset + 1]]);
+        let value = u16::from_le_bytes([raw[offset], raw[offset + 1]]);
         ic_readings.push(value);
     }
 
-    // Extract the 6-byte timestamp following the readings
-    let timestamp_start = NUM_IC_READINGS * 2; // byte 54
-    let timestamp_bytes = raw[timestamp_start..timestamp_start + 6].to_vec();
+    // Extract the ASCII timestamp following the readings
+    let timestamp = if raw.len() > IC_DATA_BYTES {
+        let ts_raw = &raw[IC_DATA_BYTES..];
+        // Decode printable ASCII characters, ignoring nulls/garbage
+        ts_raw
+            .iter()
+            .filter(|&&b| b > 0 && b < 128)
+            .map(|&b| b as char)
+            .collect::<String>()
+            .trim()
+            .to_string()
+    } else {
+        String::new()
+    };
 
     Ok(PayloadData {
         ic_readings,
-        timestamp_bytes,
+        timestamp,
         raw_data: raw.to_vec(),
+    })
+}
+
+/// Parse an 8-byte RTC time response from the Get RTC Time command (0x68).
+///
+/// Format: year(2 bytes, big-endian), month, day, weekday, hour, minute, second
+pub fn parse_rtc_time(raw: &[u8]) -> AnalogIcResult<RtcTime> {
+    if raw.len() < 8 {
+        return Err(AnalogIcError::ParsingFailure {
+            source_description: format!(
+                "Expected 8 bytes for RTC time, got {}",
+                raw.len()
+            ),
+        });
+    }
+
+    Ok(RtcTime {
+        year: u16::from_be_bytes([raw[0], raw[1]]),
+        month: raw[2],
+        day: raw[3],
+        weekday: raw[4],
+        hour: raw[5],
+        minute: raw[6],
+        second: raw[7],
+    })
+}
+
+/// Parse a 1-byte power status response from the Check Power Status
+/// command (0x69).
+pub fn parse_power_status(raw: &[u8]) -> AnalogIcResult<PowerMode> {
+    if raw.is_empty() {
+        return Err(AnalogIcError::ParsingFailure {
+            source_description: "Expected at least 1 byte for power status, got 0".to_string(),
+        });
+    }
+
+    Ok(match raw[0] {
+        0 => PowerMode::Normal,
+        1 => PowerMode::PowerSaving,
+        other => PowerMode::Unknown(other),
     })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::commands::SEND_DATA_RESPONSE_LEN;
 
     #[test]
     fn test_parse_payload_data_valid() {
-        // Create a 107-byte buffer with known values
         let mut raw = vec![0u8; SEND_DATA_RESPONSE_LEN];
-        // Set first IC reading to 0x0102 = 258
+        // Set first reading to 0x0201 (little-endian: low=0x01, high=0x02 => 513)
         raw[0] = 0x01;
         raw[1] = 0x02;
-        // Set last IC reading (index 26) to 0x1A2B
-        raw[52] = 0x1A;
-        raw[53] = 0x2B;
-        // Set timestamp bytes
-        raw[54] = 0x07; // year hi
-        raw[55] = 0xD5; // year lo
-        raw[56] = 0x0B; // month
-        raw[57] = 0x13; // date
-        raw[58] = 0x09; // hour
-        raw[59] = 0x21; // minute
+        // Set reading at row 4, col 9 (index 49, bytes 98-99)
+        raw[98] = 0x2B;
+        raw[99] = 0x1A;
 
         let data = parse_payload_data(&raw).unwrap();
         assert_eq!(data.ic_readings.len(), NUM_IC_READINGS);
-        assert_eq!(data.ic_readings[0], 0x0102);
-        assert_eq!(data.ic_readings[26], 0x1A2B);
-        assert_eq!(data.timestamp_bytes, vec![0x07, 0xD5, 0x0B, 0x13, 0x09, 0x21]);
-        assert_eq!(data.raw_data.len(), SEND_DATA_RESPONSE_LEN);
+        assert_eq!(data.ic_readings[0], 0x0201); // little-endian
+        assert_eq!(data.ic_readings[49], 0x1A2B); // little-endian
     }
 
     #[test]
     fn test_parse_payload_data_too_short() {
-        let raw = vec![0u8; 50]; // Less than minimum 60 bytes
+        let raw = vec![0u8; 50]; // Less than minimum 100 bytes
         let result = parse_payload_data(&raw);
         assert!(result.is_err());
     }
@@ -151,13 +224,43 @@ mod tests {
     #[test]
     fn test_get_reading() {
         let mut raw = vec![0u8; SEND_DATA_RESPONSE_LEN];
-        // IC 2, reading 1 => index 2*3+1 = 7, bytes 14-15
-        raw[14] = 0xAB;
-        raw[15] = 0xCD;
+        // Row 2, col 1 => index 2*10+1 = 21, bytes 42-43
+        raw[42] = 0xCD;
+        raw[43] = 0xAB;
 
         let data = parse_payload_data(&raw).unwrap();
         assert_eq!(data.get_reading(2, 1), Some(0xABCD));
-        assert_eq!(data.get_reading(9, 0), None); // Out of range
-        assert_eq!(data.get_reading(0, 3), None); // Out of range
+        assert_eq!(data.get_reading(5, 0), None); // Out of range
+        assert_eq!(data.get_reading(0, 10), None); // Out of range
+    }
+
+    #[test]
+    fn test_as_matrix() {
+        let raw = vec![0u8; SEND_DATA_RESPONSE_LEN];
+        let data = parse_payload_data(&raw).unwrap();
+        let matrix = data.as_matrix();
+        assert_eq!(matrix.len(), 5);
+        assert_eq!(matrix[0].len(), 10);
+    }
+
+    #[test]
+    fn test_parse_rtc_time() {
+        let raw = vec![0x07, 0xD5, 11, 19, 5, 9, 33, 11];
+        let rtc = parse_rtc_time(&raw).unwrap();
+        assert_eq!(rtc.year, 2005);
+        assert_eq!(rtc.month, 11);
+        assert_eq!(rtc.day, 19);
+        assert_eq!(rtc.weekday, 5);
+        assert_eq!(rtc.hour, 9);
+        assert_eq!(rtc.minute, 33);
+        assert_eq!(rtc.second, 11);
+    }
+
+    #[test]
+    fn test_parse_power_status() {
+        assert_eq!(parse_power_status(&[0]).unwrap(), PowerMode::Normal);
+        assert_eq!(parse_power_status(&[1]).unwrap(), PowerMode::PowerSaving);
+        assert_eq!(parse_power_status(&[2]).unwrap(), PowerMode::Unknown(2));
+        assert!(parse_power_status(&[]).is_err());
     }
 }

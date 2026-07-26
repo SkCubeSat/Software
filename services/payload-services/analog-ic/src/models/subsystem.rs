@@ -17,7 +17,7 @@
 //! Main module for interacting with the underlying Analog IC API
 
 use crate::models::*;
-use analog_ic_api::{AnalogIc, AnalogIcPayload, AnalogIcResult};
+use analog_ic_api::{AnalogIc, AnalogIcPayload, AnalogIcResult, PowerMode};
 use async_graphql::Enum;
 use kubos_service::{run, process_errors, push_err};
 use rust_i2c::*;
@@ -154,6 +154,49 @@ impl Subsystem {
         }
     }
 
+    /// Get the board's current RTC time
+    pub fn get_rtc_time(&self) -> Result<RtcTimeResponse, String> {
+        let payload = self.payload.lock().unwrap();
+        let rtc = run!(payload.get_rtc_time(), self.errors)?;
+
+        Ok(RtcTimeResponse {
+            year: rtc.year as i32,
+            month: rtc.month as i32,
+            day: rtc.day as i32,
+            weekday: rtc.weekday as i32,
+            hour: rtc.hour as i32,
+            minute: rtc.minute as i32,
+            second: rtc.second as i32,
+        })
+    }
+
+    /// Check the board's power status
+    pub fn check_power_status(&self) -> Result<PowerStatusResponse, String> {
+        let payload = self.payload.lock().unwrap();
+        let mode = run!(payload.check_power_status(), self.errors)?;
+
+        let (status, raw) = match mode {
+            PowerMode::Normal => (PowerModeStatus::Normal, 0),
+            PowerMode::PowerSaving => (PowerModeStatus::PowerSaving, 1),
+            PowerMode::Unknown(v) => (PowerModeStatus::Unknown, v as i32),
+        };
+
+        Ok(PowerStatusResponse {
+            mode: status,
+            raw_value: raw,
+        })
+    }
+
+    /// Check the latest data file timestamp on the board
+    pub fn check_latest_timestamp(&self) -> Result<LatestTimestampResponse, String> {
+        let payload = self.payload.lock().unwrap();
+        let bytes = run!(payload.check_latest_timestamp(), self.errors)?;
+
+        Ok(LatestTimestampResponse {
+            bytes: bytes.iter().map(|&v| v as i32).collect(),
+        })
+    }
+
     /// Get payload telemetry data (IC readings + timestamp)
     pub fn get_payload_data(&self) -> Result<PayloadDataResponse, String> {
         let payload = self.payload.lock().unwrap();
@@ -161,7 +204,7 @@ impl Subsystem {
 
         Ok(PayloadDataResponse {
             ic_readings: data.ic_readings.iter().map(|&v| v as i32).collect(),
-            timestamp_bytes: data.timestamp_bytes.iter().map(|&v| v as i32).collect(),
+            timestamp: data.timestamp,
             raw_data: data.raw_data.iter().map(|&v| v as i32).collect(),
         })
     }
@@ -182,8 +225,6 @@ impl Subsystem {
     }
 
     /// No-op: simply verifies connectivity by issuing a harmless command.
-    /// Uses reset_comms equivalent — for this board, we just return success
-    /// since there is no dedicated watchdog reset command.
     pub fn noop(&self) -> Result<MutationResponse, String> {
         Ok(MutationResponse {
             success: true,
