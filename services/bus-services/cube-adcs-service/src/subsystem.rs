@@ -9,7 +9,7 @@ use rust_can::{CanFrame, Connection, FrameFilter};
 use thiserror::Error;
 
 const DEFAULT_INTERFACE: &str = "can0";
-const DEFAULT_BITRATE: u32 = 100000;
+const DEFAULT_BITRATE: u32 = 1000000;
 const DEFAULT_SRC_ADDRESS: u8 = 1;
 const DEFAULT_DST_ADDRESS: u8 = 4;
 const DEFAULT_TIMEOUT_MS: u64 = 5_000;
