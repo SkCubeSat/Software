@@ -1,11 +1,12 @@
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use cubespace_adcs_api::{
-    MSG_TYPE_TC, MSG_TYPE_TC_ACK, MSG_TYPE_TC_NACK, MSG_TYPE_TLM_REQ, MSG_TYPE_TLM_RESP_EXT,
-    Telecommand, Telemetry, build_can_id, command_spec, decode_can_id, telemetry_spec,
+    MSG_TYPE_TC, MSG_TYPE_TC_ACK, MSG_TYPE_TC_EXT, MSG_TYPE_TC_NACK, MSG_TYPE_TLM_NACK,
+    MSG_TYPE_TLM_REQ, MSG_TYPE_TLM_RESP, MSG_TYPE_TLM_RESP_EXT, Telecommand, Telemetry,
+    build_can_id, command_spec, decode_can_id, telemetry_spec,
 };
-use rust_can::{CanFrame, Connection, FrameFilter};
+use rust_can::{CanFrame, Connection};
 use thiserror::Error;
 
 const DEFAULT_INTERFACE: &str = "can0";
@@ -59,6 +60,14 @@ pub enum CubeAdcsError {
         /// Rejected telecommand ID.
         command_id: u8,
         /// Optional ADCS error code from the NACK payload.
+        error_code: Option<u8>,
+    },
+    /// A telemetry request was rejected with an optional error code.
+    #[error("telemetry {telemetry_id} rejected by ADCS: {error_code:?}")]
+    TelemetryNack {
+        /// Rejected telemetry ID.
+        telemetry_id: u8,
+        /// Optional ADCS NACK error code.
         error_code: Option<u8>,
     },
     /// Unexpected CAN frame received while waiting for a response.
@@ -124,6 +133,14 @@ impl Subsystem {
         })
     }
 
+    #[cfg(test)]
+    pub(crate) fn with_connection(config: AdcsServiceConfig, connection: Connection) -> Self {
+        Self {
+            config,
+            connection: Arc::new(Mutex::new(connection)),
+        }
+    }
+
     /// Returns service configuration.
     pub fn config(&self) -> &AdcsServiceConfig {
         &self.config
@@ -163,20 +180,24 @@ impl Subsystem {
             )));
         }
 
+        let message_type = if payload.len() <= 8 {
+            MSG_TYPE_TC
+        } else {
+            MSG_TYPE_TC_EXT
+        };
         let can_id = build_can_id(
-            MSG_TYPE_TC,
+            message_type,
             command_id,
             self.config.source_address,
             self.config.destination_address,
         );
-        let frame = CanFrame::extended(can_id, payload);
         let connection = self
             .connection
             .lock()
             .map_err(|_| CubeAdcsError::LockPoisoned)?;
 
         connection
-            .write(frame)
+            .write_payload(can_id, true, payload)
             .map_err(|err| CubeAdcsError::Can(err.to_string()))?;
 
         loop {
@@ -251,12 +272,6 @@ impl Subsystem {
             self.config.source_address,
             self.config.destination_address,
         );
-        let response_id = build_can_id(
-            MSG_TYPE_TLM_RESP_EXT,
-            telemetry_id,
-            self.config.destination_address,
-            self.config.source_address,
-        );
         let connection = self
             .connection
             .lock()
@@ -266,14 +281,42 @@ impl Subsystem {
             .write(CanFrame::extended(request_id, &[]))
             .map_err(|err| CubeAdcsError::Can(err.to_string()))?;
 
-        let payload = connection
-            .read_payload(
-                length_bytes,
-                self.config.timeout,
-                Some(FrameFilter::extended(response_id)),
-            )
-            .map_err(|err| CubeAdcsError::Can(err.to_string()))?;
+        let start = Instant::now();
+        let mut payload = Vec::with_capacity(length_bytes);
+        while payload.len() < length_bytes {
+            let remaining = self
+                .config
+                .timeout
+                .checked_sub(start.elapsed())
+                .ok_or_else(|| CubeAdcsError::Can("CAN read timed out".to_string()))?;
+            let response = connection
+                .read(remaining)
+                .map_err(|err| CubeAdcsError::Can(err.to_string()))?;
+            let fields = decode_can_id(response.id);
 
+            if !response.extended
+                || fields.tctlm_id != telemetry_id
+                || fields.src_addr != self.config.destination_address
+                || fields.dst_addr != self.config.source_address
+            {
+                continue;
+            }
+
+            match fields.msg_type {
+                MSG_TYPE_TLM_NACK => {
+                    return Err(CubeAdcsError::TelemetryNack {
+                        telemetry_id,
+                        error_code: response.data.first().copied(),
+                    });
+                }
+                MSG_TYPE_TLM_RESP | MSG_TYPE_TLM_RESP_EXT => {
+                    payload.extend_from_slice(&response.data);
+                }
+                _ => continue,
+            }
+        }
+
+        payload.truncate(length_bytes);
         Ok(payload)
     }
 

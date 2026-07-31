@@ -194,6 +194,36 @@ impl Connection {
         self.stream.write(frame)
     }
 
+    /// Writes a payload as consecutive classic CAN frames with the same identifier.
+    ///
+    /// Empty payloads are transmitted as one zero-length frame. Non-empty payloads
+    /// are split into chunks of at most eight bytes.
+    pub fn write_payload(&self, id: u32, extended: bool, payload: &[u8]) -> CanResult<()> {
+        if payload.is_empty() {
+            return self.write(if extended {
+                CanFrame::extended(id, &[])
+            } else {
+                let id = u16::try_from(id).map_err(|_| CanError::InvalidFrame {
+                    description: format!("standard CAN ID 0x{id:X} is out of range"),
+                })?;
+                CanFrame::standard(id, &[])
+            });
+        }
+
+        for chunk in payload.chunks(8) {
+            self.write(if extended {
+                CanFrame::extended(id, chunk)
+            } else {
+                let id = u16::try_from(id).map_err(|_| CanError::InvalidFrame {
+                    description: format!("standard CAN ID 0x{id:X} is out of range"),
+                })?;
+                CanFrame::standard(id, chunk)
+            })?;
+        }
+
+        Ok(())
+    }
+
     /// Reads one CAN frame from the stream.
     pub fn read(&self, timeout: Duration) -> CanResult<CanFrame> {
         self.stream.read(timeout)

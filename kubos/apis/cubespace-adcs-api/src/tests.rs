@@ -3,9 +3,23 @@ use crate::*;
 #[test]
 fn generated_matrix_specs_are_available() {
     assert_eq!(COMMAND_SPECS.len(), 33);
+    assert_eq!(ADDITIONAL_COMMAND_SPECS.len(), 16);
     assert_eq!(TELEMETRY_SPECS.len(), 102);
     assert_eq!(command_spec(58).unwrap().name, "Control Mode");
     assert_eq!(telemetry_spec(170).unwrap().name, "FSS CubeSense Sun Raw");
+}
+
+#[test]
+fn mission_selected_raw_command_specs_are_available() {
+    let port_map = command_spec(111).unwrap();
+    assert_eq!(port_map.length_bytes, 120);
+    assert_eq!(port_map.fields.len(), 48);
+    assert_eq!(port_map.fields[0].offset_bits, 0);
+    assert_eq!(port_map.fields.last().unwrap().offset_bits, 928);
+
+    let format_logs = command_spec(122).unwrap();
+    assert_eq!(format_logs.length_bytes, 1);
+    assert_eq!(format_logs.fields.len(), 1);
 }
 
 #[test]
@@ -32,6 +46,20 @@ fn encode_control_mode_payload() {
     };
 
     assert_eq!(command.encode().unwrap(), vec![0, 0, 0]);
+}
+
+#[test]
+fn encode_adcs_operational_state_payload() {
+    let command = AdcsOperationalStateCommand {
+        adcs_operational_state: 2,
+    };
+
+    assert_eq!(command.encode().unwrap(), vec![2]);
+    let spec = command_spec(72).unwrap();
+    assert_eq!(spec.length_bytes, 1);
+    assert_eq!(spec.fields.len(), 1);
+    assert_eq!(spec.fields[0].offset_bits, 0);
+    assert_eq!(spec.fields[0].length_bits, 8);
 }
 
 #[test]

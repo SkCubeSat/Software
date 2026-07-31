@@ -27,6 +27,32 @@ fn test_write_good() {
 }
 
 #[test]
+fn test_write_payload_splits_classic_can_frames() {
+    let mut mock = MockStream::default();
+    let id = 0x0755_0104;
+    mock.write
+        .set_input(CanFrame::extended(id, &[0, 1, 2, 3, 4, 5, 6, 7]));
+    mock.write
+        .set_input(CanFrame::extended(id, &[8, 9, 10, 11]));
+    let connection = Connection::new(Box::new(mock));
+
+    assert_eq!(
+        connection.write_payload(id, true, &(0_u8..12).collect::<Vec<_>>()),
+        Ok(())
+    );
+}
+
+#[test]
+fn test_write_payload_sends_one_empty_frame() {
+    let mut mock = MockStream::default();
+    let frame = CanFrame::extended(0x0101_0104, &[]);
+    mock.write.set_input(frame.clone());
+    let connection = Connection::new(Box::new(mock));
+
+    assert_eq!(connection.write_payload(frame.id, true, &[]), Ok(()));
+}
+
+#[test]
 #[should_panic]
 fn test_write_bad_input() {
     let mut mock = MockStream::default();

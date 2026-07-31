@@ -20,6 +20,7 @@
 
 pub mod codec;
 pub mod commands;
+mod additional_commands;
 mod packet;
 pub mod telemetry;
 #[cfg(test)]
@@ -27,6 +28,7 @@ mod tests;
 pub mod types;
 
 pub use crate::commands::*;
+pub use crate::additional_commands::*;
 pub use crate::packet::*;
 pub use crate::telemetry::*;
 pub use crate::types::*;

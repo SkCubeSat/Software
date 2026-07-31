@@ -8,6 +8,12 @@ pub const MSG_TYPE_TC_ACK: u8 = 2;
 pub const MSG_TYPE_TC_NACK: u8 = 3;
 /// CubeSpace CAN message type for telemetry requests.
 pub const MSG_TYPE_TLM_REQ: u8 = 4;
+/// CubeSpace message type for single-frame telemetry responses.
+pub const MSG_TYPE_TLM_RESP: u8 = 5;
+/// CubeSpace message type for rejected telemetry requests.
+pub const MSG_TYPE_TLM_NACK: u8 = 6;
+/// CubeSpace message type for extended, multi-frame telecommands.
+pub const MSG_TYPE_TC_EXT: u8 = 7;
 /// CubeSpace CAN message type for extended telemetry responses.
 pub const MSG_TYPE_TLM_RESP_EXT: u8 = 8;
 

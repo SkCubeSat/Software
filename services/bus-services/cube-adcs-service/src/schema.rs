@@ -1,7 +1,8 @@
 use async_graphql::{Context, MergedObject, Object, Result};
 use cubespace_adcs_api::{
-    COMMAND_SPECS, CommandInfo, CommandResponse, HealthInfo, MutationResponse, RawFrameResponse,
-    TELEMETRY_SPECS, TelemetryInfo, command_spec, telemetry_spec,
+    ADDITIONAL_COMMAND_SPECS, COMMAND_SPECS, CommandInfo, CommandResponse, HealthInfo,
+    MutationResponse, RawFrameResponse, TELEMETRY_SPECS, TelemetryInfo, command_spec,
+    telemetry_spec,
 };
 
 use crate::schema_generated::{GeneratedMutationRoot, GeneratedQueryRoot};
@@ -46,7 +47,11 @@ impl BaseQueryRoot {
 
     /// Lists telecommands generated from the ADCS command matrix.
     async fn command_definitions(&self) -> Vec<CommandInfo> {
-        COMMAND_SPECS.iter().map(CommandInfo::from_spec).collect()
+        COMMAND_SPECS
+            .iter()
+            .chain(ADDITIONAL_COMMAND_SPECS.iter())
+            .map(CommandInfo::from_spec)
+            .collect()
     }
 
     /// Returns one telecommand definition by ID.
