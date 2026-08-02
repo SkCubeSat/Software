@@ -15,7 +15,9 @@ case "$OUT" in
 esac
 
 if [ "${SKIP_BUILD:-0}" != "1" ]; then
-  "$DIR/build.sh"
+  # Calling through sh also works when a Windows checkout did not preserve
+  # the executable bit on build.sh.
+  sh "$DIR/build.sh"
 fi
 
 rm -rf "$OUT"
@@ -23,10 +25,11 @@ mkdir -p "$OUT/bin"
 
 cp "$ROOT/target/$TARGET/release/antenna-deployment" "$OUT/bin/"
 cp "$DIR/run.sh" "$OUT/"
+cp "$DIR/run-hardware.sh" "$OUT/"
 cp "$DIR/README.md" "$OUT/"
 
-chmod +x "$OUT/run.sh" "$OUT/bin/antenna-deployment"
+chmod +x "$OUT/run.sh" "$OUT/run-hardware.sh" "$OUT/bin/antenna-deployment"
 
 echo "Packaged OBC antenna-deployment tests at $OUT"
 echo "Transfer with:"
-echo "  transfer -d /home/kubos/antenna-tests $OUT"
+echo "  transfer -p /dev/ttyUSB0 -d /home/kubos/antenna-tests $OUT"

@@ -8,13 +8,16 @@ This directory builds and packages a guarded OBC test harness for the
 From the repository on the PowerEdge computer:
 
 ```sh
-mission-applications/antenna-deployment/obc-tests/package.sh
+sh mission-applications/antenna-deployment/obc-tests/package.sh
 ```
+
+`package.sh` explicitly makes both runners and the packaged antenna binary
+executable, so no local `chmod` step is normally required before transfer.
 
 The package is written to `target/obc-tests/antenna-deployment`. Transfer it:
 
 ```sh
-transfer -d /home/kubos/antenna-tests target/obc-tests/antenna-deployment
+transfer -p /dev/ttyUSB0 -d /home/kubos/antenna-tests target/obc-tests/antenna-deployment
 ```
 
 ## Run on the OBC
@@ -59,6 +62,32 @@ before deployment pulses.
 Do not extend this runner with an expired deploy timer unless deployment loads
 are disconnected or the application has gained a simulated GPIO test mode.
 
+## Run with deployment hardware
+
+`run-hardware.sh` invokes the application's real `run-once` deployment path.
+It uses the stored mission state and retains the normal 30-minute hold timer.
+If that timer has elapsed, the application can pulse the VHF and UHF deployment
+GPIO outputs and physically fire connected deployment loads.
+
+Only run this on hardware prepared for a deployment test:
+
+```sh
+cd /home/kubos/antenna-tests
+./run-hardware.sh
+```
+
+Review the displayed mission state, then type `DEPLOY` at the confirmation
+prompt. For a deliberately non-interactive test, provide the same confirmation
+through the environment:
+
+```sh
+ANTENNA_HARDWARE_TEST_CONFIRM=DEPLOY ./run-hardware.sh
+```
+
+The hardware runner does not alter flags or shorten/bypass the hold timer. Use
+the application's manual state commands separately if you are preparing a
+controlled deployment test state.
+
 ## Overrides
 
 - `TARGET`: Rust target triple (default `armv7-unknown-linux-gnueabihf`)
@@ -68,3 +97,4 @@ are disconnected or the application has gained a simulated GPIO test mode.
 - `SKIP_BUILD=1`: package an existing binary
 - `APP`: application path on the OBC
 - `CONFIG`: KubOS configuration containing the `fram-service` address
+- `ANTENNA_HARDWARE_TEST_CONFIRM=DEPLOY`: confirm a non-interactive hardware run
