@@ -37,6 +37,7 @@ pub const CNN_BOOT: u32 = 67;
 // ADCS
 pub const ADCS_ENABLE: u32 = 47; // active-low
 
+
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct PinInfo {
     pub name: &'static str,
