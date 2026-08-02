@@ -2,49 +2,54 @@ use failure::{Error, bail, format_err};
 use log::{info, warn};
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
- 
+
 use crate::gpio::{self, GPIO_7, GPIO_66, GPIO_115, GPIO_117};
 use crate::state::{self, MissionFlagKey, MissionState};
- 
-const HOLD_TIME_SECONDS: i64 = 30 * 60;          // 30 minutes
+
+const HOLD_TIME_SECONDS: i64 = 30 * 60; // 30 minutes
 const INTER_ANTENNA_DELAY_SECONDS: u64 = 90;
 const DEPLOY_PULSE_MS: u64 = 5;
 const MAX_ATTEMPT_SETS: u8 = 3;
-const MIN_VALID_UNIX_TIME: i64 = 1_735_689_600;  // 2025-01-01T00:00:00Z
- 
- 
+const MIN_VALID_UNIX_TIME: i64 = 1_735_689_600; // 2025-01-01T00:00:00Z
+
 pub fn run_once() -> Result<(), Error> {
     // Validate system time.
     let now = current_unix_time()?;
     ensure_time_valid(now)?;
- 
+
     // Step 2 – reconcile FRAM ↔ U-Boot env and read merged state.
-    state::reconcile_mission_state(false)?;
+    // Bench hardware may explicitly opt into FRAM-only state when the test
+    // image has no mounted U-Boot environment.
+    if state::fram_only_mode() {
+        warn!("ANTENNA_FRAM_ONLY enabled: skipping U-Boot reconciliation");
+    } else {
+        state::reconcile_mission_state(false)?;
+    }
     let mut mission = state::read_mission_state()?;
- 
+
     // Nothing to do if already fully deployed.
     if mission.deployed {
         info!("deployed=true, nothing to do");
         return Ok(());
     }
- 
+
     // Pre-check both sense lines before touching deploy outputs.
     gpio::init_antenna_gpio()?;
     refresh_confirmed_antennas(&mut mission);
- 
+
     if mission.vhf_antenna_deployed && mission.uhf_antenna_deployed {
         info!("both antennas confirmed on pre-check — finalizing");
         finalize_deployment()?;
         return Ok(());
     }
- 
+
     // Record deploy_start if not yet set, then hold for required time before attempting deploys.
     if mission.deploy_start.is_none() {
         info!("deploy_start missing, setting deploy_start={}", now);
         state::set_deploy_start(now)?;
         return Ok(());
     }
- 
+
     // Hold timer check.
     let deploy_start = mission.deploy_start.unwrap();
     let elapsed = now.saturating_sub(deploy_start);
@@ -56,9 +61,12 @@ pub fn run_once() -> Result<(), Error> {
         );
         return Ok(());
     }
- 
-    info!("hold timer elapsed ({}s) — proceeding with deployment", elapsed);
- 
+
+    info!(
+        "hold timer elapsed ({}s) — proceeding with deployment",
+        elapsed
+    );
+
     // /Run deploy cycles for any antenna not yet confirmed.
     let attempts_done = decode_attempt_count(&mission);
     if attempts_done < MAX_ATTEMPT_SETS {
@@ -69,31 +77,31 @@ pub fn run_once() -> Result<(), Error> {
             MAX_ATTEMPT_SETS
         );
     }
- 
+
     // One check-only pass for any antenna still unconfirmed.
     run_check_only_cycle(&mut mission);
- 
+
     // Finalize if both now confirmed.
     if mission.vhf_antenna_deployed && mission.uhf_antenna_deployed {
         finalize_deployment()?;
     }
- 
+
     Ok(())
 }
- 
-// deploy cycles 
- 
+
+// deploy cycles
+
 fn run_attempt_sets(mut mission: MissionState, attempts_done: u8) -> Result<MissionState, Error> {
     let mut count = attempts_done;
- 
+
     while count < MAX_ATTEMPT_SETS {
         if mission.vhf_antenna_deployed && mission.uhf_antenna_deployed {
             break;
         }
- 
+
         count += 1;
         info!("starting attempt set {}/{}", count, MAX_ATTEMPT_SETS);
- 
+
         // VHF deploy + sense
         if !mission.vhf_antenna_deployed {
             info!("attempting VHF deployment via GPIO_{}", GPIO_117);
@@ -110,13 +118,16 @@ fn run_attempt_sets(mut mission: MissionState, attempts_done: u8) -> Result<Miss
                 Err(err) => warn!("VHF deploy pulse failed: {}", err),
             }
         }
- 
+
         // 90s wait before UHF (always observed so VHF has time to settle,
         // even if VHF just confirmed above)
         if !mission.uhf_antenna_deployed {
-            info!("waiting {}s before UHF attempt", INTER_ANTENNA_DELAY_SECONDS);
+            info!(
+                "waiting {}s before UHF attempt",
+                INTER_ANTENNA_DELAY_SECONDS
+            );
             thread::sleep(Duration::from_secs(INTER_ANTENNA_DELAY_SECONDS));
- 
+
             // UHF deploy + sense
             info!("attempting UHF deployment via GPIO_{}", GPIO_115);
             match gpio::pulse_high(GPIO_115, Duration::from_millis(DEPLOY_PULSE_MS)) {
@@ -132,16 +143,16 @@ fn run_attempt_sets(mut mission: MissionState, attempts_done: u8) -> Result<Miss
                 Err(err) => warn!("UHF deploy pulse failed: {}", err),
             }
         }
- 
+
         // Persist attempt count after each cycle
         persist_attempt_count(count)?;
     }
- 
+
     Ok(mission)
 }
- 
-// sense-check helpers 
- 
+
+// sense-check helpers
+
 /// Read both sense lines and update mission state + FRAM for any that confirm.
 fn refresh_confirmed_antennas(mission: &mut MissionState) {
     if !mission.vhf_antenna_deployed {
@@ -158,7 +169,7 @@ fn refresh_confirmed_antennas(mission: &mut MissionState) {
             Err(err) => warn!("VHF refresh read failed: {}", err),
         }
     }
- 
+
     if !mission.uhf_antenna_deployed {
         match gpio::read_pin(GPIO_7) {
             Ok(true) => {
@@ -174,7 +185,7 @@ fn refresh_confirmed_antennas(mission: &mut MissionState) {
         }
     }
 }
- 
+
 /// Single check-only pass — no deploy pulses, just reads sense lines.
 fn run_check_only_cycle(mission: &mut MissionState) {
     if !mission.vhf_antenna_deployed {
@@ -191,7 +202,7 @@ fn run_check_only_cycle(mission: &mut MissionState) {
             Err(err) => warn!("VHF check-only read failed: {}", err),
         }
     }
- 
+
     if !mission.uhf_antenna_deployed {
         match gpio::read_pin(GPIO_7) {
             Ok(true) => {
@@ -207,7 +218,6 @@ fn run_check_only_cycle(mission: &mut MissionState) {
         }
     }
 }
- 
 
 fn finalize_deployment() -> Result<(), Error> {
     state::set_flag(MissionFlagKey::Deployed, true)?;
@@ -215,9 +225,9 @@ fn finalize_deployment() -> Result<(), Error> {
     info!("both antennas confirmed — deployed=true");
     Ok(())
 }
- 
-// attempt counter encoding 
- 
+
+// attempt counter encoding
+
 fn decode_attempt_count(mission: &MissionState) -> u8 {
     let mut value = 0u8;
     if mission.initial_safe_state_complete {
@@ -228,29 +238,29 @@ fn decode_attempt_count(mission: &MissionState) -> u8 {
     }
     value.min(MAX_ATTEMPT_SETS)
 }
- 
+
 fn persist_attempt_count(count: u8) -> Result<(), Error> {
     let value = count.min(MAX_ATTEMPT_SETS);
     let bit0 = (value & 0b01) != 0;
     let bit1 = (value & 0b10) != 0;
- 
+
     state::set_flag(MissionFlagKey::InitialSafeStateComplete, bit0)?;
     state::set_flag(MissionFlagKey::DetumblingComplete, bit1)?;
- 
+
     Ok(())
 }
- 
+
 // time helpers
- 
+
 fn current_unix_time() -> Result<i64, Error> {
     let duration = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map_err(|e| format_err!("system clock is before unix epoch: {}", e))?;
- 
+
     i64::try_from(duration.as_secs())
         .map_err(|e| format_err!("unix timestamp overflowed i64: {}", e))
 }
- 
+
 fn ensure_time_valid(now: i64) -> Result<(), Error> {
     if now < MIN_VALID_UNIX_TIME {
         bail!(

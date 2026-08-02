@@ -1,6 +1,7 @@
 use failure::{Error, bail, format_err};
 use kubos_app::ServiceConfig;
 use serde_json::Value;
+use std::env;
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::time::Duration;
@@ -63,6 +64,17 @@ pub fn parse_bool(input: &str) -> Option<bool> {
         "0" | "false" | "f" | "no" | "n" => Some(false),
         _ => None,
     }
+}
+
+pub fn fram_only_mode() -> bool {
+    env::var("ANTENNA_FRAM_ONLY")
+        .ok()
+        .and_then(|value| parse_bool(&value))
+        .unwrap_or(false)
+}
+
+fn mirror_to_env() -> bool {
+    !fram_only_mode()
 }
 
 pub fn reconcile_mission_state(dry_run: bool) -> Result<(), Error> {
@@ -149,8 +161,9 @@ pub fn set_deploy_start(timestamp: i64) -> Result<(), Error> {
         bail!("deploy_start timestamp must be non-negative");
     }
 
+    let mirror = mirror_to_env();
     let request = format!(
-        "mutation {{ setDeployStart(timestamp: {timestamp}, mirrorToEnv: true) {{ success errors }} }}"
+        "mutation {{ setDeployStart(timestamp: {timestamp}, mirrorToEnv: {mirror}) {{ success errors }} }}"
     );
 
     let response = graphql(&request)?;
@@ -175,8 +188,10 @@ pub fn set_deploy_start(timestamp: i64) -> Result<(), Error> {
 }
 
 pub fn clear_deploy_start() -> Result<(), Error> {
-    let request = "mutation { setDeployStart(mirrorToEnv: true) { success errors } }";
-    let response = graphql(request)?;
+    let mirror = mirror_to_env();
+    let request =
+        format!("mutation {{ setDeployStart(mirrorToEnv: {mirror}) {{ success errors }} }}");
+    let response = graphql(&request)?;
     let result = response
         .get("setDeployStart")
         .ok_or_else(|| format_err!("missing setDeployStart in FRAM response"))?;
@@ -198,8 +213,9 @@ pub fn clear_deploy_start() -> Result<(), Error> {
 }
 
 pub fn set_flag(key: MissionFlagKey, value: bool) -> Result<(), Error> {
+    let mirror = mirror_to_env();
     let request = format!(
-        "mutation {{ setMissionFlag(key: {}, value: {}, mirrorToEnv: true) {{ success errors }} }}",
+        "mutation {{ setMissionFlag(key: {}, value: {}, mirrorToEnv: {mirror}) {{ success errors }} }}",
         key.as_graphql(),
         value
     );
@@ -346,8 +362,13 @@ fn decode_chunked_body(bytes: &[u8]) -> Result<Vec<u8>, Error> {
         let size_str = std::str::from_utf8(size_slice)
             .map_err(|e| format_err!("invalid chunk size in fram-service response: {}", e))?;
         let size_hex = size_str.split(';').next().unwrap_or_default().trim();
-        let chunk_size = usize::from_str_radix(size_hex, 16)
-            .map_err(|e| format_err!("invalid chunk size '{}' in fram-service response: {}", size_hex, e))?;
+        let chunk_size = usize::from_str_radix(size_hex, 16).map_err(|e| {
+            format_err!(
+                "invalid chunk size '{}' in fram-service response: {}",
+                size_hex,
+                e
+            )
+        })?;
         cursor += size_end + 2;
 
         if chunk_size == 0 {

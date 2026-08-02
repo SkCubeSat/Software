@@ -88,6 +88,25 @@ The hardware runner does not alter flags or shorten/bypass the hold timer. Use
 the application's manual state commands separately if you are preparing a
 controlled deployment test state.
 
+If the bench image does not provide `/envar/uboot.env`, explicitly use
+FRAM-only mode:
+
+```sh
+ANTENNA_FRAM_ONLY=1 ./run-hardware.sh
+```
+
+This skips U-Boot reconciliation and makes state mutations write only to FRAM.
+It is intended only for controlled bench testing; omit it for normal or flight
+operation so the redundant U-Boot state copy remains enabled.
+
+Prefix manual state commands with the same variable while `/envar/uboot.env`
+is unavailable, for example:
+
+```sh
+ANTENNA_FRAM_ONLY=1 ./bin/antenna-deployment set-deploy-start 0 \
+  -c /home/kubos/fram-tests/fram-service/config/fram-hw.toml --stdout
+```
+
 ## Overrides
 
 - `TARGET`: Rust target triple (default `armv7-unknown-linux-gnueabihf`)
@@ -98,3 +117,4 @@ controlled deployment test state.
 - `APP`: application path on the OBC
 - `CONFIG`: KubOS configuration containing the `fram-service` address
 - `ANTENNA_HARDWARE_TEST_CONFIRM=DEPLOY`: confirm a non-interactive hardware run
+- `ANTENNA_FRAM_ONLY=1`: bench-only mode without U-Boot state mirroring

@@ -1,7 +1,7 @@
 use failure::Error;
+use kubos_app::logging_setup;
 use log::{error, info};
 use std::time::{SystemTime, UNIX_EPOCH};
-use kubos_app::logging_setup;
 
 mod deployment;
 mod gpio;
