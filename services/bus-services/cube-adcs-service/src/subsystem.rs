@@ -196,9 +196,13 @@ impl Subsystem {
             .lock()
             .map_err(|_| CubeAdcsError::LockPoisoned)?;
 
-        connection
-            .write_payload(can_id, true, payload)
-            .map_err(|err| CubeAdcsError::Can(err.to_string()))?;
+        if message_type == MSG_TYPE_TC_EXT {
+            write_extended_payload(&connection, can_id, payload)?;
+        } else {
+            connection
+                .write(CanFrame::extended(can_id, payload))
+                .map_err(|err| CubeAdcsError::Can(err.to_string()))?;
+        }
 
         loop {
             let response = connection
@@ -283,6 +287,13 @@ impl Subsystem {
 
         let start = Instant::now();
         let mut payload = Vec::with_capacity(length_bytes);
+        let extended_frame_count = length_bytes.div_ceil(7);
+        let initial_extended_counter = u8::try_from(extended_frame_count - 1).map_err(|_| {
+            CubeAdcsError::Api(format!(
+                "extended telemetry requires too many CAN frames: {extended_frame_count}"
+            ))
+        })?;
+        let mut expected_extended_counter = Some(initial_extended_counter);
         while payload.len() < length_bytes {
             let remaining = self
                 .config
@@ -309,8 +320,28 @@ impl Subsystem {
                         error_code: response.data.first().copied(),
                     });
                 }
-                MSG_TYPE_TLM_RESP | MSG_TYPE_TLM_RESP_EXT => {
+                MSG_TYPE_TLM_RESP => {
                     payload.extend_from_slice(&response.data);
+                }
+                MSG_TYPE_TLM_RESP_EXT => {
+                    let (&counter, data) = response.data.split_last().ok_or_else(|| {
+                        CubeAdcsError::Can(
+                            "extended telemetry frame did not contain a frame counter".to_string(),
+                        )
+                    })?;
+                    let expected = expected_extended_counter.ok_or_else(|| {
+                        CubeAdcsError::Can(
+                            "received an extra extended telemetry frame after counter zero"
+                                .to_string(),
+                        )
+                    })?;
+                    if counter != expected {
+                        return Err(CubeAdcsError::Can(format!(
+                            "extended telemetry frame counter out of sequence: expected {expected}, received {counter}"
+                        )));
+                    }
+                    payload.extend_from_slice(data);
+                    expected_extended_counter = counter.checked_sub(1);
                 }
                 _ => continue,
             }
@@ -353,6 +384,33 @@ impl Subsystem {
             data: frame.data,
         })
     }
+}
+
+fn write_extended_payload(
+    connection: &Connection,
+    can_id: u32,
+    payload: &[u8],
+) -> Result<(), CubeAdcsError> {
+    let frame_count = payload.len().div_ceil(7);
+    let initial_counter = u8::try_from(frame_count - 1).map_err(|_| {
+        CubeAdcsError::Api(format!(
+            "extended telecommand requires too many CAN frames: {frame_count}"
+        ))
+    })?;
+
+    for (index, chunk) in payload.chunks(7).enumerate() {
+        let index = u8::try_from(index).map_err(|_| {
+            CubeAdcsError::Api("extended telecommand frame index overflow".to_string())
+        })?;
+        let mut frame_payload = Vec::with_capacity(chunk.len() + 1);
+        frame_payload.extend_from_slice(chunk);
+        frame_payload.push(initial_counter - index);
+        connection
+            .write(CanFrame::extended(can_id, &frame_payload))
+            .map_err(|err| CubeAdcsError::Can(err.to_string()))?;
+    }
+
+    Ok(())
 }
 
 fn config_string(config: &kubos_service::Config, key: &str, default: &str) -> String {

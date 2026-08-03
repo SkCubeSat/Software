@@ -68,5 +68,6 @@ python3 scripts/Testing/cube-adcs-service/adcs_graphql_test.py \
 The tester validates the payload against the command database length before
 sending it. Payloads longer than eight bytes use `sendCommandRaw`; the service
 selects extended telecommand message type 7 and splits the payload into
-consecutive classic-CAN frames of at most eight bytes. The tester prints the
-expected frame count before transmission.
+consecutive classic-CAN frames containing at most seven command bytes followed
+by a descending frame counter. The tester prints the expected frame count before
+transmission.

@@ -545,7 +545,7 @@ def run_raw_command(args, introspection):
             )
         )
 
-    frame_count = max(1, (payload_length + 7) // 8)
+    frame_count = 1 if payload_length <= 8 else (payload_length + 6) // 7
     transport = "extended multi-frame" if payload_length > 8 else "single-frame"
     print(
         "Sending command {} ({}) as {} CAN frame(s), {} transport".format(

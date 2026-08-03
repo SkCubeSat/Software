@@ -63,9 +63,9 @@ fn long_command_is_split_into_extended_telecommand_frames() {
     let mut mock = MockStream::default();
     let tx_id = build_can_id(MSG_TYPE_TC_EXT, 54, 1, 4);
     mock.write
-        .set_input(CanFrame::extended(tx_id, &[0, 1, 2, 3, 4, 5, 6, 7]));
+        .set_input(CanFrame::extended(tx_id, &[0, 1, 2, 3, 4, 5, 6, 1]));
     mock.write
-        .set_input(CanFrame::extended(tx_id, &[8, 9, 10, 11]));
+        .set_input(CanFrame::extended(tx_id, &[7, 8, 9, 10, 11, 0]));
     mock.read.set_output(vec![CanFrame::extended(
         build_can_id(MSG_TYPE_TC_ACK, 54, 4, 1),
         &[],
@@ -106,11 +106,11 @@ fn extended_telemetry_reassembles_matching_frames() {
     ));
     let rx_id = build_can_id(MSG_TYPE_TLM_RESP_EXT, 170, 4, 1);
     mock.read.set_output(vec![
-        CanFrame::extended(rx_id, &[0, 1, 2, 3, 4, 5, 6, 7]),
-        CanFrame::extended(rx_id, &[8, 9, 10, 11, 12, 13, 14, 15]),
-        CanFrame::extended(rx_id, &[16, 17, 18, 19, 20, 21, 22, 23]),
-        CanFrame::extended(rx_id, &[24, 25, 26, 27, 28, 29, 30, 31]),
-        CanFrame::extended(rx_id, &[32]),
+        CanFrame::extended(rx_id, &[0, 1, 2, 3, 4, 5, 6, 4]),
+        CanFrame::extended(rx_id, &[7, 8, 9, 10, 11, 12, 13, 3]),
+        CanFrame::extended(rx_id, &[14, 15, 16, 17, 18, 19, 20, 2]),
+        CanFrame::extended(rx_id, &[21, 22, 23, 24, 25, 26, 27, 1]),
+        CanFrame::extended(rx_id, &[28, 29, 30, 31, 32, 0]),
     ]);
     let subsystem = Subsystem::with_connection(test_config(), Connection::new(Box::new(mock)));
 
@@ -118,6 +118,26 @@ fn extended_telemetry_reassembles_matching_frames() {
         subsystem.request_telemetry_payload(170, 33).unwrap(),
         (0_u8..33).collect::<Vec<_>>()
     );
+}
+
+#[test]
+fn extended_telemetry_rejects_out_of_sequence_frames() {
+    let mut mock = MockStream::default();
+    mock.write.set_input(CanFrame::extended(
+        build_can_id(cubespace_adcs_api::MSG_TYPE_TLM_REQ, 170, 1, 4),
+        &[],
+    ));
+    let rx_id = build_can_id(MSG_TYPE_TLM_RESP_EXT, 170, 4, 1);
+    mock.read.set_output(vec![
+        CanFrame::extended(rx_id, &[0, 1, 2, 3, 4, 5, 6, 4]),
+        CanFrame::extended(rx_id, &[7, 8, 9, 10, 11, 12, 13, 2]),
+    ]);
+    let subsystem = Subsystem::with_connection(test_config(), Connection::new(Box::new(mock)));
+
+    assert!(matches!(
+        subsystem.request_telemetry_payload(170, 33),
+        Err(CubeAdcsError::Can(message)) if message.contains("out of sequence")
+    ));
 }
 
 #[test]
