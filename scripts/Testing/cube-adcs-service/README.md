@@ -35,6 +35,16 @@ The response includes `payloadHex`, `expectedLengthBytes`, and
 `receivedLengthBytes`. Compare it with the corresponding typed telemetry query
 to distinguish CAN/reassembly problems from decoding problems.
 
+Long raw payloads are also printed in copy-safe 16-byte rows. To save the exact
+uninterrupted hexadecimal value without terminal wrapping, request one ID and
+provide an output path:
+
+```bash
+python3 scripts/Testing/cube-adcs-service/adcs_graphql_test.py \
+  --url http://127.0.0.1:8000/graphql raw-telemetry \
+  --ids 190 --payload-output /tmp/tlm-190.hex
+```
+
 Create a command input template:
 
 ```bash

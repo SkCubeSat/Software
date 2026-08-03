@@ -431,6 +431,8 @@ def run_raw_telemetry(args, introspection):
     unknown = sorted(set(telemetry_ids) - set(available))
     if unknown:
         raise GraphqlError("unknown telemetry IDs: {}".format(", ".join(map(str, unknown))))
+    if args.payload_output and len(telemetry_ids) != 1:
+        raise GraphqlError("--payload-output requires exactly one telemetry ID")
 
     failures = 0
     query = "query RawTelemetry($id: Int!) { telemetryRaw(id: $id) { %s } }" % (
@@ -449,8 +451,33 @@ def run_raw_telemetry(args, introspection):
         errors = response.get("errors")
         data = (response.get("data") or {}).get("telemetryRaw") or {}
         ok = not errors and data.get("success") is True
+        payload_hex = data.get("payloadHex") or ""
+        received_length = data.get("receivedLengthBytes")
+        if ok and received_length is not None and len(payload_hex) != received_length * 2:
+            ok = False
+            data["errors"] = (
+                "payloadHex contains {} characters for {} received bytes; expected {}".format(
+                    len(payload_hex), received_length, received_length * 2
+                )
+            )
         failures += 0 if ok else 1
         print_result("raw-tlm", telemetry_id, item["name"], ok, elapsed_ms, response, True)
+
+        if payload_hex:
+            print(
+                "payloadHex: {} characters / {} bytes".format(
+                    len(payload_hex), len(payload_hex) // 2
+                )
+            )
+            print("payloadHex copy-safe (16 bytes per line):")
+            for offset in range(0, len(payload_hex), 32):
+                print(payload_hex[offset : offset + 32])
+
+        if args.payload_output and ok:
+            with open(args.payload_output, "w", encoding="ascii") as stream:
+                stream.write(payload_hex)
+                stream.write("\n")
+            print("Wrote uninterrupted payloadHex to {}".format(args.payload_output))
 
         if args.delay:
             time.sleep(args.delay)
@@ -609,6 +636,10 @@ def build_parser():
         "--ids", action="append", help="Telemetry IDs, comma-separated or repeated"
     )
     raw_telemetry.add_argument("--delay", type=float, default=0.0, help="Delay between requests")
+    raw_telemetry.add_argument(
+        "--payload-output",
+        help="Write one telemetry payload as uninterrupted hexadecimal to this file",
+    )
     raw_telemetry.set_defaults(func=run_raw_telemetry)
 
     commands = subparsers.add_parser("commands", help="Prepare or execute telecommand mutations")
