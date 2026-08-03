@@ -201,7 +201,7 @@ fn encode_hex(bytes: &[u8]) -> String {
     bytes.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
-fn decode_hex(value: &str) -> Result<Vec<u8>> {
+pub(crate) fn decode_hex(value: &str) -> Result<Vec<u8>> {
     let compact: String = value
         .chars()
         .filter(|character| !character.is_ascii_whitespace() && *character != '_')

@@ -59,6 +59,38 @@ fn schema_exposes_service_control_fields() {
 }
 
 #[test]
+fn schema_exposes_all_additional_command_fields() {
+    let schema = Schema::build(
+        QueryRoot::default(),
+        MutationRoot::default(),
+        EmptySubscription,
+    )
+    .finish();
+    let sdl = schema.sdl();
+
+    for field in [
+        "referenceRotationAngle",
+        "disableMagneticRwlMomentumManagement",
+        "referenceParametersForFmcScan",
+        "referenceIrcVector",
+        "referenceLlhTargetCommand",
+        "targetSatelliteOrbitParameterCommand",
+        "simulationRawSensorTelemetry",
+        "transferFrame",
+        "fileTransferSetup",
+        "passThroughTctlm",
+        "portMap",
+        "unsolicitedTelemetrySetup",
+        "setRequestImageLogTransferSetup",
+        "setADummyEvent",
+        "unsolicitedEventMessageSetup",
+        "formatAllLogs",
+    ] {
+        assert!(sdl.contains(field), "missing GraphQL mutation {field}");
+    }
+}
+
+#[test]
 fn long_command_is_split_into_extended_telecommand_frames() {
     let mut mock = MockStream::default();
     let tx_id = build_can_id(MSG_TYPE_TC_EXT, 54, 1, 4);

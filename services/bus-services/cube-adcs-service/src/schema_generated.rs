@@ -3,8 +3,23 @@
 use async_graphql::{Context, Object, Result};
 use cubespace_adcs_api::{self as api};
 
-use crate::schema::map_command_ack;
+use crate::schema::{decode_hex, map_command_ack};
 use crate::subsystem::Subsystem;
+
+fn send_additional_command(
+    ctx: &Context<'_>,
+    command_id: u8,
+    payload_hex: &str,
+) -> Result<api::CommandResponse> {
+    let payload = decode_hex(payload_hex)?;
+    let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+    Ok(map_command_ack(
+        command_id,
+        context
+            .subsystem()
+            .send_command_payload(command_id, &payload),
+    ))
+}
 
 /// Generated GraphQL queries, one per telemetry ID.
 #[derive(Default)]
@@ -1544,5 +1559,149 @@ impl GeneratedMutationRoot {
             72,
             context.subsystem().send_typed_command(&input),
         ))
+    }
+
+    /// Sends telecommand ID 40: Reference Rotation Angle.
+    async fn reference_rotation_angle(
+        &self,
+        ctx: &Context<'_>,
+        payload_hex: String,
+    ) -> Result<api::CommandResponse> {
+        send_additional_command(ctx, 40, &payload_hex)
+    }
+
+    /// Sends telecommand ID 43: Disable magnetic RWL momentum management.
+    async fn disable_magnetic_rwl_momentum_management(
+        &self,
+        ctx: &Context<'_>,
+        payload_hex: String,
+    ) -> Result<api::CommandResponse> {
+        send_additional_command(ctx, 43, &payload_hex)
+    }
+
+    /// Sends telecommand ID 46: Reference parameters for FMC scan.
+    async fn reference_parameters_for_fmc_scan(
+        &self,
+        ctx: &Context<'_>,
+        payload_hex: String,
+    ) -> Result<api::CommandResponse> {
+        send_additional_command(ctx, 46, &payload_hex)
+    }
+
+    /// Sends telecommand ID 47: Reference IRC vector.
+    async fn reference_irc_vector(
+        &self,
+        ctx: &Context<'_>,
+        payload_hex: String,
+    ) -> Result<api::CommandResponse> {
+        send_additional_command(ctx, 47, &payload_hex)
+    }
+
+    /// Sends telecommand ID 48: Reference LLH target command.
+    async fn reference_llh_target_command(
+        &self,
+        ctx: &Context<'_>,
+        payload_hex: String,
+    ) -> Result<api::CommandResponse> {
+        send_additional_command(ctx, 48, &payload_hex)
+    }
+
+    /// Sends telecommand ID 60: Target satellite orbit parameter command.
+    async fn target_satellite_orbit_parameter_command(
+        &self,
+        ctx: &Context<'_>,
+        payload_hex: String,
+    ) -> Result<api::CommandResponse> {
+        send_additional_command(ctx, 60, &payload_hex)
+    }
+
+    /// Sends telecommand ID 73: Simulation raw sensor telemetry.
+    async fn simulation_raw_sensor_telemetry(
+        &self,
+        ctx: &Context<'_>,
+        payload_hex: String,
+    ) -> Result<api::CommandResponse> {
+        send_additional_command(ctx, 73, &payload_hex)
+    }
+
+    /// Sends telecommand ID 79: Transfer Frame.
+    async fn transfer_frame(
+        &self,
+        ctx: &Context<'_>,
+        payload_hex: String,
+    ) -> Result<api::CommandResponse> {
+        send_additional_command(ctx, 79, &payload_hex)
+    }
+
+    /// Sends telecommand ID 80: File Transfer Setup.
+    async fn file_transfer_setup(
+        &self,
+        ctx: &Context<'_>,
+        payload_hex: String,
+    ) -> Result<api::CommandResponse> {
+        send_additional_command(ctx, 80, &payload_hex)
+    }
+
+    /// Sends telecommand ID 99: Pass Through TCTLM.
+    async fn pass_through_tctlm(
+        &self,
+        ctx: &Context<'_>,
+        payload_hex: String,
+    ) -> Result<api::CommandResponse> {
+        send_additional_command(ctx, 99, &payload_hex)
+    }
+
+    /// Sends telecommand ID 111: Port Map.
+    async fn port_map(
+        &self,
+        ctx: &Context<'_>,
+        payload_hex: String,
+    ) -> Result<api::CommandResponse> {
+        send_additional_command(ctx, 111, &payload_hex)
+    }
+
+    /// Sends telecommand ID 112: Unsolicited Telemetry Setup.
+    async fn unsolicited_telemetry_setup(
+        &self,
+        ctx: &Context<'_>,
+        payload_hex: String,
+    ) -> Result<api::CommandResponse> {
+        send_additional_command(ctx, 112, &payload_hex)
+    }
+
+    /// Sends telecommand ID 114: Set Request Image Log Transfer Setup.
+    async fn set_request_image_log_transfer_setup(
+        &self,
+        ctx: &Context<'_>,
+        payload_hex: String,
+    ) -> Result<api::CommandResponse> {
+        send_additional_command(ctx, 114, &payload_hex)
+    }
+
+    /// Sends telecommand ID 115: Set a dummy event.
+    async fn set_a_dummy_event(
+        &self,
+        ctx: &Context<'_>,
+        payload_hex: String,
+    ) -> Result<api::CommandResponse> {
+        send_additional_command(ctx, 115, &payload_hex)
+    }
+
+    /// Sends telecommand ID 116: Unsolicited Event Message Setup.
+    async fn unsolicited_event_message_setup(
+        &self,
+        ctx: &Context<'_>,
+        payload_hex: String,
+    ) -> Result<api::CommandResponse> {
+        send_additional_command(ctx, 116, &payload_hex)
+    }
+
+    /// Sends telecommand ID 122: Format all logs.
+    async fn format_all_logs(
+        &self,
+        ctx: &Context<'_>,
+        payload_hex: String,
+    ) -> Result<api::CommandResponse> {
+        send_additional_command(ctx, 122, &payload_hex)
     }
 }
