@@ -141,3 +141,87 @@ fn decode_hil_enum_labels() {
         Some("OpStateManual".to_string())
     );
 }
+
+#[test]
+fn decode_mag_sensing_element_enum_labels() {
+    let primary = MagSensingElementConfigurationTelemetry::decode(&[0b0000_0000]).unwrap();
+    assert_eq!(primary.mag0_sensing_element_raw, 0);
+    assert_eq!(primary.mag0_sensing_element, Some("MagPrimary".to_string()));
+    assert_eq!(primary.mag1_sensing_element_raw, 0);
+    assert_eq!(primary.mag1_sensing_element, Some("MagPrimary".to_string()));
+
+    let redundant = MagSensingElementConfigurationTelemetry::decode(&[0b0000_0011]).unwrap();
+    assert_eq!(redundant.mag0_sensing_element_raw, 1);
+    assert_eq!(
+        redundant.mag0_sensing_element,
+        Some("MagRedundant".to_string())
+    );
+    assert_eq!(redundant.mag1_sensing_element_raw, 1);
+    assert_eq!(
+        redundant.mag1_sensing_element,
+        Some("MagRedundant".to_string())
+    );
+}
+
+#[test]
+fn generated_telemetry_has_no_null_enum_placeholder() {
+    assert!(!include_str!("telemetry.rs").contains("unknown_enum_label("));
+
+    for table in [
+        "table_13",
+        "table_29",
+        "table_30",
+        "table_38",
+        "table_41",
+        "table_51",
+        "table_55",
+        "table_56",
+        "table_57",
+        "table_58",
+        "table_59",
+        "table_61",
+        "table_64",
+        "table_78",
+        "table_80",
+        "table_84",
+        "table_85",
+        "table_88",
+        "table_90",
+        "table_91",
+        "table_93",
+        "table_99",
+        "table_101",
+        "table_107",
+        "table_109",
+        "table_110",
+        "table_111",
+        "table_113",
+        "table_114",
+        "table_117",
+        "table_120",
+        "table_126",
+        "table_139",
+        "table_140",
+        "table_175",
+        "table_176",
+        "table_177",
+        "table_178",
+        "table_179",
+        "table_180",
+        "table_181",
+        "table_182",
+        "table_183",
+        "table_200",
+        "table_203",
+        "table_205",
+        "table_208",
+        "table_214",
+        "table_215",
+    ] {
+        assert!(
+            crate::telemetry::telemetry_enum_label(table, 0).is_some(),
+            "{} is missing its zero-value enum label",
+            table
+        );
+    }
+}
