@@ -6,8 +6,8 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use crate::gpio::{self, GPIO_7, GPIO_66, GPIO_115, GPIO_117};
 use crate::state::{self, MissionFlagKey, MissionState};
 
-const HOLD_TIME_SECONDS: i64 = 30 * 60; // 30 minutes
-const INTER_ANTENNA_DELAY_SECONDS: u64 = 90;
+const HOLD_TIME_SECONDS: i64 = 5; // 30 minutes
+const INTER_ANTENNA_DELAY_SECONDS: u64 = 5;
 const DEPLOY_PULSE_MS: u64 = 5;
 const MAX_ATTEMPT_SETS: u8 = 3;
 const MIN_VALID_UNIX_TIME: i64 = 1_735_689_600; // 2025-01-01T00:00:00Z
