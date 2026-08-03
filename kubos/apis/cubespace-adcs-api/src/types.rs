@@ -233,6 +233,57 @@ impl TelemetryInfo {
     }
 }
 
+/// A complete telemetry payload before typed field decoding.
+#[derive(Clone, Debug, PartialEq, Eq, SimpleObject)]
+pub struct RawTelemetryResponse {
+    /// Whether the telemetry request succeeded.
+    pub success: bool,
+    /// Error text when the request failed.
+    pub errors: String,
+    /// Requested telemetry ID.
+    pub telemetry_id: i32,
+    /// Telemetry name from the database.
+    pub name: String,
+    /// Payload length declared by the telemetry database.
+    pub expected_length_bytes: i64,
+    /// Number of reassembled payload bytes received.
+    pub received_length_bytes: i64,
+    /// Complete reassembled payload encoded as lowercase hexadecimal.
+    pub payload_hex: String,
+}
+
+impl RawTelemetryResponse {
+    /// Builds a successful raw telemetry response.
+    pub fn success_response(
+        telemetry: &TelemetrySpec,
+        received_length_bytes: usize,
+        payload_hex: String,
+    ) -> Self {
+        Self {
+            success: true,
+            errors: String::new(),
+            telemetry_id: i32::from(telemetry.id),
+            name: telemetry.name.to_string(),
+            expected_length_bytes: telemetry.length_bytes as i64,
+            received_length_bytes: received_length_bytes as i64,
+            payload_hex,
+        }
+    }
+
+    /// Builds a failed raw telemetry response.
+    pub fn failure(telemetry: &TelemetrySpec, error: impl ToString) -> Self {
+        Self {
+            success: false,
+            errors: error.to_string(),
+            telemetry_id: i32::from(telemetry.id),
+            name: telemetry.name.to_string(),
+            expected_length_bytes: telemetry.length_bytes as i64,
+            received_length_bytes: 0,
+            payload_hex: String::new(),
+        }
+    }
+}
+
 /// Generic mutation response.
 #[derive(Clone, Debug, PartialEq, Eq, SimpleObject)]
 pub struct MutationResponse {

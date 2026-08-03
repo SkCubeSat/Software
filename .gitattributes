@@ -1,0 +1,3 @@
+# Large source documents are inputs to the ADCS generator/audit, not useful text diffs.
+/controlprogram8_4.8.4.75.html -diff
+/*.xlsx binary

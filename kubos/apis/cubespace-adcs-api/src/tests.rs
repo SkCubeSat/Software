@@ -23,6 +23,19 @@ fn mission_selected_raw_command_specs_are_available() {
 }
 
 #[test]
+fn raw_telemetry_response_preserves_payload_details() {
+    let telemetry = telemetry_spec(133).unwrap();
+    let response = RawTelemetryResponse::success_response(telemetry, 8, "0102030405060708".into());
+
+    assert!(response.success);
+    assert_eq!(response.telemetry_id, 133);
+    assert_eq!(response.name, "Current Unix Time");
+    assert_eq!(response.expected_length_bytes, 8);
+    assert_eq!(response.received_length_bytes, 8);
+    assert_eq!(response.payload_hex, "0102030405060708");
+}
+
+#[test]
 fn can_id_round_trip_matches_adcs_scripts() {
     let can_id = build_can_id(MSG_TYPE_TC, 58, 1, 4);
 

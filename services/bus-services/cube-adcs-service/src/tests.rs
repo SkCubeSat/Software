@@ -1,7 +1,7 @@
 use async_graphql::{EmptySubscription, Schema};
 use cubespace_adcs_api::{
-    MSG_TYPE_TC_ACK, MSG_TYPE_TC_EXT, MSG_TYPE_TLM_NACK, MSG_TYPE_TLM_RESP,
-    MSG_TYPE_TLM_RESP_EXT, build_can_id,
+    MSG_TYPE_TC_ACK, MSG_TYPE_TC_EXT, MSG_TYPE_TLM_NACK, MSG_TYPE_TLM_RESP, MSG_TYPE_TLM_RESP_EXT,
+    build_can_id,
 };
 use rust_can::mock::MockStream;
 use rust_can::{CanFrame, Connection};
@@ -49,6 +49,10 @@ fn schema_exposes_service_control_fields() {
     let sdl = schema.sdl();
 
     assert!(sdl.contains("health"));
+    assert!(sdl.contains("telemetryRaw"));
+    assert!(sdl.contains("payloadHex"));
+    assert!(sdl.contains("expectedLengthBytes"));
+    assert!(sdl.contains("receivedLengthBytes"));
     assert!(sdl.contains("setInterfaceUp"));
     assert!(sdl.contains("resetInterface"));
     assert!(sdl.contains("sendCommandRaw"));

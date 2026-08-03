@@ -1,8 +1,8 @@
 use async_graphql::{Context, MergedObject, Object, Result};
 use cubespace_adcs_api::{
     ADDITIONAL_COMMAND_SPECS, COMMAND_SPECS, CommandInfo, CommandResponse, HealthInfo,
-    MutationResponse, RawFrameResponse, TELEMETRY_SPECS, TelemetryInfo, command_spec,
-    telemetry_spec,
+    MutationResponse, RawFrameResponse, RawTelemetryResponse, TELEMETRY_SPECS, TelemetryInfo,
+    command_spec, telemetry_spec,
 };
 
 use crate::schema_generated::{GeneratedMutationRoot, GeneratedQueryRoot};
@@ -76,6 +76,28 @@ impl BaseQueryRoot {
         telemetry_spec(id)
             .map(TelemetryInfo::from_spec)
             .ok_or_else(|| async_graphql::Error::new(format!("unknown telemetry ID: {id}")))
+    }
+
+    /// Requests telemetry and returns the complete reassembled payload without decoding it.
+    async fn telemetry_raw(&self, ctx: &Context<'_>, id: i32) -> Result<RawTelemetryResponse> {
+        let context = ctx.data::<kubos_service::Context<Subsystem>>()?;
+        let id = checked_u8(id, "id")?;
+        let telemetry = telemetry_spec(id)
+            .ok_or_else(|| async_graphql::Error::new(format!("unknown telemetry ID: {id}")))?;
+
+        Ok(
+            match context
+                .subsystem()
+                .request_telemetry_payload(id, telemetry.length_bytes)
+            {
+                Ok(payload) => RawTelemetryResponse::success_response(
+                    telemetry,
+                    payload.len(),
+                    encode_hex(&payload),
+                ),
+                Err(err) => RawTelemetryResponse::failure(telemetry, err),
+            },
+        )
     }
 
     /// Reads one raw CAN frame.
