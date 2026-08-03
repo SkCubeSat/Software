@@ -125,6 +125,10 @@ query AdcsDefinitions {
 """
 
 COMMAND_RESPONSE_SELECTION = "success errors commandId acknowledged errorCode payloadHex"
+RAW_TELEMETRY_SELECTION = (
+    "success errors telemetryId name expectedLengthBytes "
+    "receivedLengthBytes payloadHex"
+)
 
 
 class GraphqlError(RuntimeError):
@@ -347,13 +351,32 @@ def parse_ids(values):
     return ids
 
 
-def run_discovery(args, introspection):
-    definitions = post_graphql(args.url, DEFINITION_QUERY, timeout=args.timeout)
-    if definitions.get("errors"):
-        raise GraphqlError(json.dumps(definitions["errors"], indent=2))
+def normalize_hex(value):
+    compact = "".join(
+        character
+        for character in value
+        if not character.isspace() and character != "_"
+    )
+    if len(compact) % 2:
+        raise GraphqlError("hex payload must contain an even number of digits")
+    try:
+        bytes.fromhex(compact)
+    except ValueError as err:
+        raise GraphqlError("invalid hex payload: {}".format(err)) from err
+    return compact.lower()
 
-    telemetry = definitions["data"]["telemetryDefinitions"]
-    commands = definitions["data"]["commandDefinitions"]
+
+def fetch_definitions(args):
+    response = post_graphql(args.url, DEFINITION_QUERY, timeout=args.timeout)
+    if response.get("errors"):
+        raise GraphqlError(json.dumps(response["errors"], indent=2))
+    return response["data"]
+
+
+def run_discovery(args, introspection):
+    definitions = fetch_definitions(args)
+    telemetry = definitions["telemetryDefinitions"]
+    commands = definitions["commandDefinitions"]
     telemetry_fields = telemetry_field_map(introspection)
     command_fields = command_field_map(introspection)
 
@@ -391,6 +414,43 @@ def run_telemetry(args, introspection):
         ok = not response.get("errors")
         failures += 0 if ok else 1
         print_result("telemetry", telemetry_id, field["name"], ok, elapsed_ms, response, args.verbose)
+
+        if args.delay:
+            time.sleep(args.delay)
+
+    if failures:
+        raise SystemExit(1)
+
+
+def run_raw_telemetry(args, introspection):
+    del introspection
+    definitions = fetch_definitions(args)["telemetryDefinitions"]
+    available = {item["id"]: item for item in definitions}
+    requested = parse_ids(args.ids)
+    telemetry_ids = requested or sorted(available)
+    unknown = sorted(set(telemetry_ids) - set(available))
+    if unknown:
+        raise GraphqlError("unknown telemetry IDs: {}".format(", ".join(map(str, unknown))))
+
+    failures = 0
+    query = "query RawTelemetry($id: Int!) { telemetryRaw(id: $id) { %s } }" % (
+        RAW_TELEMETRY_SELECTION,
+    )
+    for telemetry_id in telemetry_ids:
+        item = available[telemetry_id]
+        started = time.time()
+        response = post_graphql(
+            args.url,
+            query,
+            variables={"id": telemetry_id},
+            timeout=args.timeout,
+        )
+        elapsed_ms = int((time.time() - started) * 1000)
+        errors = response.get("errors")
+        data = (response.get("data") or {}).get("telemetryRaw") or {}
+        ok = not errors and data.get("success") is True
+        failures += 0 if ok else 1
+        print_result("raw-tlm", telemetry_id, item["name"], ok, elapsed_ms, response, True)
 
         if args.delay:
             time.sleep(args.delay)
@@ -456,6 +516,66 @@ def run_commands(args, introspection):
         raise SystemExit(1)
 
 
+def run_raw_command(args, introspection):
+    del introspection
+    if not args.include_mutating_commands:
+        print("Raw command was not sent.")
+        print("Add --include-mutating-commands after reviewing the ID and payload.")
+        return
+
+    if args.payload_hex is not None:
+        payload_hex = normalize_hex(args.payload_hex)
+    else:
+        with open(args.payload_file, "r", encoding="utf-8") as stream:
+            payload_hex = normalize_hex(stream.read())
+
+    commands = {
+        item["id"]: item for item in fetch_definitions(args)["commandDefinitions"]
+    }
+    command = commands.get(args.id)
+    if command is None:
+        raise GraphqlError("unknown command ID: {}".format(args.id))
+
+    payload_length = len(payload_hex) // 2
+    expected_length = command["lengthBytes"]
+    if payload_length != expected_length:
+        raise GraphqlError(
+            "command {} expects {} bytes, payload contains {}".format(
+                args.id, expected_length, payload_length
+            )
+        )
+
+    frame_count = max(1, (payload_length + 7) // 8)
+    transport = "extended multi-frame" if payload_length > 8 else "single-frame"
+    print(
+        "Sending command {} ({}) as {} CAN frame(s), {} transport".format(
+            args.id, command["name"], frame_count, transport
+        )
+    )
+
+    mutation = """
+mutation RawCommand($id: Int!, $payloadHex: String!) {
+  sendCommandRaw(id: $id, payloadHex: $payloadHex) {
+    %s
+  }
+}
+""" % (COMMAND_RESPONSE_SELECTION,)
+    started = time.time()
+    response = post_graphql(
+        args.url,
+        mutation,
+        variables={"id": args.id, "payloadHex": payload_hex},
+        timeout=args.timeout,
+    )
+    elapsed_ms = int((time.time() - started) * 1000)
+    errors = response.get("errors")
+    data = (response.get("data") or {}).get("sendCommandRaw") or {}
+    ok = not errors and data.get("success") is True
+    print_result("raw-cmd", args.id, command["name"], ok, elapsed_ms, response, True)
+    if not ok:
+        raise SystemExit(1)
+
+
 def print_result(kind, item_id, name, ok, elapsed_ms, response, verbose):
     status = "PASS" if ok else "FAIL"
     print("{} {:3d} {:36s} {:4s} {} ms".format(kind, item_id, name[:36], status, elapsed_ms))
@@ -481,6 +601,16 @@ def build_parser():
     telemetry.add_argument("--delay", type=float, default=0.0, help="Delay between requests")
     telemetry.set_defaults(func=run_telemetry)
 
+    raw_telemetry = subparsers.add_parser(
+        "raw-telemetry",
+        help="Request complete reassembled telemetry payloads without decoding",
+    )
+    raw_telemetry.add_argument(
+        "--ids", action="append", help="Telemetry IDs, comma-separated or repeated"
+    )
+    raw_telemetry.add_argument("--delay", type=float, default=0.0, help="Delay between requests")
+    raw_telemetry.set_defaults(func=run_raw_telemetry)
+
     commands = subparsers.add_parser("commands", help="Prepare or execute telecommand mutations")
     commands.add_argument("--ids", action="append", help="Command IDs, comma-separated or repeated")
     commands.add_argument("--inputs", help="JSON file containing command inputs")
@@ -492,6 +622,21 @@ def build_parser():
         help="Actually send command mutations to the ADCS",
     )
     commands.set_defaults(func=run_commands)
+
+    raw_command = subparsers.add_parser(
+        "raw-command",
+        help="Send an encoded command payload, including payloads longer than one CAN frame",
+    )
+    raw_command.add_argument("--id", type=int, required=True, help="Command ID")
+    payload = raw_command.add_mutually_exclusive_group(required=True)
+    payload.add_argument("--payload-hex", help="Encoded command payload as hexadecimal")
+    payload.add_argument("--payload-file", help="File containing the hexadecimal payload")
+    raw_command.add_argument(
+        "--include-mutating-commands",
+        action="store_true",
+        help="Actually send the command to the ADCS",
+    )
+    raw_command.set_defaults(func=run_raw_command)
 
     return parser
 

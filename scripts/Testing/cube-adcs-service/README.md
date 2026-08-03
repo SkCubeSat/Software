@@ -24,6 +24,17 @@ python3 scripts/Testing/cube-adcs-service/adcs_graphql_test.py \
   --url http://127.0.0.1:8000/graphql telemetry --ids 136,170,243
 ```
 
+Read a complete reassembled telemetry payload before decoding:
+
+```bash
+python3 scripts/Testing/cube-adcs-service/adcs_graphql_test.py \
+  --url http://127.0.0.1:8000/graphql raw-telemetry --ids 170
+```
+
+The response includes `payloadHex`, `expectedLengthBytes`, and
+`receivedLengthBytes`. Compare it with the corresponding typed telemetry query
+to distinguish CAN/reassembly problems from decoding problems.
+
 Create a command input template:
 
 ```bash
@@ -43,3 +54,19 @@ python3 scripts/Testing/cube-adcs-service/adcs_graphql_test.py \
 
 Command mutations are intentionally opt-in because many telecommands change ADCS
 state.
+
+Send a pre-encoded raw command after explicitly opting in:
+
+```bash
+python3 scripts/Testing/cube-adcs-service/adcs_graphql_test.py \
+  --url http://127.0.0.1:8000/graphql raw-command \
+  --id 54 \
+  --payload-hex 000000000000000000000000 \
+  --include-mutating-commands
+```
+
+The tester validates the payload against the command database length before
+sending it. Payloads longer than eight bytes use `sendCommandRaw`; the service
+selects extended telecommand message type 7 and splits the payload into
+consecutive classic-CAN frames of at most eight bytes. The tester prints the
+expected frame count before transmission.
