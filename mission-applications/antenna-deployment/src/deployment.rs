@@ -188,6 +188,7 @@ fn refresh_confirmed_antennas(mission: &mut MissionState) {
 
 /// Single check-only pass — no deploy pulses, just reads sense lines.
 fn run_check_only_cycle(mission: &mut MissionState) {
+    info!("starting check-only cycle");
     if !mission.vhf_antenna_deployed {
         match gpio::read_active_low(GPIO_66) {
             Ok(true) => {
