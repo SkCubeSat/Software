@@ -26,7 +26,7 @@ mkdir -p "$OUT/bin"
 cp "$ROOT/target/$TARGET/release/antenna-deployment" "$OUT/bin/"
 cp "$DIR/run.sh" "$OUT/"
 cp "$DIR/run-hardware.sh" "$OUT/"
-cp "$DIR/README.md" "$OUT/"
+cp "$DIR/setup-bench.sh" "$OUT/"
 
 chmod +x "$OUT/run.sh" "$OUT/run-hardware.sh" "$OUT/bin/antenna-deployment"
 
