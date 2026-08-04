@@ -106,11 +106,11 @@ fn run_attempt_sets(mut mission: MissionState, attempts_done: u8) -> Result<Miss
         if !mission.vhf_antenna_deployed {
             info!("attempting VHF deployment via GPIO_{}", GPIO_117);
             match gpio::pulse_high(GPIO_117, Duration::from_millis(DEPLOY_PULSE_MS)) {
-                Ok(()) => match gpio::read_pin(GPIO_66) {
+                Ok(()) => match gpio::read_active_low(GPIO_66) {
                     Ok(true) => {
                         mission.vhf_antenna_deployed = true;
                         state::set_flag(MissionFlagKey::VhfAntennaDeployed, true)?;
-                        info!("VHF confirmed via GPIO_{} (active-high)", GPIO_66);
+                        info!("VHF confirmed via GPIO_{} (active-low)", GPIO_66);
                     }
                     Ok(false) => info!("VHF not yet confirmed via GPIO_{}", GPIO_66),
                     Err(err) => warn!("VHF sense read failed: {}", err),
@@ -131,11 +131,11 @@ fn run_attempt_sets(mut mission: MissionState, attempts_done: u8) -> Result<Miss
             // UHF deploy + sense
             info!("attempting UHF deployment via GPIO_{}", GPIO_115);
             match gpio::pulse_high(GPIO_115, Duration::from_millis(DEPLOY_PULSE_MS)) {
-                Ok(()) => match gpio::read_pin(GPIO_7) {
+                Ok(()) => match gpio::read_active_low(GPIO_7) {
                     Ok(true) => {
                         mission.uhf_antenna_deployed = true;
                         state::set_flag(MissionFlagKey::UhfAntennaDeployed, true)?;
-                        info!("UHF confirmed via GPIO_{} (active-high)", GPIO_7);
+                        info!("UHF confirmed via GPIO_{} (active-low)", GPIO_7);
                     }
                     Ok(false) => info!("UHF not yet confirmed via GPIO_{}", GPIO_7),
                     Err(err) => warn!("UHF sense read failed: {}", err),
@@ -156,7 +156,7 @@ fn run_attempt_sets(mut mission: MissionState, attempts_done: u8) -> Result<Miss
 /// Read both sense lines and update mission state + FRAM for any that confirm.
 fn refresh_confirmed_antennas(mission: &mut MissionState) {
     if !mission.vhf_antenna_deployed {
-        match gpio::read_pin(GPIO_66) {
+        match gpio::read_active_low(GPIO_66) {
             Ok(true) => {
                 mission.vhf_antenna_deployed = true;
                 if let Err(err) = state::set_flag(MissionFlagKey::VhfAntennaDeployed, true) {
@@ -171,7 +171,7 @@ fn refresh_confirmed_antennas(mission: &mut MissionState) {
     }
 
     if !mission.uhf_antenna_deployed {
-        match gpio::read_pin(GPIO_7) {
+        match gpio::read_active_low(GPIO_7) {
             Ok(true) => {
                 mission.uhf_antenna_deployed = true;
                 if let Err(err) = state::set_flag(MissionFlagKey::UhfAntennaDeployed, true) {
@@ -189,7 +189,7 @@ fn refresh_confirmed_antennas(mission: &mut MissionState) {
 /// Single check-only pass — no deploy pulses, just reads sense lines.
 fn run_check_only_cycle(mission: &mut MissionState) {
     if !mission.vhf_antenna_deployed {
-        match gpio::read_pin(GPIO_66) {
+        match gpio::read_active_low(GPIO_66) {
             Ok(true) => {
                 mission.vhf_antenna_deployed = true;
                 if let Err(err) = state::set_flag(MissionFlagKey::VhfAntennaDeployed, true) {
@@ -204,7 +204,7 @@ fn run_check_only_cycle(mission: &mut MissionState) {
     }
 
     if !mission.uhf_antenna_deployed {
-        match gpio::read_pin(GPIO_7) {
+        match gpio::read_active_low(GPIO_7) {
             Ok(true) => {
                 mission.uhf_antenna_deployed = true;
                 if let Err(err) = state::set_flag(MissionFlagKey::UhfAntennaDeployed, true) {

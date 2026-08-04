@@ -37,7 +37,6 @@ pub const CNN_BOOT: u32 = 67;
 // ADCS
 pub const ADCS_ENABLE: u32 = 47; // active-low
 
-
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct PinInfo {
     pub name: &'static str,
@@ -48,9 +47,9 @@ pub struct PinInfo {
 
 pub const PIN_TABLE: [PinInfo; 12] = [
     PinInfo { name: "VHF_DEPLOY_OUT",     gpio: VHF_DEPLOY_OUT,     direction: Direction::Output, active: Active::High },
-    PinInfo { name: "VHF_DEPLOYED_SENSE", gpio: VHF_DEPLOYED_SENSE, direction: Direction::Input,  active: Active::High },
+    PinInfo { name: "VHF_DEPLOYED_SENSE", gpio: VHF_DEPLOYED_SENSE, direction: Direction::Input,  active: Active::Low  },
     PinInfo { name: "UHF_DEPLOY_OUT",     gpio: UHF_DEPLOY_OUT,     direction: Direction::Output, active: Active::High },
-    PinInfo { name: "UHF_DEPLOYED_SENSE", gpio: UHF_DEPLOYED_SENSE, direction: Direction::Input,  active: Active::High },
+    PinInfo { name: "UHF_DEPLOYED_SENSE", gpio: UHF_DEPLOYED_SENSE, direction: Direction::Input,  active: Active::Low  },
     PinInfo { name: "SOLAR_PX_SENSE",     gpio: SOLAR_PX_SENSE,     direction: Direction::Input,  active: Active::Low  },
     PinInfo { name: "SOLAR_NX_SENSE",     gpio: SOLAR_NX_SENSE,     direction: Direction::Input,  active: Active::Low  },
     PinInfo { name: "GNSS_ENABLE",        gpio: GNSS_ENABLE,        direction: Direction::Output, active: Active::Low  },
@@ -71,6 +70,14 @@ mod tests {
         assert_eq!(VHF_DEPLOYED_SENSE, 66);
         assert_eq!(UHF_DEPLOY_OUT, 115);
         assert_eq!(UHF_DEPLOYED_SENSE, 7);
+    }
+
+    #[test]
+    fn antenna_pin_polarities_are_active_high_out_active_low_in() {
+        assert_eq!(PIN_TABLE[0].active, Active::High);
+        assert_eq!(PIN_TABLE[1].active, Active::Low);
+        assert_eq!(PIN_TABLE[2].active, Active::High);
+        assert_eq!(PIN_TABLE[3].active, Active::Low);
     }
 
     #[test]

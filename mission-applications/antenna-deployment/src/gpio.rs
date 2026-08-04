@@ -52,6 +52,11 @@ pub fn read_pin(pin: u32) -> Result<bool, Error> {
     }
 }
 
+/// Return whether an active-low input is asserted.
+pub fn read_active_low(pin: u32) -> Result<bool, Error> {
+    read_pin(pin).map(|is_high| !is_high)
+}
+
 fn configure_pin(pin: u32, direction: Direction) -> Result<(), Error> {
     ensure_exported(pin)?;
 
