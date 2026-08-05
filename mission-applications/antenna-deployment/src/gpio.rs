@@ -35,6 +35,13 @@ pub fn init_antenna_gpio() -> Result<(), Error> {
 }
 
 pub fn pulse_high(pin: u32, pulse: Duration) -> Result<(), Error> {
+    // Prepare the deploy output immediately before every pulse. This mirrors:
+    //   echo <pin> > /sys/class/gpio/export
+    //   echo out   > /sys/class/gpio/gpio<pin>/direction
+    //   echo 1     > /sys/class/gpio/gpio<pin>/value
+    // `ensure_exported` treats an existing gpio directory as already ready, so
+    // repeated deployment attempts do not fail just because the pin is exported.
+    configure_pin(pin, Direction::Out)?;
     write_pin(pin, true)?;
     thread::sleep(pulse);
     write_pin(pin, false)?;
