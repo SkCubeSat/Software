@@ -43,8 +43,6 @@ pub fn pulse_high(pin: u32, pulse: Duration) -> Result<(), Error> {
     // repeated deployment attempts do not fail just because the pin is exported.
     configure_pin(pin, Direction::Out)?;
     write_pin(pin, true)?;
-    thread::sleep(pulse);
-    write_pin(pin, false)?;
     Ok(())
 }
 
