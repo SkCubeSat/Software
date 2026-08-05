@@ -1,8 +1,6 @@
 use failure::{Error, bail, format_err};
 use std::fs;
 use std::path::Path;
-use std::thread;
-use std::time::Duration;
 
 pub const GPIO_117: u32 = 117;
 pub const GPIO_66: u32 = 66;
@@ -34,16 +32,15 @@ pub fn init_antenna_gpio() -> Result<(), Error> {
     Ok(())
 }
 
-pub fn pulse_high(pin: u32, pulse: Duration) -> Result<(), Error> {
-    // Prepare the deploy output immediately before every pulse. This mirrors:
+pub fn set_high(pin: u32) -> Result<(), Error> {
+    // Prepare and latch the deploy output high. This mirrors:
     //   echo <pin> > /sys/class/gpio/export
     //   echo out   > /sys/class/gpio/gpio<pin>/direction
     //   echo 1     > /sys/class/gpio/gpio<pin>/value
     // `ensure_exported` treats an existing gpio directory as already ready, so
     // repeated deployment attempts do not fail just because the pin is exported.
     configure_pin(pin, Direction::Out)?;
-    write_pin(pin, true)?;
-    Ok(())
+    write_pin(pin, true)
 }
 
 pub fn read_pin(pin: u32) -> Result<bool, Error> {
