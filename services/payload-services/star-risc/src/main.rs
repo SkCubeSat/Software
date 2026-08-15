@@ -1,10 +1,9 @@
-use async_graphql::{Context, EmptyMutation, Object};
+use async_graphql::{Context, EmptyMutation, Object, SimpleObject};
 use kubos_service::{Config, Service};
-use std::collections::VecDeque;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::io::AsyncReadExt;
-use tokio::sync::RwLock;
+use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::sync::{broadcast, RwLock};
 use tokio_serial::SerialPortBuilderExt;
 
 struct UartConfig {
@@ -12,38 +11,21 @@ struct UartConfig {
     baud: u32,
 }
 
-// Define our data structure for storing UART readings
-#[derive(Clone)]
-struct UartReading {
-    data: Vec<u8>,
+#[derive(SimpleObject, Clone)]
+pub struct Counters {
+    pub seu: i32,
+    pub deu: i32,
 }
 
 // Define our shared state
 #[derive(Default)]
 struct AppState {
-    readings: VecDeque<UartReading>,
-    max_readings: usize,
+    last_counters: Option<Counters>,
 }
 
 impl AppState {
-    fn new(max_readings: usize) -> Self {
-        Self {
-            readings: VecDeque::new(),
-            max_readings,
-        }
-    }
-
-    fn add_reading(&mut self, data: Vec<u8>) {
-        self.readings.push_back(UartReading { data });
-
-        // Remove old readings if we exceed the maximum size
-        while self.readings.len() > self.max_readings {
-            self.readings.pop_front();
-        }
-    }
-
-    fn get_readings(&self) -> Vec<UartReading> {
-        self.readings.iter().cloned().collect()
+    fn new() -> Self {
+        Self { last_counters: None }
     }
 }
 
@@ -51,27 +33,52 @@ impl AppState {
 #[derive(Clone)]
 pub struct StarRiscSubsystem {
     state: Arc<RwLock<AppState>>,
+    tx: Arc<broadcast::Sender<String>>,
 }
 
 impl StarRiscSubsystem {
     pub fn new() -> Self {
+        let (tx, _) = broadcast::channel(100);
         Self {
-            state: Arc::new(RwLock::new(AppState::new(1000))),
+            state: Arc::new(RwLock::new(AppState::new())),
+            tx: Arc::new(tx),
         }
     }
 
-    pub async fn add_reading(&self, data: Vec<u8>) {
-        let mut state = self.state.write().await;
-        state.add_reading(data);
+    pub async fn publish_line(&self, line: String) {
+        let _ = self.tx.send(line);
     }
 
-    pub async fn get_uart_readings(&self) -> Vec<u8> {
-        let state = self.state.read().await;
-        state
-            .get_readings()
-            .iter()
-            .flat_map(|reading| reading.data.clone())
-            .collect()
+    pub async fn wait_for_counters(&self) -> Counters {
+        let mut rx = self.tx.subscribe();
+        let mut seu = None;
+        let mut deu = None;
+
+        while let Ok(line) = rx.recv().await {
+            if line.contains("SEU counter:") {
+                if let Some(val_str) = line.split("SEU counter:").nth(1) {
+                    if let Ok(val) = val_str.trim().parse::<i32>() {
+                        seu = Some(val);
+                    }
+                }
+            } else if line.contains("DEU counter:") {
+                if let Some(val_str) = line.split("DEU counter:").nth(1) {
+                    if let Ok(val) = val_str.trim().parse::<i32>() {
+                        deu = Some(val);
+                    }
+                }
+            }
+
+            if let (Some(s), Some(d)) = (seu, deu) {
+                let counters = Counters { seu: s, deu: d };
+                let mut state = self.state.write().await;
+                state.last_counters = Some(counters.clone());
+                return counters;
+            }
+        }
+
+        // Default fallback if channel drops
+        Counters { seu: -1, deu: -1 }
     }
 }
 
@@ -85,19 +92,14 @@ impl QueryRoot {
         "pong"
     }
 
-    async fn uart_readings(&self, ctx: &Context<'_>) -> async_graphql::Result<Vec<u8>> {
+    async fn counters(&self, ctx: &Context<'_>) -> async_graphql::Result<Counters> {
         let subsystem_ctx = ctx.data::<kubos_service::Context<StarRiscSubsystem>>()?;
-        Ok(subsystem_ctx.subsystem().get_uart_readings().await)
+        Ok(subsystem_ctx.subsystem().wait_for_counters().await)
     }
 }
 
 // UART reading task
 async fn uart_reading_task(subsystem: StarRiscSubsystem, uart_config: UartConfig) {
-    // For simulation, we'll use a PTY (pseudo-terminal)
-    // You can create one using: socat -d -d pty,raw,echo=0 pty,raw,echo=0
-    // This will give you two device paths like /dev/pts/X and /dev/pts/Y
-    // Use one end to write data and the other to read
-
     // Try to open the UART, but don't panic if it fails (for demo purposes)
     let uart_result = tokio_serial::new(uart_config.bus.clone(), uart_config.baud)
         .data_bits(tokio_serial::DataBits::Eight)
@@ -107,13 +109,14 @@ async fn uart_reading_task(subsystem: StarRiscSubsystem, uart_config: UartConfig
         .timeout(Duration::from_millis(100))
         .open_native_async();
 
-    if let Ok(mut uart) = uart_result {
-        let mut buffer = [0u8; 1024];
+    if let Ok(uart) = uart_result {
+        let mut reader = BufReader::new(uart);
+        let mut line = String::new();
         loop {
-            match uart.read(&mut buffer).await {
+            line.clear();
+            match reader.read_line(&mut line).await {
                 Ok(bytes_read) if bytes_read > 0 => {
-                    let data = buffer[..bytes_read].to_vec();
-                    subsystem.add_reading(data).await;
+                    subsystem.publish_line(line.clone()).await;
                 }
                 Ok(_) => {
                     // No data read, continue
@@ -127,11 +130,11 @@ async fn uart_reading_task(subsystem: StarRiscSubsystem, uart_config: UartConfig
     } else {
         println!("Could not open UART device, running in simulation mode");
         // Generate some simulated data
-        let mut counter = 0u8;
+        let mut counter = 0;
         loop {
-            let data = vec![counter, counter.wrapping_add(1), counter.wrapping_add(2)];
-            subsystem.add_reading(data).await;
-            counter = counter.wrapping_add(1);
+            subsystem.publish_line(format!("123.45 | SEU counter: {}\n", counter)).await;
+            subsystem.publish_line(format!("123.45 | DEU counter: {}\n", counter)).await;
+            counter += 1;
             tokio::time::sleep(Duration::from_secs(1)).await;
         }
     }
