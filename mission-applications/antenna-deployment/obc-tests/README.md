@@ -62,6 +62,28 @@ before deployment pulses.
 Do not extend this runner with an expired deploy timer unless deployment loads
 are disconnected or the application has gained a simulated GPIO test mode.
 
+## Test all four GPIO pins
+
+`test-gpio.sh` exports both sense inputs and both deployment outputs, verifies
+their sysfs values, and drives each output high for one second before returning
+it low. Disconnect all deployment loads and connect only safe test equipment
+before running it:
+
+```sh
+cd /home/kubos/antenna-tests/antenna-deployment
+./test-gpio.sh
+```
+
+Type `TEST_ALL_GPIOS` at the prompt. For a deliberately non-interactive test:
+
+```sh
+ANTENNA_GPIO_TEST_CONFIRM=TEST_ALL_GPIOS ./test-gpio.sh
+```
+
+The pulse duration can be changed to a positive whole number of seconds with
+`ANTENNA_GPIO_TEST_PULSE_SECONDS`. A cleanup trap attempts to return GPIO 117
+and GPIO 115 low if the script exits or is interrupted.
+
 ## Hardware-test all three failed attempts
 
 This runner checks three real VHF GPIO pulses, three real UHF GPIO pulses, and
@@ -137,3 +159,5 @@ ANTENNA_FRAM_ONLY=1 ./bin/antenna-deployment set-deploy-start 0 \
 - `ANTENNA_HARDWARE_TEST_MODE=three-attempts`: prepare and check three real attempts
 - `ANTENNA_HARDWARE_TEST_CONFIRM=DEPLOY_3_TIMES`: confirm three real hardware attempts
 - `ANTENNA_FRAM_ONLY=1`: bench-only mode without U-Boot state mirroring
+- `ANTENNA_GPIO_TEST_CONFIRM=TEST_ALL_GPIOS`: confirm the four-pin GPIO test
+- `ANTENNA_GPIO_TEST_PULSE_SECONDS`: output test pulse duration (default `1`)

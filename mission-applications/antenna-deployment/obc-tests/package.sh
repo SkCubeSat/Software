@@ -27,8 +27,10 @@ cp "$ROOT/target/$TARGET/release/antenna-deployment" "$OUT/bin/"
 cp "$DIR/run.sh" "$OUT/"
 cp "$DIR/run-hardware.sh" "$OUT/"
 cp "$DIR/setup-bench.sh" "$OUT/"
+cp "$DIR/test-gpio.sh" "$OUT/"
 
-chmod +x "$OUT/run.sh" "$OUT/run-hardware.sh" "$OUT/bin/antenna-deployment"
+chmod +x "$OUT/run.sh" "$OUT/run-hardware.sh" "$OUT/test-gpio.sh" \
+  "$OUT/bin/antenna-deployment"
 
 echo "Packaged OBC antenna-deployment tests at $OUT"
 echo "Transfer with:"

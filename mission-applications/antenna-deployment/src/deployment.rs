@@ -8,6 +8,7 @@ use crate::state::{self, MissionFlagKey, MissionState};
 
 const HOLD_TIME_SECONDS: i64 = 5; // 30 minutes
 const INTER_ANTENNA_DELAY_SECONDS: u64 = 5;
+const DEPLOY_PULSE_SECONDS: u64 = 5;
 const MAX_ATTEMPT_SETS: u8 = 3;
 const MIN_VALID_UNIX_TIME: i64 = 1_735_689_600; // 2025-01-01T00:00:00Z
 
@@ -104,7 +105,7 @@ fn run_attempt_sets(mut mission: MissionState, attempts_done: u8) -> Result<Miss
         // VHF deploy + sense
         if !mission.vhf_antenna_deployed {
             info!("attempting VHF deployment via GPIO_{}", GPIO_117);
-            match gpio::set_high(GPIO_117) {
+            match gpio::pulse_high(GPIO_117, Duration::from_secs(DEPLOY_PULSE_SECONDS)) {
                 Ok(()) => match gpio::read_active_low(GPIO_66) {
                     Ok(true) => {
                         mission.vhf_antenna_deployed = true;
@@ -129,7 +130,7 @@ fn run_attempt_sets(mut mission: MissionState, attempts_done: u8) -> Result<Miss
 
             // UHF deploy + sense
             info!("attempting UHF deployment via GPIO_{}", GPIO_115);
-            match gpio::set_high(GPIO_115) {
+            match gpio::pulse_high(GPIO_115, Duration::from_secs(DEPLOY_PULSE_SECONDS)) {
                 Ok(()) => match gpio::read_active_low(GPIO_7) {
                     Ok(true) => {
                         mission.uhf_antenna_deployed = true;
