@@ -14,6 +14,7 @@ const DEFAULT_BITRATE: u32 = 1000000;
 const DEFAULT_SRC_ADDRESS: u8 = 1;
 const DEFAULT_DST_ADDRESS: u8 = 4;
 const DEFAULT_TIMEOUT_MS: u64 = 5_000;
+const DEFAULT_EXTENDED_FRAME_DELAY_MS: u64 = 1;
 
 /// Service configuration values for CubeSpace ADCS CAN communication.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -28,6 +29,8 @@ pub struct AdcsServiceConfig {
     pub destination_address: u8,
     /// Request/response timeout.
     pub timeout: Duration,
+    /// Delay inserted between consecutive extended telecommand CAN frames.
+    pub extended_frame_delay: Duration,
     /// Whether to run `ip link set <interface> up type can bitrate <bitrate>` at startup.
     pub bring_interface_up: bool,
 }
@@ -40,6 +43,11 @@ impl AdcsServiceConfig {
             source_address: config_u8(config, "source_address", DEFAULT_SRC_ADDRESS),
             destination_address: config_u8(config, "destination_address", DEFAULT_DST_ADDRESS),
             timeout: Duration::from_millis(config_u64(config, "timeout_ms", DEFAULT_TIMEOUT_MS)),
+            extended_frame_delay: Duration::from_millis(config_u64(
+                config,
+                "extended_frame_delay_ms",
+                DEFAULT_EXTENDED_FRAME_DELAY_MS,
+            )),
             bring_interface_up: config_bool(config, "bring_interface_up", false),
         }
     }
@@ -197,7 +205,12 @@ impl Subsystem {
             .map_err(|_| CubeAdcsError::LockPoisoned)?;
 
         if message_type == MSG_TYPE_TC_EXT {
-            write_extended_payload(&connection, can_id, payload)?;
+            write_extended_payload(
+                &connection,
+                can_id,
+                payload,
+                self.config.extended_frame_delay,
+            )?;
         } else {
             connection
                 .write(CanFrame::extended(can_id, payload))
@@ -390,6 +403,7 @@ fn write_extended_payload(
     connection: &Connection,
     can_id: u32,
     payload: &[u8],
+    frame_delay: Duration,
 ) -> Result<(), CubeAdcsError> {
     let frame_count = payload.len().div_ceil(7);
     let initial_counter = u8::try_from(frame_count - 1).map_err(|_| {
@@ -408,6 +422,9 @@ fn write_extended_payload(
         connection
             .write(CanFrame::extended(can_id, &frame_payload))
             .map_err(|err| CubeAdcsError::Can(err.to_string()))?;
+        if usize::from(index) + 1 < frame_count && !frame_delay.is_zero() {
+            std::thread::sleep(frame_delay);
+        }
     }
 
     Ok(())

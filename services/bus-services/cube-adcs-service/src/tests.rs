@@ -17,6 +17,7 @@ fn test_config() -> AdcsServiceConfig {
         source_address: 1,
         destination_address: 4,
         timeout: Duration::from_millis(10),
+        extended_frame_delay: Duration::ZERO,
         bring_interface_up: false,
     }
 }

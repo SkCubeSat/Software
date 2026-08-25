@@ -328,6 +328,63 @@ def load_json(path):
         return json.load(stream)
 
 
+def parse_inline_command(value, fields, types):
+    """Convert ID#{value1,value2,...} into the normal command input mapping."""
+    match = re.fullmatch(r"\s*(\d+)\s*#\{(.*)\}\s*", value, re.DOTALL)
+    if not match:
+        raise GraphqlError(
+            "invalid inline command {!r}; expected ID#{{value1,value2,...}}".format(value)
+        )
+
+    command_id = int(match.group(1), 10)
+    field = fields.get(command_id)
+    if field is None:
+        raise GraphqlError("command ID {} has no GraphQL mutation".format(command_id))
+
+    try:
+        values = json.loads("[{}]".format(match.group(2)))
+    except json.JSONDecodeError as err:
+        raise GraphqlError(
+            "invalid values for command {}: {}; use JSON values and quote strings"
+            .format(command_id, err)
+        ) from err
+
+    args = field.get("args") or []
+    if len(args) == 1 and type_kind(args[0]["type"]) == "INPUT_OBJECT":
+        input_type = types.get(type_name(args[0]["type"])) or {}
+        input_fields = input_type.get("inputFields") or []
+        if len(values) != len(input_fields):
+            raise GraphqlError(
+                "command {} expects {} values ({}), received {}".format(
+                    command_id,
+                    len(input_fields),
+                    ", ".join(item["name"] for item in input_fields),
+                    len(values),
+                )
+            )
+        command_inputs = {
+            args[0]["name"]: {
+                item["name"]: item_value
+                for item, item_value in zip(input_fields, values)
+            }
+        }
+    else:
+        if len(values) != len(args):
+            raise GraphqlError(
+                "command {} expects {} values ({}), received {}".format(
+                    command_id,
+                    len(args),
+                    ", ".join(item["name"] for item in args),
+                    len(values),
+                )
+            )
+        command_inputs = {
+            item["name"]: item_value for item, item_value in zip(args, values)
+        }
+
+    return command_id, field["name"], command_inputs
+
+
 def write_json(path, value):
     with open(path, "w", encoding="utf-8") as stream:
         json.dump(value, stream, indent=2, sort_keys=True)
@@ -515,8 +572,19 @@ def run_commands(args, introspection):
         return
 
     types = index_types(introspection)
-    fields = selected_items(command_field_map(introspection), parse_ids(args.ids))
+    all_fields = command_field_map(introspection)
     provided_inputs = load_json(args.inputs)
+    inline_ids = []
+    for value in args.command or []:
+        command_id, field_name, command_inputs = parse_inline_command(
+            value, all_fields, types
+        )
+        inline_ids.append(command_id)
+        provided_inputs[field_name] = command_inputs
+
+    selected_ids = parse_ids(args.ids)
+    selected_ids.extend(inline_ids)
+    fields = selected_items(all_fields, selected_ids)
     failures = 0
 
     for command_id in sorted(fields):
@@ -645,6 +713,11 @@ def build_parser():
     commands = subparsers.add_parser("commands", help="Prepare or execute telecommand mutations")
     commands.add_argument("--ids", action="append", help="Command IDs, comma-separated or repeated")
     commands.add_argument("--inputs", help="JSON file containing command inputs")
+    commands.add_argument(
+        "--command",
+        action="append",
+        help="Inline command as quoted ID#{value1,value2,...}; may be repeated",
+    )
     commands.add_argument("--write-template", help="Write a JSON input template and exit")
     commands.add_argument("--delay", type=float, default=0.0, help="Delay between commands")
     commands.add_argument(

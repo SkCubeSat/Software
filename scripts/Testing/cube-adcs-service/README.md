@@ -65,6 +65,20 @@ python3 scripts/Testing/cube-adcs-service/adcs_graphql_test.py \
 Command mutations are intentionally opt-in because many telecommands change ADCS
 state.
 
+Commands can also be supplied inline, without creating a JSON file. Values are
+positional in the GraphQL input object's schema order and use JSON syntax. Quote
+the entire expression because `#` is special to the shell:
+
+```bash
+python3 scripts/Testing/cube-adcs-service/adcs_graphql_test.py \
+  --url http://127.0.0.1:8000/graphql commands \
+  --command '70#{0.3,0.3,0.3,800,10,0.0}' \
+  --include-mutating-commands
+```
+
+Repeat `--command` to send multiple commands. String and enum values must be
+double-quoted inside the expression, for example `--command '40#{"00000000"}'`.
+
 Send a pre-encoded raw command after explicitly opting in:
 
 ```bash
@@ -81,3 +95,13 @@ selects extended telecommand message type 7 and splits the payload into
 consecutive classic-CAN frames containing at most seven command bytes followed
 by a descending frame counter. The tester prints the expected frame count before
 transmission.
+
+Extended telecommands are paced by the service to give the ADCS time to process
+each CAN fragment. The default delay is 1 ms between frames. It can be adjusted
+in the service section of `/etc/kubos-config.toml`; setting it to zero restores
+unpaced transmission:
+
+```toml
+[cube-adcs-service]
+extended_frame_delay_ms = 1
+```

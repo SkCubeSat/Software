@@ -164,6 +164,45 @@ fn decode_mag_sensing_element_enum_labels() {
 }
 
 #[test]
+fn decode_adcs_run_mode_enum_labels() {
+    for (raw, expected) in [
+        (0, "Off"),
+        (1, "Enabled"),
+        (2, "Triggered"),
+        (3, "Simulation"),
+    ] {
+        let decoded = AdcsRunModeTelemetry::decode(&[raw]).unwrap();
+        assert_eq!(decoded.adcs_run_mode_raw, raw);
+        assert_eq!(decoded.adcs_run_mode.as_deref(), Some(expected));
+    }
+
+    assert_eq!(
+        AdcsRunModeTelemetry::decode(&[4]).unwrap().adcs_run_mode,
+        None
+    );
+
+    let default = DefaultModeConfigurationTelemetry::decode(&[3, 0, 0, 0]).unwrap();
+    assert_eq!(default.default_adcs_run_mode_raw, 3);
+    assert_eq!(default.default_adcs_run_mode.as_deref(), Some("Simulation"));
+}
+
+#[test]
+fn decode_orbit_mode_enum_labels() {
+    for (raw, expected) in [
+        (0, "OrbTle"),
+        (1, "OrbTleGnss"),
+        (2, "OrbAsgp4"),
+        (3, "OrbAsgp4Gnss"),
+    ] {
+        let decoded = OrbitModeTelemetry::decode(&[raw]).unwrap();
+        assert_eq!(decoded.orbit_mode_raw, raw);
+        assert_eq!(decoded.orbit_mode.as_deref(), Some(expected));
+    }
+
+    assert_eq!(OrbitModeTelemetry::decode(&[4]).unwrap().orbit_mode, None);
+}
+
+#[test]
 fn generated_telemetry_has_no_null_enum_placeholder() {
     assert!(!include_str!("telemetry.rs").contains("unknown_enum_label("));
 

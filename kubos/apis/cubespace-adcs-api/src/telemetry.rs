@@ -4922,10 +4922,10 @@ impl Telemetry for ModelsTelemetry {
             asgp4_position_delta: raw_asgp4_position_delta,
             active_orbit_mode_raw: raw_active_orbit_mode,
             active_orbit_mode: match raw_active_orbit_mode {
-                0 => Some("OrbSgp4".to_string()),
-                1 => Some("OrbGnssSgp4".to_string()),
+                0 => Some("OrbTle".to_string()),
+                1 => Some("OrbTleGnss".to_string()),
                 2 => Some("OrbAsgp4".to_string()),
-                3 => Some("OrbGnssAsgp4".to_string()),
+                3 => Some("OrbAsgp4Gnss".to_string()),
                 _ => None,
             },
             asgp4_position_error: raw_asgp4_position_error,
@@ -7013,8 +7013,10 @@ impl Telemetry for AdcsRunModeTelemetry {
         Ok(Self {
             adcs_run_mode_raw: raw_adcs_run_mode,
             adcs_run_mode: match raw_adcs_run_mode {
-                0 => Some("RunModeNormal".to_string()),
-                1 => Some("RunModeConfig".to_string()),
+                0 => Some("Off".to_string()),
+                1 => Some("Enabled".to_string()),
+                2 => Some("Triggered".to_string()),
+                3 => Some("Simulation".to_string()),
                 _ => None,
             },
         })
@@ -8450,8 +8452,10 @@ impl Telemetry for DefaultModeConfigurationTelemetry {
         Ok(Self {
             default_adcs_run_mode_raw: raw_default_adcs_run_mode,
             default_adcs_run_mode: match raw_default_adcs_run_mode {
-                0 => Some("RunModeNormal".to_string()),
-                1 => Some("RunModeConfig".to_string()),
+                0 => Some("Off".to_string()),
+                1 => Some("Enabled".to_string()),
+                2 => Some("Triggered".to_string()),
+                3 => Some("Simulation".to_string()),
                 _ => None,
             },
             default_adcs_operational_state_raw: raw_default_adcs_operational_state,
@@ -22570,10 +22574,10 @@ impl Telemetry for OrbitModeTelemetry {
         Ok(Self {
             orbit_mode_raw: raw_orbit_mode,
             orbit_mode: match raw_orbit_mode {
-                0 => Some("OrbSgp4".to_string()),
-                1 => Some("OrbGnssSgp4".to_string()),
+                0 => Some("OrbTle".to_string()),
+                1 => Some("OrbTleGnss".to_string()),
                 2 => Some("OrbAsgp4".to_string()),
-                3 => Some("OrbGnssAsgp4".to_string()),
+                3 => Some("OrbAsgp4Gnss".to_string()),
                 _ => None,
             },
         })
@@ -23374,10 +23378,10 @@ impl Telemetry for HilTelemetry {
             },
             active_orbit_mode_raw: raw_active_orbit_mode,
             active_orbit_mode: match raw_active_orbit_mode {
-                0 => Some("OrbSgp4".to_string()),
-                1 => Some("OrbGnssSgp4".to_string()),
+                0 => Some("OrbTle".to_string()),
+                1 => Some("OrbTleGnss".to_string()),
                 2 => Some("OrbAsgp4".to_string()),
-                3 => Some("OrbGnssAsgp4".to_string()),
+                3 => Some("OrbAsgp4Gnss".to_string()),
                 _ => None,
             },
             source_of_current_orbit_pos_and_vel_raw: raw_source_of_current_orbit_pos_and_vel,
