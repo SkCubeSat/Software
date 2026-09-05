@@ -203,6 +203,30 @@ fn decode_orbit_mode_enum_labels() {
 }
 
 #[test]
+fn decode_estimator_mode_enum_labels() {
+    for (raw, expected) in [
+        (0, "EstNone"),
+        (1, "EstGyro"),
+        (2, "EstMagRkf"),
+        (3, "EstMagRkfPitch"),
+        (4, "EstTriadGyro"),
+        (5, "EstFullEkf"),
+        (6, "EstGyroEkf"),
+        (100, "EstUserCoded"),
+    ] {
+        let decoded = EstimationModeTelemetry::decode(&[raw, raw]).unwrap();
+        assert_eq!(decoded.main_estimator_mode_raw, raw);
+        assert_eq!(decoded.main_estimator_mode.as_deref(), Some(expected));
+        assert_eq!(decoded.backup_estimator_mode_raw, raw);
+        assert_eq!(decoded.backup_estimator_mode.as_deref(), Some(expected));
+    }
+
+    let undefined = EstimationModeTelemetry::decode(&[7, 7]).unwrap();
+    assert_eq!(undefined.main_estimator_mode, None);
+    assert_eq!(undefined.backup_estimator_mode, None);
+}
+
+#[test]
 fn generated_telemetry_has_no_null_enum_placeholder() {
     assert!(!include_str!("telemetry.rs").contains("unknown_enum_label("));
 
